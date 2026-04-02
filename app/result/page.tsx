@@ -9,7 +9,16 @@ import {
   Radar,
   ResponsiveContainer,
 } from 'recharts'
-import { calculateScores, getOSDescription, getAxisADescription, getAxisBDescription, getAxisCDescription, getZoneComment } from '@/lib/scoring'
+import {
+  calculateScores,
+  getOSDescription,
+  getAxisADescription,
+  getAxisBDescription,
+  getAxisCDescription,
+  getZoneComment,
+  getPersonalityType,
+  getSJTBehaviorTendency,
+} from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
 import { ScenarioAnswer, Layer2Answers, Scores, Zone } from '@/types'
 
@@ -31,35 +40,66 @@ const ZONE_BG: Record<Zone, string> = {
   Red: 'bg-red-500/20 text-red-400 border-red-500/40',
 }
 
-function ScoreCard({
+// Color progress bar with zone bands (0-39=red, 40-59=yellow, 60-79=blue, 80-100=green)
+function ColorProgressBar({ score }: { score: number }) {
+  return (
+    <div className="mt-2 mb-1">
+      <div className="relative h-3 rounded-full overflow-hidden flex">
+        <div className="h-full bg-red-500/50" style={{ width: '39%' }} />
+        <div className="h-full bg-yellow-500/50" style={{ width: '20%' }} />
+        <div className="h-full bg-blue-500/50" style={{ width: '20%' }} />
+        <div className="h-full bg-green-500/50" style={{ width: '21%' }} />
+        {/* Score marker */}
+        <div
+          className="absolute top-0 h-3 w-1 bg-white rounded shadow-lg"
+          style={{ left: `calc(${score}% - 2px)` }}
+        />
+      </div>
+      <div className="flex text-xs mt-1" style={{ color: 'transparent' }}>
+        <span className="text-red-400" style={{ width: '39%', textAlign: 'center' }}>0–39</span>
+        <span className="text-yellow-400" style={{ width: '20%', textAlign: 'center' }}>40–59</span>
+        <span className="text-blue-400" style={{ width: '20%', textAlign: 'center' }}>60–79</span>
+        <span className="text-green-400" style={{ width: '21%', textAlign: 'center' }}>80–100</span>
+      </div>
+      <div className="flex text-xs mt-0.5">
+        <span className="text-red-400" style={{ width: '39%', textAlign: 'center' }}>0–39</span>
+        <span className="text-yellow-400" style={{ width: '20%', textAlign: 'center' }}>40–59</span>
+        <span className="text-blue-400" style={{ width: '20%', textAlign: 'center' }}>60–79</span>
+        <span className="text-green-400" style={{ width: '21%', textAlign: 'center' }}>80–100</span>
+      </div>
+    </div>
+  )
+}
+
+function ScoreSection({
   label,
   score,
-  description,
+  paragraphs,
   skipped,
 }: {
   label: string
   score: number
-  description: string
+  paragraphs: string[]
   skipped?: boolean
 }) {
   return (
-    <div className="bg-gray-800 rounded-xl p-4">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-semibold text-gray-300">{label}</span>
-        <span className="text-lg font-bold text-white">
-          {skipped ? '—' : `${score}`}
+    <div className="bg-gray-800 rounded-xl p-5 space-y-3">
+      <div className="flex justify-between items-center">
+        <span className="text-sm font-semibold text-gray-200">{label}</span>
+        <span className="text-xl font-bold text-white">
+          {skipped ? '—' : score}
           {!skipped && <span className="text-xs text-gray-400 font-normal"> / 100</span>}
         </span>
       </div>
-      {!skipped && (
-        <div className="w-full bg-gray-700 rounded-full h-1.5 mb-3">
-          <div
-            className="h-1.5 rounded-full bg-blue-500 transition-all duration-700"
-            style={{ width: `${score}%` }}
-          />
-        </div>
-      )}
-      <p className="text-xs text-gray-400 leading-relaxed">{skipped ? '未評価（パート1の結果によりスキップ）' : description}</p>
+      {!skipped && <ColorProgressBar score={score} />}
+      {!skipped
+        ? paragraphs.map((p, i) => (
+            <p key={i} className="text-sm text-gray-300 leading-relaxed">
+              {p}
+            </p>
+          ))
+        : <p className="text-sm text-gray-500">未評価（パート1の結果によりスキップ）</p>
+      }
     </div>
   )
 }
@@ -67,6 +107,8 @@ function ScoreCard({
 export default function ResultPage() {
   const router = useRouter()
   const [scores, setScores] = useState<Scores | null>(null)
+  const [personalityType, setPersonalityType] = useState<{ name: string; description: string } | null>(null)
+  const [behaviorTendency, setBehaviorTendency] = useState<{ tag1: string; tag2: string; description: string } | null>(null)
   const [layer2Skipped, setLayer2Skipped] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState(false)
@@ -91,6 +133,16 @@ export default function ResultPage() {
     const calculated = calculateScores(scenarioAnswers, layer2Answers)
     setScores(calculated)
 
+    // SJT behavior tendency (always available)
+    setBehaviorTendency(getSJTBehaviorTendency(scenarioAnswers))
+
+    // Personality type (only if layer2 was answered)
+    let pType = { name: '—', description: '' }
+    if (!skipped && layer2Answers) {
+      pType = getPersonalityType(calculated.OS, calculated.A, calculated.B, calculated.C)
+    }
+    setPersonalityType(pType)
+
     // Save to Supabase
     saveDiagnosisResult({
       age: userInfo.age,
@@ -102,12 +154,13 @@ export default function ResultPage() {
       axisB: calculated.B,
       axisC: calculated.C,
       zone: calculated.zone,
+      personalityType: pType.name,
     })
       .then(() => setSaved(true))
       .catch(() => setSaveError(true))
   }, [router])
 
-  if (!scores) {
+  if (!scores || !behaviorTendency) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-gray-400">結果を計算中...</div>
@@ -141,6 +194,15 @@ export default function ResultPage() {
           </p>
         </div>
 
+        {/* Personality type */}
+        {personalityType && personalityType.name !== '—' && (
+          <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-700/40 rounded-2xl p-5">
+            <p className="text-xs font-semibold text-blue-400 mb-1 uppercase tracking-wider">パーソナリティタイプ</p>
+            <h2 className="text-xl font-bold text-white mb-2">{personalityType.name}</h2>
+            <p className="text-sm text-gray-300 leading-relaxed">{personalityType.description}</p>
+          </div>
+        )}
+
         {/* Radar chart */}
         <div className="bg-gray-800 rounded-2xl p-4">
           <ResponsiveContainer width="100%" height={280}>
@@ -162,29 +224,38 @@ export default function ResultPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Score cards */}
-        <div className="space-y-3">
-          <ScoreCard
+        {/* SJT behavior tendency */}
+        <div className="bg-gray-800 rounded-xl p-5">
+          <p className="text-xs font-semibold text-purple-400 mb-2 uppercase tracking-wider">行動傾向</p>
+          <p className="text-sm font-semibold text-white mb-2">
+            💡{behaviorTendency.tag1} × {behaviorTendency.tag2}型
+          </p>
+          <p className="text-sm text-gray-300 leading-relaxed">{behaviorTendency.description}</p>
+        </div>
+
+        {/* Score sections */}
+        <div className="space-y-4">
+          <ScoreSection
             label="OS（帰属スタイル）"
             score={scores.OS}
-            description={getOSDescription(scores.OS)}
+            paragraphs={getOSDescription(scores.OS)}
           />
-          <ScoreCard
+          <ScoreSection
             label="粘り強さ"
             score={scores.A}
-            description={getAxisADescription(scores.A)}
+            paragraphs={getAxisADescription(scores.A)}
             skipped={layer2Skipped}
           />
-          <ScoreCard
+          <ScoreSection
             label="鈍感力（情緒安定性）"
             score={scores.B}
-            description={getAxisBDescription(scores.B)}
+            paragraphs={getAxisBDescription(scores.B)}
             skipped={layer2Skipped}
           />
-          <ScoreCard
+          <ScoreSection
             label="達成動機"
             score={scores.C}
-            description={getAxisCDescription(scores.C)}
+            paragraphs={getAxisCDescription(scores.C)}
             skipped={layer2Skipped}
           />
         </div>

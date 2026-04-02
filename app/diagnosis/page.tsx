@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { scenarios } from '@/lib/scenarios'
 import { layer2Sections } from '@/lib/layer2Questions'
@@ -8,6 +8,15 @@ import { calculateOS } from '@/lib/scoring'
 import { ScenarioAnswer, Layer2Answers } from '@/types'
 
 const TOTAL_STEPS = 7 // 6 scenarios + 1 layer2
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
 
 function ProgressBar({ current, total }: { current: number; total: number }) {
   const pct = Math.round((current / total) * 100)
@@ -85,6 +94,15 @@ function LikertRow7({
   )
 }
 
+// Flat layer2 question item with axis + position index
+interface FlatL2Item {
+  axis: 'A' | 'B' | 'C'
+  idx: number
+  id: string
+  text: string
+  reversed: boolean
+}
+
 export default function DiagnosisPage() {
   const router = useRouter()
   const [phase, setPhase] = useState<'layer1' | 'layer2'>('layer1')
@@ -100,6 +118,31 @@ export default function DiagnosisPage() {
     axisC: Array(10).fill(0),
   })
   const [visible, setVisible] = useState(true)
+
+  // One-time randomized SJT display order per scenario: array of [0,1,2,3] shuffled
+  const [shuffledOrders] = useState<number[][]>(() =>
+    scenarios.map(() => shuffleArray([0, 1, 2, 3]))
+  )
+
+  // One-time randomized flat Layer2 question list
+  const [randomizedLayer2] = useState<FlatL2Item[]>(() => {
+    const all: FlatL2Item[] = layer2Sections.flatMap((s) =>
+      s.questions.map((q, idx) => ({
+        axis: s.axis,
+        idx,
+        id: q.id,
+        text: q.text,
+        reversed: q.reversed,
+      }))
+    )
+    return shuffleArray(all)
+  })
+
+  // Memoize display order for current scenario
+  const currentShuffledOrder = useMemo(
+    () => shuffledOrders[scenarioIndex],
+    [shuffledOrders, scenarioIndex]
+  )
 
   useEffect(() => {
     if (!sessionStorage.getItem('userInfo')) {
@@ -120,6 +163,7 @@ export default function DiagnosisPage() {
     setVisible(false)
     setTimeout(() => {
       cb()
+      window.scrollTo(0, 0)
       setVisible(true)
     }, 250)
   }, [])
@@ -156,10 +200,11 @@ export default function DiagnosisPage() {
     router.push('/result')
   }
 
-  const setSJTRating = (optionIdx: number, value: number) => {
+  // Store rating at the original option index (not display index)
+  const setSJTRating = (originalIdx: number, value: number) => {
     setCurrentAnswer((prev) => {
       const ratings = [...prev.sjtRatings]
-      ratings[optionIdx] = value
+      ratings[originalIdx] = value
       return { ...prev, sjtRatings: ratings }
     })
   }
@@ -224,7 +269,7 @@ export default function DiagnosisPage() {
                 </p>
               </div>
 
-              {/* SJT section */}
+              {/* SJT section — shuffled display order, stored by original label */}
               <div className="bg-gray-800 rounded-2xl p-5 space-y-4">
                 <p className="text-sm font-semibold text-gray-200">
                   あなたならどうしますか？各選択肢を評価してください
@@ -233,19 +278,22 @@ export default function DiagnosisPage() {
                   <span>← まったくしない</span>
                   <span>必ずする →</span>
                 </div>
-                {scenario.sjtOptions.map((opt, i) => (
-                  <div key={opt.label} className="space-y-2">
-                    <p className="text-sm text-gray-300">
-                      <span className="font-bold text-blue-400 mr-1.5">{opt.label}.</span>
-                      {opt.text}
-                    </p>
-                    <LikertRow5
-                      label={opt.label}
-                      value={currentAnswer.sjtRatings[i]}
-                      onChange={(v) => setSJTRating(i, v)}
-                    />
-                  </div>
-                ))}
+                {currentShuffledOrder.map((originalIdx) => {
+                  const opt = scenario.sjtOptions[originalIdx]
+                  return (
+                    <div key={opt.label} className="space-y-2">
+                      <p className="text-sm text-gray-300">
+                        <span className="font-bold text-blue-400 mr-1.5">{opt.label}.</span>
+                        {opt.text}
+                      </p>
+                      <LikertRow5
+                        label={opt.label}
+                        value={currentAnswer.sjtRatings[originalIdx]}
+                        onChange={(v) => setSJTRating(originalIdx, v)}
+                      />
+                    </div>
+                  )
+                })}
               </div>
 
               {/* Attribution section */}
@@ -281,7 +329,7 @@ export default function DiagnosisPage() {
           {phase === 'layer2' && (
             <div className="space-y-8">
               <div className="text-center">
-                <h2 className="text-xl font-bold text-white mb-2">パート2：自己評価</h2>
+                <h2 className="text-xl font-bold text-white mb-2">パート2：あなた自身について</h2>
                 <p className="text-gray-400 text-sm">
                   各文章について、自分にどの程度当てはまるかを評価してください。
                 </p>
@@ -291,32 +339,25 @@ export default function DiagnosisPage() {
                 </div>
               </div>
 
-              {layer2Sections.map((section) => (
-                <div key={section.axis} className="bg-gray-800 rounded-2xl p-5 space-y-4">
-                  <h3 className="text-base font-bold text-white border-b border-gray-700 pb-3">
-                    {section.title}
-                  </h3>
-                  {section.questions.map((q, idx) => {
-                    const axisKey = `axis${section.axis}` as 'axisA' | 'axisB' | 'axisC'
-                    return (
-                      <div key={q.id} className="space-y-2">
-                        <p className="text-sm text-gray-300">
-                          <span className="text-gray-500 mr-1.5 text-xs">{q.id}</span>
-                          {q.text}
-                          {q.reversed && (
-                            <span className="ml-1 text-xs text-gray-500">*</span>
-                          )}
-                        </p>
-                        <LikertRow5
-                          label={q.id}
-                          value={layer2Answers[axisKey][idx]}
-                          onChange={(v) => setLayer2Answer(section.axis, idx, v)}
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-              ))}
+              {/* Randomized flat question list — no section headers */}
+              <div className="bg-gray-800 rounded-2xl p-5 space-y-4">
+                {randomizedLayer2.map((item, displayIdx) => {
+                  const axisKey = `axis${item.axis}` as 'axisA' | 'axisB' | 'axisC'
+                  return (
+                    <div key={item.id} className="space-y-2">
+                      <p className="text-sm text-gray-300">
+                        <span className="text-gray-600 mr-1.5 text-xs">{displayIdx + 1}.</span>
+                        {item.text}
+                      </p>
+                      <LikertRow5
+                        label={item.id}
+                        value={layer2Answers[axisKey][item.idx]}
+                        onChange={(v) => setLayer2Answer(item.axis, item.idx, v)}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
 
               <button
                 onClick={handleSubmitLayer2}
