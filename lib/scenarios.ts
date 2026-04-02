@@ -9,22 +9,22 @@ export interface Scenario {
   attributions: { question: string; leftLabel: string; rightLabel: string }[]
 }
 
-function makeAttrQuestions(summaryText: string) {
+function makeAttrQuestions() {
   return [
     {
-      question: `「${summaryText}」原因は、時間が経てば変わると思いますか？ それとも今後もずっと変わらないと思いますか？`,
-      leftLabel: 'すぐ変わる',
-      rightLabel: 'ずっと変わらない',
+      question: 'この出来事の影響は、時間が経てば薄れると思いますか？',
+      leftLabel: 'すぐ薄れる',
+      rightLabel: 'ずっと続く',
     },
     {
-      question: `「${summaryText}」原因は、今回の場面だけの話だと思いますか？ それとも他の場面でも同じことが起きると思いますか？`,
+      question: 'こういうことは、この場面に限った話だと思いますか？ それとも自分の周りでは繰り返し起きそうですか？',
       leftLabel: 'この場面だけ',
-      rightLabel: '他の場面でも起きる',
+      rightLabel: '繰り返し起きる',
     },
     {
-      question: `「${summaryText}」のは、どの程度自分自身に原因があると思いますか？`,
-      leftLabel: '完全に外的要因',
-      rightLabel: '完全に自分のせい',
+      question: 'この出来事に、自分の行動や判断はどの程度関係していると思いますか？',
+      leftLabel: '自分は関係ない',
+      rightLabel: '大きく関係している',
     },
   ]
 }
@@ -42,7 +42,7 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '「訪問営業自体が時代に合っていない」と感じ、別の方法を提案する', tags: ['analytical', 'proactive'] },
       { label: 'D', text: '正直やる気が出ないので、とりあえず件数だけこなして早めに切り上げる', tags: ['avoidant'] },
     ],
-    attributions: makeAttrQuestions('30件全員に断られた'),
+    attributions: makeAttrQuestions(),
   },
   {
     id: 2,
@@ -56,7 +56,7 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '自分にはこのレベルの企画を作る力がまだないと感じ、しばらく提案を控える', tags: ['avoidant'] },
       { label: 'D', text: '「方向性が違う」のは役員側の理解不足だと思い、別ルートで再提案する', tags: ['rigid', 'proactive'] },
     ],
-    attributions: makeAttrQuestions('企画が全面却下された'),
+    attributions: makeAttrQuestions(),
   },
   {
     id: 3,
@@ -70,7 +70,7 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '自分のメンタルの弱さが原因だと感じ、試合に出ること自体を避けたいと思う', tags: ['avoidant'] },
       { label: 'D', text: 'ミスは仕方ないと割り切り、チーム全体の課題として捉え直す', tags: ['analytical', 'emotion-regulation'] },
     ],
-    attributions: makeAttrQuestions('試合の決定的な場面でミスをした'),
+    attributions: makeAttrQuestions(),
   },
   {
     id: 4,
@@ -84,7 +84,7 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '「裏切られた」という気持ちが強く、しばらく仕事に集中できない', tags: ['avoidant'] },
       { label: 'D', text: '自分のマネジメント不足（1人に頼りすぎた）と捉え、体制を見直す', tags: ['analytical', 'proactive'] },
     ],
-    attributions: makeAttrQuestions('信頼していた同期が突然辞めた'),
+    attributions: makeAttrQuestions(),
   },
   {
     id: 5,
@@ -98,7 +98,7 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '「3ヶ月が無駄だった」という気持ちが消えず、しばらく新規開拓のモチベーションが出ない', tags: ['avoidant'] },
       { label: 'D', text: '予算凍結は自分にはどうしようもないことなので、深く考えずに次に行く', tags: ['emotion-regulation', 'analytical'] },
     ],
-    attributions: makeAttrQuestions('3ヶ月追った案件が白紙になった'),
+    attributions: makeAttrQuestions(),
   },
   {
     id: 6,
@@ -112,6 +112,6 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '自分にはこの環境が合っていないのかもしれないと思い、別のインターン先を探し始める', tags: ['avoidant', 'analytical'] },
       { label: 'D', text: '焦りはあるが、自分なりのやり方を見つけながら追いつこうとする', tags: ['proactive', 'emotion-regulation'] },
     ],
-    attributions: makeAttrQuestions('自分だけ成果が出ず孤立している'),
+    attributions: makeAttrQuestions(),
   },
 ]

@@ -219,7 +219,7 @@ function AnswerViewer({
             <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">スコア</h3>
             <div className="grid grid-cols-2 gap-2 text-sm">
               {[
-                { label: 'OS（帰属）', val: scores.OS },
+                { label: '楽観性', val: scores.OS },
                 { label: '粘り強さ', val: scores.A },
                 { label: '情緒安定性', val: scores.B },
                 { label: '達成動機', val: scores.C },
@@ -452,13 +452,13 @@ export default function ResultPage() {
       : '#ef4444'
 
   const chartData = [
-    { axis: 'OS（帰属）', value: scores.OS },
+    { axis: '楽観性', value: scores.OS },
     { axis: '粘り強さ', value: scores.A },
     { axis: '情緒安定性', value: scores.B },
     { axis: '達成動機', value: scores.C },
   ]
 
-  const axisCode = `OS-${scores.OS >= 60 ? 'H' : 'L'} / A-${scores.A >= 60 ? 'H' : 'L'} / B-${scores.B >= 60 ? 'H' : 'L'} / C-${scores.C >= 60 ? 'H' : 'L'}`
+  const axisCode = `楽観-${scores.OS >= 60 ? 'H' : 'L'} / A-${scores.A >= 60 ? 'H' : 'L'} / B-${scores.B >= 60 ? 'H' : 'L'} / C-${scores.C >= 60 ? 'H' : 'L'}`
 
   // Tag badges: show non-zero tags sorted by count
   const tagEntries = Object.entries(behaviorTendency.tagCounts)
@@ -558,9 +558,12 @@ export default function ResultPage() {
         {/* ⑤ Axis score cards */}
         <div className="space-y-4">
           <ScoreSection
-            label="OS（帰属スタイル）"
+            label="楽観性（ものごとの捉え方）"
             score={scores.OS}
-            paragraphs={getOSDescription(scores.OS)}
+            paragraphs={[
+              '嫌なことが起きたとき、それを一時的・限定的と捉えるか、永続的・全般的と捉えるかの傾向です。',
+              ...getOSDescription(scores.OS),
+            ]}
           />
           <ScoreSection
             label="粘り強さ（Grit）"

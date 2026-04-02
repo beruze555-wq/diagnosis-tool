@@ -132,6 +132,7 @@ export default function DiagnosisPage() {
   })
   const [layer2Page, setLayer2Page] = useState(0)
   const [visible, setVisible] = useState(true)
+  const [isDev, setIsDev] = useState(false)
 
   // One-time randomized SJT display order per scenario: array of [0,1,2,3] shuffled
   const [shuffledOrders] = useState<number[][]>(() =>
@@ -167,6 +168,8 @@ export default function DiagnosisPage() {
 
     const savedScenarioAnswers = sessionStorage.getItem('scenarioAnswers')
     const savedLayer2Answers = sessionStorage.getItem('layer2Answers')
+    setIsDev(new URLSearchParams(window.location.search).get('dev') === 'true')
+
     const savedPhase = sessionStorage.getItem('diagnosisPhase')
 
     if (savedScenarioAnswers && savedLayer2Answers) {
@@ -220,6 +223,25 @@ export default function DiagnosisPage() {
       setVisible(true)
     }, 250)
   }, [])
+
+  const handleBack = () => {
+    if (phase === 'layer2') {
+      if (layer2Page > 0) {
+        transition(() => setLayer2Page((p) => p - 1))
+      }
+      // layer2Page === 0: PART1には戻れない
+    } else {
+      if (scenarioIndex > 0) {
+        const prevAnswer = scenarioAnswers[scenarioIndex - 1]
+        const prevAnswers = scenarioAnswers.slice(0, -1)
+        transition(() => {
+          setCurrentAnswer(prevAnswer)
+          setScenarioAnswers(prevAnswers)
+          setScenarioIndex((i) => i - 1)
+        })
+      }
+    }
+  }
 
   const handleNextScenario = () => {
     if (!isLayer1Complete) return
@@ -322,6 +344,18 @@ export default function DiagnosisPage() {
             <span>{Math.round((currentProgress / TOTAL_STEPS) * 100)}%</span>
           </div>
           <ProgressBar current={currentProgress} total={TOTAL_STEPS} />
+          {isDev && (
+            <button
+              onClick={handleBack}
+              disabled={
+                (phase === 'layer1' && scenarioIndex === 0) ||
+                (phase === 'layer2' && layer2Page === 0)
+              }
+              className="mt-2 text-xs text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              ← 前のページに戻る
+            </button>
+          )}
         </div>
       </div>
 
