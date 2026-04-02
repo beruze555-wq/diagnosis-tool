@@ -87,18 +87,22 @@ export default function StartPage() {
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-md space-y-6">
 
-        {/* Hero + メリット */}
+        {/* Hero */}
         <div className="text-center space-y-3">
           <p className="text-xs text-gray-500 tracking-widest uppercase">MIRROR</p>
           <h1 className="text-2xl font-bold text-white">メンタルタイプ診断</h1>
-          <div className="space-y-2 text-sm text-gray-400 leading-relaxed">
-            <p>
-              <span className="text-gray-200">「自分の強みは？」</span>と聞かれて、固まったことはないですか。
-            </p>
-            <p>
-              MIRRORは7つの心理指標からあなたのメンタルの型を割り出します。面接でも、配属でも、<span className="text-gray-200">「自分はこうだ」と根拠を持って言える</span>ようになります。
-            </p>
-          </div>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            6つの場面を通じて、あなたのメンタルの<span className="text-white">"型"</span>と、力を発揮できる環境がわかります
+          </p>
+        </div>
+
+        {/* この診断について */}
+        <div className="bg-gray-800/40 rounded-2xl p-5 border border-gray-700/40 space-y-2.5 text-sm text-gray-400 leading-relaxed">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">この診断について</p>
+          <p>この診断は、あなたが本当に力を発揮できる環境や、隠れた強みを見つけるためのものです。</p>
+          <p>「良い回答」や「正解」はありません。感じたままに答えるほど、あなたに合った結果が出ます。</p>
+          <p><span className="text-gray-300 font-medium">就活中の方</span>　自分のメンタルの型を知ることは、面接やES作成に直結します。</p>
+          <p><span className="text-gray-300 font-medium">インターン・仕事を始める方</span>　「向いている環境」と「消耗する環境」を事前に知ることで、ミスマッチを防げます。</p>
         </div>
 
         {/* 16タイプ プレビュー */}
@@ -123,7 +127,7 @@ export default function StartPage() {
           {/* Trust badges */}
           <div className="flex justify-center gap-4 text-xs text-gray-500 pb-2">
             <span>📊 7つの学術理論</span>
-            <span>⏱️ 約10分</span>
+            <span>⏱️ 所要時間：約10〜15分</span>
             <span>🔬 42問</span>
           </div>
 

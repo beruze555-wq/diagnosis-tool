@@ -35,25 +35,38 @@ import { layer2Sections } from '@/lib/layer2Questions'
 
 // ─── Color helpers ─────────────────────────────────────────────────────────────
 
-function scoreBarColor(score: number): string {
-  if (score >= 80) return 'bg-green-500'
-  if (score >= 60) return 'bg-blue-500'
-  if (score >= 40) return 'bg-yellow-500'
-  return 'bg-red-500'
+function scoreSegment(score: number): 'red' | 'yellow' | 'blue' | 'green' {
+  if (score >= 80) return 'green'
+  if (score >= 60) return 'blue'
+  if (score >= 40) return 'yellow'
+  return 'red'
+}
+
+function scoreTextColor(score: number): string {
+  if (score >= 80) return 'text-green-400'
+  if (score >= 60) return 'text-blue-400'
+  if (score >= 40) return 'text-yellow-400'
+  return 'text-red-400'
 }
 
 // ─── Shared color progress bar ────────────────────────────────────────────────
 
 function ColorProgressBar({ score }: { score: number }) {
+  const seg = scoreSegment(score)
+  const segments = [
+    { key: 'red',    bg: seg === 'red'    ? 'bg-red-500'    : 'bg-red-500/30',    width: '40%', label: '0-39',   left: '20%', labelColor: seg === 'red'    ? 'text-red-400'    : 'text-gray-600' },
+    { key: 'yellow', bg: seg === 'yellow' ? 'bg-yellow-500' : 'bg-yellow-500/30', width: '20%', label: '40-59',  left: '50%', labelColor: seg === 'yellow' ? 'text-yellow-400' : 'text-gray-600' },
+    { key: 'blue',   bg: seg === 'blue'   ? 'bg-blue-500'   : 'bg-blue-500/30',   width: '20%', label: '60-79',  left: '70%', labelColor: seg === 'blue'   ? 'text-blue-400'   : 'text-gray-600' },
+    { key: 'green',  bg: seg === 'green'  ? 'bg-green-500'  : 'bg-green-500/30',  width: '20%', label: '80-100', left: '90%', labelColor: seg === 'green'  ? 'text-green-400'  : 'text-gray-600' },
+  ]
   return (
     <div className="mt-2 mb-1">
       <div className="relative flex items-center" style={{ height: '20px' }}>
         {/* 4-color range bar */}
         <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-3 rounded-full overflow-hidden flex">
-          <div className="bg-red-500/80" style={{ width: '40%' }} />
-          <div className="bg-yellow-500/80" style={{ width: '20%' }} />
-          <div className="bg-blue-500/80" style={{ width: '20%' }} />
-          <div className="bg-green-500/80" style={{ width: '20%' }} />
+          {segments.map(s => (
+            <div key={s.key} className={s.bg} style={{ width: s.width }} />
+          ))}
         </div>
         {/* Position marker */}
         <div
@@ -61,15 +74,15 @@ function ColorProgressBar({ score }: { score: number }) {
           style={{ left: `${score}%`, transform: 'translateX(-50%)' }}
         />
       </div>
-      {/* Scale numbers */}
+      {/* Segment labels */}
       <div className="relative mt-1" style={{ height: '16px' }}>
-        {[0, 40, 60, 80, 100].map((n) => (
+        {segments.map(s => (
           <span
-            key={n}
-            className="absolute text-xs text-gray-600"
-            style={{ left: `${n}%`, transform: 'translateX(-50%)' }}
+            key={s.key}
+            className={`absolute text-xs ${s.labelColor}`}
+            style={{ left: s.left, transform: 'translateX(-50%)' }}
           >
-            {n}
+            {s.label}
           </span>
         ))}
       </div>
@@ -94,7 +107,7 @@ function ScoreSection({
     <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-3">
       <div className="flex justify-between items-center">
         <span className="text-sm font-semibold text-gray-200">{label}</span>
-        <span className="text-xl font-bold text-white">
+        <span className={`text-xl font-bold ${skipped ? 'text-white' : scoreTextColor(score)}`}>
           {skipped ? '—' : score}
           {!skipped && <span className="text-xs text-gray-400 font-normal"> / 100</span>}
         </span>
@@ -133,7 +146,7 @@ function DeepMetricCard({
           {isRef && (
             <span className="text-xs text-gray-500">（行動パターンから推定）</span>
           )}
-          <span className="text-base font-bold text-white">
+          <span className={`text-base font-bold ${scoreTextColor(score)}`}>
             {score}
             <span className="text-xs text-gray-400 font-normal"> / 100</span>
           </span>
