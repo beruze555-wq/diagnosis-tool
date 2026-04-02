@@ -105,22 +105,6 @@ export default function StartPage() {
           <p><span className="text-gray-300 font-medium">インターン・仕事を始める方</span>　「向いている環境」と「消耗する環境」を事前に知ることで、ミスマッチを防げます。</p>
         </div>
 
-        {/* 16タイプ プレビュー */}
-        <div className="space-y-2">
-          <p className="text-center text-xs text-gray-500">16タイプの中から、あなたの型を特定</p>
-          <div className="grid grid-cols-8 gap-1 max-w-sm mx-auto">
-            {PERSONALITY_TYPES_PREVIEW.map((t) => (
-              <div
-                key={t.name}
-                title={t.name}
-                className={`w-10 h-10 flex items-center justify-center text-lg rounded-lg bg-gradient-to-br ${t.themeFrom} ${t.themeTo} border border-gray-700/40`}
-              >
-                {t.icon}
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Form card */}
         <div className="bg-gray-800/40 rounded-2xl p-6 border border-gray-700/40 space-y-4">
 
