@@ -18,6 +18,14 @@ import {
   getZoneComment,
   getPersonalityType,
   getSJTBehaviorTendency,
+  calculateDeepAnalysis,
+  getLearningAgilityDescription,
+  getSelfEfficacyDescription,
+  getAutonomousMotivationDescription,
+  getCrisisResponseDescription,
+  getTeamContributionDescription,
+  getAntifragilityDescription,
+  DeepAnalysis,
 } from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
 import { ScenarioAnswer, Layer2Answers, Scores, Zone } from '@/types'
@@ -42,7 +50,8 @@ const ZONE_BG: Record<Zone, string> = {
   Red: 'bg-red-500/20 text-red-400 border-red-500/40',
 }
 
-// Color progress bar with zone bands (0-39=red, 40-59=yellow, 60-79=blue, 80-100=green)
+// ─── Shared color progress bar ────────────────────────────────────────────────
+
 function ColorProgressBar({ score }: { score: number }) {
   return (
     <div className="mt-2 mb-1">
@@ -51,7 +60,6 @@ function ColorProgressBar({ score }: { score: number }) {
         <div className="h-full bg-yellow-500/50" style={{ width: '20%' }} />
         <div className="h-full bg-blue-500/50" style={{ width: '20%' }} />
         <div className="h-full bg-green-500/50" style={{ width: '21%' }} />
-        {/* Score marker */}
         <div
           className="absolute top-0 h-3 w-1 bg-white rounded shadow-lg"
           style={{ left: `calc(${score}% - 2px)` }}
@@ -66,6 +74,8 @@ function ColorProgressBar({ score }: { score: number }) {
     </div>
   )
 }
+
+// ─── Main axis score section ──────────────────────────────────────────────────
 
 function ScoreSection({
   label,
@@ -98,6 +108,34 @@ function ScoreSection({
   )
 }
 
+// ─── Deep analysis metric card ────────────────────────────────────────────────
+
+function DeepMetricCard({
+  label,
+  score,
+  description,
+}: {
+  label: string
+  score: number
+  description: string
+}) {
+  return (
+    <div className="bg-gray-800/60 rounded-xl p-4 space-y-2">
+      <div className="flex justify-between items-center">
+        <span className="text-sm font-medium text-gray-300">{label}</span>
+        <span className="text-base font-bold text-white">
+          {score}
+          <span className="text-xs text-gray-400 font-normal"> / 100</span>
+        </span>
+      </div>
+      <ColorProgressBar score={score} />
+      <p className="text-xs text-gray-400 leading-relaxed">{description}</p>
+    </div>
+  )
+}
+
+// ─── Answer data viewer ───────────────────────────────────────────────────────
+
 function AnswerViewer({
   scenarioAnswers,
   layer2Answers,
@@ -111,13 +149,7 @@ function AnswerViewer({
   const [copied, setCopied] = useState(false)
 
   const allData = {
-    scores: {
-      OS: scores.OS,
-      粘り強さ: scores.A,
-      鈍感力: scores.B,
-      達成動機: scores.C,
-      zone: scores.zone,
-    },
+    scores: { OS: scores.OS, 粘り強さ: scores.A, 鈍感力: scores.B, 達成動機: scores.C, zone: scores.zone },
     layer1: scenarioAnswers.map((ans, i) => ({
       scenarioId: i + 1,
       title: scenarios[i]?.title ?? `シナリオ${i + 1}`,
@@ -155,10 +187,8 @@ function AnswerViewer({
         <span>回答データを表示</span>
         <span className="text-xs">{open ? '▲' : '▼'}</span>
       </button>
-
       {open && (
         <div className="border-t border-gray-700 p-5 space-y-5">
-          {/* Scores summary */}
           <div>
             <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">スコア</h3>
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -175,23 +205,15 @@ function AnswerViewer({
               ))}
             </div>
           </div>
-
-          {/* Layer 1 */}
           {scenarioAnswers.length > 0 ? (
             <div>
               <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Part 1 回答</h3>
               <div className="space-y-2">
                 {scenarioAnswers.map((ans, i) => (
                   <div key={i} className="bg-gray-900 rounded-lg p-3 text-xs space-y-1">
-                    <p className="font-semibold text-gray-200">
-                      シナリオ{i + 1}：{scenarios[i]?.title}
-                    </p>
-                    <p className="text-gray-500">
-                      SJT (A/B/C/D)：{ans.sjtRatings.join(' / ')}
-                    </p>
-                    <p className="text-gray-500">
-                      帰属評定 (Q1/Q2/Q3)：{ans.attributions.join(' / ')}
-                    </p>
+                    <p className="font-semibold text-gray-200">シナリオ{i + 1}：{scenarios[i]?.title}</p>
+                    <p className="text-gray-500">SJT (A/B/C/D)：{ans.sjtRatings.join(' / ')}</p>
+                    <p className="text-gray-500">帰属評定 (Q1/Q2/Q3)：{ans.attributions.join(' / ')}</p>
                   </div>
                 ))}
               </div>
@@ -199,8 +221,6 @@ function AnswerViewer({
           ) : (
             <p className="text-xs text-gray-600">Layer1データなし（開発モード）</p>
           )}
-
-          {/* Layer 2 */}
           {layer2Answers ? (
             <div>
               <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Part 2 回答</h3>
@@ -222,8 +242,6 @@ function AnswerViewer({
           ) : (
             <p className="text-xs text-gray-600">Layer2データなし（スキップまたは開発モード）</p>
           )}
-
-          {/* Copy JSON */}
           <button
             onClick={handleCopy}
             className="w-full py-2.5 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-700 transition-colors text-sm"
@@ -236,11 +254,15 @@ function AnswerViewer({
   )
 }
 
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function ResultPage() {
   const router = useRouter()
   const [scores, setScores] = useState<Scores | null>(null)
-  const [personalityType, setPersonalityType] = useState<{ name: string; description: string } | null>(null)
+  const [personalityType, setPersonalityType] = useState<{ name: string; paragraphs: string[] } | null>(null)
   const [behaviorTendency, setBehaviorTendency] = useState<{ tag1: string; tag2: string; description: string } | null>(null)
+  const [deepAnalysis, setDeepAnalysis] = useState<DeepAnalysis | null>(null)
+  const [zoneComment, setZoneComment] = useState<string[]>([])
   const [layer2Skipped, setLayer2Skipped] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState(false)
@@ -258,23 +280,18 @@ export default function ResultPage() {
       return
     }
 
-    // Dev mode: use hardcoded scores, skip Supabase
+    // Dev mode
     const devMode = sessionStorage.getItem('devMode') === 'true'
     const devScoresRaw = sessionStorage.getItem('devScores')
     if (devMode && devScoresRaw) {
       const devScores = JSON.parse(devScoresRaw) as Scores
       setScores(devScores)
-      setLayer2Skipped(false)
-      setPersonalityType(
-        getPersonalityType(devScores.OS, devScores.A, devScores.B, devScores.C)
-      )
-      setBehaviorTendency({
-        tag1: '自力改善',
-        tag2: 'フィードバック志向',
-        description: '（開発モード：ダミーデータ）',
-      })
+      setZoneComment(getZoneComment(devScores.zone))
+      setPersonalityType(getPersonalityType(devScores.OS, devScores.A, devScores.B, devScores.C))
+      setBehaviorTendency({ tag1: '自力改善', tag2: 'フィードバック志向', description: '（開発モード：ダミーデータ）' })
+      setDeepAnalysis({ learningAgility: 70, selfEfficacy: 65, autonomousMotivation: 75, crisisResponse: 60, teamContribution: 72, antifragility: 68 })
       setRawAnswers({ scenarioAnswers: [], layer2Answers: undefined })
-      setSaved(true) // skip save indicator
+      setSaved(true)
       return
     }
 
@@ -289,15 +306,19 @@ export default function ResultPage() {
 
     const calculated = calculateScores(scenarioAnswers, layer2Answers)
     setScores(calculated)
+    setZoneComment(getZoneComment(calculated.zone))
     setBehaviorTendency(getSJTBehaviorTendency(scenarioAnswers))
 
-    let pType = { name: '—', description: '' }
+    let pType = { name: '—', paragraphs: [] as string[] }
+    let da: DeepAnalysis | null = null
+
     if (!skipped && layer2Answers) {
       pType = getPersonalityType(calculated.OS, calculated.A, calculated.B, calculated.C)
+      da = calculateDeepAnalysis(scenarioAnswers, layer2Answers)
     }
     setPersonalityType(pType)
+    setDeepAnalysis(da)
 
-    // Save to Supabase
     saveDiagnosisResult({
       age: userInfo.age,
       affiliation: userInfo.affiliation,
@@ -309,6 +330,7 @@ export default function ResultPage() {
       axisC: calculated.C,
       zone: calculated.zone,
       personalityType: pType.name,
+      deepAnalysis: da ?? undefined,
     })
       .then(() => setSaved(true))
       .catch(() => setSaveError(true))
@@ -323,7 +345,6 @@ export default function ResultPage() {
   }
 
   const zoneColor = ZONE_COLOR[scores.zone]
-
   const chartData = [
     { axis: 'OS（帰属）', value: scores.OS },
     { axis: '粘り強さ', value: scores.A },
@@ -338,22 +359,24 @@ export default function ResultPage() {
         {/* Zone badge */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">診断結果</h1>
-          <div
-            className={`inline-flex items-center gap-2 px-8 py-4 rounded-2xl border-2 text-2xl font-bold ${ZONE_BG[scores.zone]}`}
-          >
+          <div className={`inline-flex items-center gap-2 px-8 py-4 rounded-2xl border-2 text-2xl font-bold ${ZONE_BG[scores.zone]}`}>
             {ZONE_LABEL[scores.zone]}
           </div>
-          <p className="text-gray-400 text-sm mt-4 leading-relaxed px-4">
-            {getZoneComment(scores.zone)}
-          </p>
+          <div className="mt-4 space-y-3 text-left px-2">
+            {zoneComment.map((p, i) => (
+              <p key={i} className="text-gray-400 text-sm leading-relaxed">{p}</p>
+            ))}
+          </div>
         </div>
 
         {/* Personality type */}
-        {personalityType && personalityType.name !== '—' && (
-          <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-700/40 rounded-2xl p-5">
-            <p className="text-xs font-semibold text-blue-400 mb-1 uppercase tracking-wider">パーソナリティタイプ</p>
-            <h2 className="text-xl font-bold text-white mb-2">{personalityType.name}</h2>
-            <p className="text-sm text-gray-300 leading-relaxed">{personalityType.description}</p>
+        {personalityType && personalityType.name !== '—' && personalityType.paragraphs.length > 0 && (
+          <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-700/40 rounded-2xl p-5 space-y-3">
+            <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">パーソナリティタイプ</p>
+            <h2 className="text-xl font-bold text-white">{personalityType.name}</h2>
+            {personalityType.paragraphs.map((p, i) => (
+              <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
+            ))}
           </div>
         )}
 
@@ -362,18 +385,8 @@ export default function ResultPage() {
           <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={chartData}>
               <PolarGrid stroke="#374151" />
-              <PolarAngleAxis
-                dataKey="axis"
-                tick={{ fill: '#9ca3af', fontSize: 11 }}
-              />
-              <Radar
-                name="score"
-                dataKey="value"
-                stroke={zoneColor}
-                fill={zoneColor}
-                fillOpacity={0.25}
-                strokeWidth={2}
-              />
+              <PolarAngleAxis dataKey="axis" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+              <Radar name="score" dataKey="value" stroke={zoneColor} fill={zoneColor} fillOpacity={0.25} strokeWidth={2} />
             </RadarChart>
           </ResponsiveContainer>
         </div>
@@ -387,32 +400,56 @@ export default function ResultPage() {
           <p className="text-sm text-gray-300 leading-relaxed">{behaviorTendency.description}</p>
         </div>
 
-        {/* Score sections */}
+        {/* Main 4 axis score sections */}
         <div className="space-y-4">
-          <ScoreSection
-            label="OS（帰属スタイル）"
-            score={scores.OS}
-            paragraphs={getOSDescription(scores.OS)}
-          />
-          <ScoreSection
-            label="粘り強さ"
-            score={scores.A}
-            paragraphs={getAxisADescription(scores.A)}
-            skipped={layer2Skipped}
-          />
-          <ScoreSection
-            label="鈍感力（情緒安定性）"
-            score={scores.B}
-            paragraphs={getAxisBDescription(scores.B)}
-            skipped={layer2Skipped}
-          />
-          <ScoreSection
-            label="達成動機"
-            score={scores.C}
-            paragraphs={getAxisCDescription(scores.C)}
-            skipped={layer2Skipped}
-          />
+          <ScoreSection label="OS（帰属スタイル）" score={scores.OS} paragraphs={getOSDescription(scores.OS)} />
+          <ScoreSection label="粘り強さ" score={scores.A} paragraphs={getAxisADescription(scores.A)} skipped={layer2Skipped} />
+          <ScoreSection label="鈍感力（情緒安定性）" score={scores.B} paragraphs={getAxisBDescription(scores.B)} skipped={layer2Skipped} />
+          <ScoreSection label="達成動機" score={scores.C} paragraphs={getAxisCDescription(scores.C)} skipped={layer2Skipped} />
         </div>
+
+        {/* Deep analysis section */}
+        {deepAnalysis && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-white">深層分析</h2>
+              <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">リサーチベース</span>
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              SJTと自己評価の回答パターンから算出した6つの追加指標です。
+            </p>
+            <DeepMetricCard
+              label="学習敏捷性（Learning Agility）"
+              score={deepAnalysis.learningAgility}
+              description={getLearningAgilityDescription(deepAnalysis.learningAgility)}
+            />
+            <DeepMetricCard
+              label="自己効力感（Self-Efficacy）"
+              score={deepAnalysis.selfEfficacy}
+              description={getSelfEfficacyDescription(deepAnalysis.selfEfficacy)}
+            />
+            <DeepMetricCard
+              label="自律的動機（Autonomous Motivation）"
+              score={deepAnalysis.autonomousMotivation}
+              description={getAutonomousMotivationDescription(deepAnalysis.autonomousMotivation)}
+            />
+            <DeepMetricCard
+              label="危機対応力（Crisis Response）"
+              score={deepAnalysis.crisisResponse}
+              description={getCrisisResponseDescription(deepAnalysis.crisisResponse)}
+            />
+            <DeepMetricCard
+              label="チーム貢献力（Team Contribution）"
+              score={deepAnalysis.teamContribution}
+              description={getTeamContributionDescription(deepAnalysis.teamContribution)}
+            />
+            <DeepMetricCard
+              label="折れない度（Anti-Fragility）"
+              score={deepAnalysis.antifragility}
+              description={getAntifragilityDescription(deepAnalysis.antifragility)}
+            />
+          </div>
+        )}
 
         {/* Answer data viewer */}
         <AnswerViewer
@@ -429,10 +466,7 @@ export default function ResultPage() {
 
         {/* Restart */}
         <button
-          onClick={() => {
-            sessionStorage.clear()
-            router.push('/')
-          }}
+          onClick={() => { sessionStorage.clear(); router.push('/') }}
           className="w-full py-3 rounded-xl border border-gray-600 text-gray-400 hover:bg-gray-800 transition-colors text-sm"
         >
           もう一度診断する

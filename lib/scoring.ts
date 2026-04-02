@@ -8,21 +8,21 @@ export function calculateOS(scenarioAnswers: ScenarioAnswer[]): number {
 }
 
 export function calculateAxisA(axisA: number[]): number {
-  const reversedIdx = [2, 4, 7] // A3, A5, A8 (0-indexed)
+  const reversedIdx = [2, 4, 7]
   const adjusted = axisA.map((v, i) => (reversedIdx.includes(i) ? 6 - v : v))
   const sum = adjusted.reduce((a, b) => a + b, 0)
   return Math.round((sum * 100) / 50)
 }
 
 export function calculateAxisB(axisB: number[]): number {
-  const reversedIdx = [1, 3, 6, 8] // B2, B4, B7, B9 (0-indexed)
+  const reversedIdx = [1, 3, 6, 8]
   const adjusted = axisB.map((v, i) => (reversedIdx.includes(i) ? 6 - v : v))
   const sum = adjusted.reduce((a, b) => a + b, 0)
   return Math.round((sum * 100) / 50)
 }
 
 export function calculateAxisC(axisC: number[]): number {
-  const reversedIdx = [4] // C5 (0-indexed)
+  const reversedIdx = [4]
   const adjusted = axisC.map((v, i) => (reversedIdx.includes(i) ? 6 - v : v))
   const sum = adjusted.reduce((a, b) => a + b, 0)
   return Math.round((sum * 100) / 50)
@@ -41,101 +41,189 @@ export function calculateScores(
   layer2Answers?: Layer2Answers
 ): Scores {
   const OS = calculateOS(scenarioAnswers)
-
   if (OS < 35 || !layer2Answers) {
     return { OS, A: 0, B: 0, C: 0, zone: 'Red' }
   }
-
   const A = calculateAxisA(layer2Answers.axisA)
   const B = calculateAxisB(layer2Answers.axisB)
   const C = calculateAxisC(layer2Answers.axisC)
   const zone = determineZone(OS, A, B, C)
-
   return { OS, A, B, C, zone }
 }
 
-// --- Personality type (16 types based on 4-axis H/L split at 60) ---
+// ─── Zone comment (multi-paragraph) ──────────────────────────────────────────
 
-const PERSONALITY_TYPES: Record<string, { name: string; description: string }> = {
+export function getZoneComment(zone: Zone): string[] {
+  if (zone === 'Green') {
+    return [
+      'あなたは高ストレス環境でも自走し、成果を出し続けられる可能性が非常に高い人材です。',
+      '心理学的に見ると、逆境を一時的なものとして捉える帰属スタイル、感情に左右されない安定性、そして目標に向かって粘り続ける力がバランスよく備わっています。セリグマンのMetLife研究（5,000人の営業調査）では、あなたのようなプロファイルを持つ人材は、そうでない人材と比べて37%高い成果を出し、1年以内の離職率が半分以下でした。',
+      '営業・スタートアップの立ち上げ・新規事業など、不確実性が高く拒絶や失敗が日常的に起きる環境で最も真価を発揮します。即戦力としてチームの中核を担えるポテンシャルがあります。',
+      'ただし、強さゆえに"周囲も同じように耐えられるはず"と無意識に期待してしまうリスクがあります。リーダーポジションに就く場合は、メンバーの温度感への配慮を意識すると、チーム全体のパフォーマンスがさらに上がります。',
+    ]
+  }
+  if (zone === 'Yellow') {
+    return [
+      'あなたには高ストレス環境で活躍するための基盤が十分に備わっています。ただし、一部の領域にまだ伸びしろがあります。',
+      'これは"弱点"ではなく"伸びしろ"です。Duckworthのグリット研究やBanduraの自己効力感理論が示すように、これらの特性は環境と経験によって後天的に伸ばすことができます。特に、良い上司やメンターとの出会い、そして小さな成功体験の積み重ねが鍵になります。',
+      '適切なオンボーディング（最初の90日間の伴走）とメンタリング体制があれば、十分に成果を出せる人材です。逆に言えば、"放置して自走させる"マネジメントとは相性が悪い可能性があります。',
+      'おすすめは、最初の3ヶ月間は週1回の1on1でフィードバックをもらい、小さな成功体験を意図的に積み上げること。そこを超えれば、Green人材と遜色ない活躍が期待できます。',
+    ]
+  }
+  return [
+    '現時点では、高ストレス環境との相性にいくつかの課題が見られます。ただし、これはあなたの能力や価値を否定するものではまったくありません。',
+    '心理学の自己決定理論（SDT）によれば、人は"自律性""有能感""関係性"の3つが満たされる環境で最もパフォーマンスを発揮します。あなたのスコアパターンは、今の段階ではこれら3つが十分に満たされる環境を選ぶことが重要であることを示しています。',
+    '具体的には、心理的安全性が高いチーム、明確な役割定義がある環境、建設的なフィードバックが日常的にもらえる組織がフィットします。いきなり飛び込み営業やスタートアップの最前線に立つよりも、まずは支えのある環境で自信と経験を積むステップが有効です。',
+    '重要なのは、このスコアは"今の状態"であり、固定的なものではないということ。セリグマンの研究でも、帰属スタイルは認知行動的なアプローチで改善できることが実証されています。自分に合った環境で経験を積むことで、スコアは確実に変化していきます。',
+  ]
+}
+
+// ─── Personality types (16 types, 4 paragraphs each) ─────────────────────────
+
+const PERSONALITY_TYPES: Record<string, { name: string; paragraphs: string[] }> = {
   HHHH: {
     name: '突破者（ブレイクスルー）型',
-    description:
+    paragraphs: [
       '逆境を一時的と捉え、感情に流されず、粘り強く目標を追い続ける。最も高ストレスな環境に適性がある"鉄人"タイプ。',
+      '仕事では、周囲が諦めた後も最後まで粘り、結果を出し切る力があります。営業であれば断られ続けても数字を積み上げ、スタートアップであれば資金が尽きかけても次の一手を打てる。チームの精神的支柱になれる存在です。',
+      'ただし、自分の基準を他者にも求めてしまうことがあります。"なぜ皆もっと頑張れないのか"というフラストレーションを感じやすく、マネジメントでは共感力の意識的な発揮が課題になります。',
+      '最も輝く環境：成果主義のベンチャー、新規開拓営業、困難なプロジェクトのリーダー。裁量権が大きく、自分で意思決定できるポジション。',
+    ],
   },
   HHHL: {
     name: '静かな継続者型',
-    description:
+    paragraphs: [
       '目立たないが、黙々とやり続ける安定感がある。競争より自分のペースで確実に積み上げるタイプ。',
+      '仕事では、派手さはないが確実に成果を積み上げる"縁の下の力持ち"。長期プロジェクトや、丁寧さが求められる業務で真価を発揮します。',
+      '注意点として、自分から手を挙げることが少ないため、周囲から過小評価されがちです。成果を言語化して伝える力を意識的に鍛えると、正当な評価を得やすくなります。',
+      '最も輝く環境：長期的な関係構築が重要なルート営業、カスタマーサクセス、品質管理。安定した環境で専門性を深められるポジション。',
+    ],
   },
   HHLH: {
     name: '情熱戦士型',
-    description:
+    paragraphs: [
       '目標への情熱が強く粘り強いが、批判や拒絶に敏感。仲間の支えがあると爆発的に伸びるタイプ。',
+      '仕事では、"これを成し遂げたい"という強い想いが原動力。目標が明確なときの推進力は圧倒的で、チームメンバーを巻き込む熱量があります。営業でも"この商品で顧客の課題を解決したい"という使命感が成果につながります。',
+      '一方で、否定的なフィードバックや人間関係のトラブルで大きく消耗します。上司からの何気ない一言で数日間パフォーマンスが落ちることも。感情の波が成果の波に直結しやすいのが弱点です。',
+      '最も輝く環境：ビジョンに共感できるチーム、心理的安全性のある組織、こまめな承認とフィードバックがある環境。"何のためにやるのか"が明確な仕事。',
+    ],
   },
   HHLL: {
     name: '堅実マイペース型',
-    description:
+    paragraphs: [
       '自分のやるべきことを淡々とこなす。プレッシャーの少ない環境で持続的に成果を出す。',
+      '仕事では、与えられた役割を確実に遂行する信頼性の高さが強みです。締め切りを守り、品質を維持し、チームの安定に貢献します。',
+      '一方で、急な環境変化や高プレッシャーの状況ではパフォーマンスが落ちやすい傾向があります。変化の激しいスタートアップよりも、プロセスが確立された環境が向いています。',
+      '最も輝く環境：明確な業務フローがある組織、バックオフィス業務、プロセス改善。安定した基盤の上でコツコツと成長できるポジション。',
+    ],
   },
   HLHH: {
     name: '瞬発アタッカー型',
-    description:
+    paragraphs: [
       '立ち直りが早く打たれ強いが、飽きやすい。短期集中型のプロジェクトで真価を発揮する。',
+      '仕事では、新しいプロジェクトの立ち上げフェーズで爆発的な推進力を見せます。失敗しても翌日にはケロッとしているメンタルの強さがあります。',
+      'ただし、ルーティン化すると急速にモチベーションが低下します。"同じことの繰り返し"が最大の敵。常に新しいチャレンジを与え続ける必要があります。',
+      '最も輝く環境：新規事業立ち上げ、イベント企画、短期集中キャンペーン。3ヶ月単位でプロジェクトが変わるような動きの多いポジション。',
+    ],
   },
   HLHL: {
     name: '楽観サバイバー型',
-    description:
+    paragraphs: [
       'ストレスに強くポジティブだが、目標への執着は薄い。柔軟な環境で持ち味が活きる。',
+      '仕事では、チームの雰囲気を明るくする存在。ストレスフルな状況でも周囲を和ませ、チームの精神的健康に貢献します。',
+      '一方で、目標への執着が弱いため成果にムラが出やすいです。外的な動機づけ（インセンティブ、チーム目標）があると安定します。',
+      '最も輝く環境：チームワーク重視の組織、接客・ホスピタリティ、コミュニティ運営。人間関係の良さがパフォーマンスに直結するポジション。',
+    ],
   },
   HLLH: {
     name: '野心スプリンター型',
-    description:
+    paragraphs: [
       '高い目標に向かう意欲はあるが、壁にぶつかると感情が揺れやすい。メンターの存在が鍵。',
+      '仕事では、"上に行きたい"という強い意志が行動量を生みます。ただし、挫折時のダメージが大きく、立ち直りに時間がかかることがあります。',
+      'メンターや上司からの定期的な精神的サポートがあると、持ち前の野心が安定的に成果につながります。放置されると一気に崩れるリスクも。',
+      '最も輝く環境：メンター制度が充実した組織、段階的に難易度が上がる成長パス。定期的な1on1とフィードバックがある環境。',
+    ],
   },
   HLLL: {
     name: '自由探索型',
-    description:
+    paragraphs: [
       '楽観的で好奇心旺盛だが、一つに絞ることが苦手。多様な経験を積む段階で力を発揮する。',
+      '仕事では、幅広い興味関心が新しいアイデアや視点を生みます。"何でもやってみたい"というエネルギーがチームに刺激を与えます。',
+      'ただし、一つのことに深くコミットすることが苦手で、浅く広くなりがちです。今は"探索期"と捉え、多様な経験を積むことを優先する方が長期的には有利です。',
+      '最も輝く環境：ジョブローテーションがある組織、マルチタスク型の業務、企画やマーケティング。好奇心を活かせる多様性のあるポジション。',
+    ],
   },
   LHHH: {
     name: '隠れエース型',
-    description:
+    paragraphs: [
       '実行力は高いが、逆境の捉え方にやや課題あり。成功体験を積めば急成長する可能性大。',
+      '仕事では、やると決めたら確実に実行する力があります。ただし、失敗を必要以上に深刻に捉えてしまう傾向があり、自信を失いやすいです。',
+      '上司やメンターからの"大丈夫、方向性は合っている"という承認が、このタイプの最大のブースターになります。一度自信をつければ、突破者型に匹敵する活躍をする可能性があります。',
+      '最も輝く環境：成功体験を計画的に積める環境、こまめなポジティブフィードバック。最初の3ヶ月で"勝ち癖"をつけられるオンボーディング。',
+    ],
   },
   LHHL: {
     name: '黙々職人型',
-    description:
+    paragraphs: [
       '与えられた仕事は確実にこなすが、自発的な目標設定が弱い。明確な役割定義がある環境向き。',
+      '仕事では、指示が明確であれば非常に高い精度で業務を遂行します。品質管理やオペレーション業務で高い信頼を得るタイプです。',
+      '自分から目標を立てることは苦手で、"何をすればいいかが分からない"状態に弱いです。マネージャーが明確なKPIを設定すると安定的に成果を出します。',
+      '最も輝く環境：役割と期待値が明確なポジション、マニュアルが整備された環境。定型業務の効率化や品質向上を担う役割。',
+    ],
   },
   LHLH: {
     name: '繊細エンジン型',
-    description:
+    paragraphs: [
       'やる気と粘り強さはあるが、メンタルの浮き沈みが大きい。心理的安全性のあるチームで開花する。',
+      '仕事では、調子が良いときの推進力は目を見張るものがあります。感受性の高さは顧客の課題を深く理解する力にもつながっています。',
+      'ただし、人間関係のストレスや否定的フィードバックで急激にパフォーマンスが低下することがあります。チーム内の人間関係が良好かどうかが、このタイプの成果を大きく左右します。',
+      '最も輝く環境：チームの人間関係が良好な組織、共感的なリーダーの下。感受性を強みとして活かせる顧客対応やカウンセリング的な業務。',
+    ],
   },
   LHLL: {
     name: '慎重ストイック型',
-    description:
+    paragraphs: [
       '真面目で努力家だが、悲観的になりやすい。安定した環境で地道に成長するタイプ。',
+      '仕事では、責任感が強く手を抜きません。任された業務は必ずやり遂げるという信頼感があります。',
+      '一方で、"完璧でなければ"というプレッシャーを自分にかけすぎる傾向があり、燃え尽きのリスクがあります。適度に力を抜く許可を自分に与えることが大切です。',
+      '最も輝く環境：段階的に難易度が上がる業務設計、過度な競争がない環境。真面目さが正当に評価される文化の組織。',
+    ],
   },
   LLHH: {
     name: '勝負師型（ムラあり）',
-    description:
+    paragraphs: [
       '打たれ強く勝ちにこだわるが、継続力に課題。短期の競争環境で一気に結果を出すタイプ。',
+      '仕事では、コンテストやキャンペーンなど"勝負の場"で爆発力を発揮します。競争相手がいることで最大限のパフォーマンスを出します。',
+      'ただし、日常の地道な積み上げは苦手で、"本番"以外のモチベーション維持が課題です。常にゲーム性のある環境設計が必要です。',
+      '最も輝く環境：営業コンテスト、短期キャンペーン、ランキング可視化。勝ち負けが明確で、短期サイクルの成果が求められるポジション。',
+    ],
   },
   LLHL: {
     name: 'マイペース鈍感型',
-    description:
+    paragraphs: [
       'ストレスには強いが、目標や継続への意欲が低い。本人の"やりたい"が見つかれば化ける。',
+      '仕事では、プレッシャーに強くマイペースを崩さない安定感があります。ただし、外から見ると"やる気がない"と誤解されることも。',
+      'このタイプの最大の課題は"動機の発見"。やりたいことが見つかったとき、打たれ強さが最大の武器になります。今は焦らず、様々な経験を通じて自分の情熱を探す段階です。',
+      '最も輝く環境：様々な業務を経験できるジェネラリストポジション、自分のペースで働ける環境。内発的動機が見つかるまでの"修行期間"として多様な経験を積める場所。',
+    ],
   },
   LLLH: {
     name: 'ガラスの野心家型',
-    description:
+    paragraphs: [
       '高い目標は持つが、逆境に弱く継続も苦手。手厚いサポートと小さな成功体験の積み重ねが必要。',
+      '仕事では、"大きなことを成し遂げたい"という意欲は本物です。ただし、その意欲に現在のメンタル耐性が追いついていない状態。',
+      '最も重要なのは、いきなり大きな挑戦をさせるのではなく、達成可能な小さな目標を段階的にクリアさせること。成功体験が自己効力感を育て、それがメンタル耐性の向上につながります。',
+      '最も輝く環境：段階的な目標設定、手厚いメンタリング、週次の1on1。"守られながら挑戦できる"環境が理想。',
+    ],
   },
   LLLL: {
     name: '探索準備型',
-    description:
+    paragraphs: [
       'まだ自分の方向性を模索中。高ストレス環境よりも、自己理解を深める経験が今は大切。',
+      '仕事では、今は"何が向いているか"を見つける段階です。これは弱みではなく、キャリアの自然なプロセスです。',
+      '焦って高ストレス環境に飛び込むよりも、インターンや短期プロジェクトで多様な経験を積み、自分の反応パターンを知ることが先決です。自己理解が深まれば、次のステップが自然と見えてきます。',
+      '最も輝く環境：複数のプロジェクトを経験できるインターン、メンターがつく研修プログラム。自己理解を促進するフィードバックが豊富な環境。',
+    ],
   },
 }
 
@@ -144,22 +232,22 @@ export function getPersonalityType(
   A: number,
   B: number,
   C: number
-): { name: string; description: string } {
+): { name: string; paragraphs: string[] } {
   const key =
     (OS >= 60 ? 'H' : 'L') +
     (A >= 60 ? 'H' : 'L') +
     (B >= 60 ? 'H' : 'L') +
     (C >= 60 ? 'H' : 'L')
-  return PERSONALITY_TYPES[key] ?? { name: '探索準備型', description: 'まだ自分の方向性を模索中。' }
+  return PERSONALITY_TYPES[key] ?? PERSONALITY_TYPES['LLLL']
 }
 
-// --- SJT behavior tendency analysis ---
+// ─── SJT behavior tendency ────────────────────────────────────────────────────
 
 const OPTION_TAGS = [
-  { tags: ['自力改善', '行動変容'], phrase: '自ら原因を分析し行動を変えていこうとする' },         // A (idx 0)
-  { tags: ['フィードバック志向', '関係構築'], phrase: '他者のフィードバックを活かし関係を築く' },  // B (idx 1)
-  { tags: ['回避傾向', '自己防衛'], phrase: '困難な状況から距離を置いて自分を守ろうとする' },      // C (idx 2)
-  { tags: ['合理化', '俯瞰思考'], phrase: '状況を俯瞰して合理的に捉え直す' },                    // D (idx 3)
+  { tags: ['自力改善', '行動変容'], phrase: '自ら原因を分析し行動を変えていこうとする' },
+  { tags: ['フィードバック志向', '関係構築'], phrase: '他者のフィードバックを活かし関係を築く' },
+  { tags: ['回避傾向', '自己防衛'], phrase: '困難な状況から距離を置いて自分を守ろうとする' },
+  { tags: ['合理化', '俯瞰思考'], phrase: '状況を俯瞰して合理的に捉え直す' },
 ]
 
 export function getSJTBehaviorTendency(scenarioAnswers: ScenarioAnswer[]): {
@@ -169,25 +257,19 @@ export function getSJTBehaviorTendency(scenarioAnswers: ScenarioAnswer[]): {
 } {
   const scores = [0, 0, 0, 0]
   for (const ans of scenarioAnswers) {
-    for (let i = 0; i < 4; i++) {
-      scores[i] += ans.sjtRatings[i] ?? 0
-    }
+    for (let i = 0; i < 4; i++) scores[i] += ans.sjtRatings[i] ?? 0
   }
   const ranked = [0, 1, 2, 3].sort((a, b) => scores[b] - scores[a])
   const top1 = ranked[0]
   const top2 = ranked[1]
-  const tag1 = OPTION_TAGS[top1].tags[0]
-  const tag2 = OPTION_TAGS[top2].tags[0]
-  const phrase1 = OPTION_TAGS[top1].phrase
-  const phrase2 = OPTION_TAGS[top2].phrase
   return {
-    tag1,
-    tag2,
-    description: `困難な場面で${phrase1}傾向と、${phrase2}傾向が組み合わさっています。`,
+    tag1: OPTION_TAGS[top1].tags[0],
+    tag2: OPTION_TAGS[top2].tags[0],
+    description: `困難な場面で${OPTION_TAGS[top1].phrase}傾向と、${OPTION_TAGS[top2].phrase}傾向が組み合わさっています。`,
   }
 }
 
-// --- Extended score descriptions (returns array of paragraphs) ---
+// ─── Main axis descriptions (string[], one item per paragraph) ───────────────
 
 export function getOSDescription(score: number): string[] {
   if (score >= 80) {
@@ -299,8 +381,95 @@ export function getAxisCDescription(score: number): string[] {
   ]
 }
 
-export function getZoneComment(zone: Zone): string {
-  if (zone === 'Green') return '高ストレス環境でも自走し、成果を出し続けられる可能性が高いです。営業・スタートアップなどの即戦力候補です。'
-  if (zone === 'Yellow') return '基本的なポテンシャルはありますが、一部に課題があります。適切なオンボーディングとメンタリングで十分に活躍できます。'
-  return '現時点では高ストレス環境との相性に課題がある可能性があります。本人の志向と環境のマッチングを慎重に検討してください。'
+// ─── Deep Analysis ────────────────────────────────────────────────────────────
+
+export interface DeepAnalysis {
+  learningAgility: number
+  selfEfficacy: number
+  autonomousMotivation: number
+  crisisResponse: number
+  teamContribution: number
+  antifragility: number
+}
+
+function norm1to5(val: number): number {
+  return Math.round(Math.max(0, Math.min(100, (val - 1) / 4 * 100)))
+}
+
+export function calculateDeepAnalysis(
+  scenarioAnswers: ScenarioAnswer[],
+  layer2Answers: Layer2Answers
+): DeepAnalysis {
+  const { axisA, axisB, axisC } = layer2Answers
+
+  // SJT option averages (1-5). Neutral fallback (3) when no answers.
+  const n = scenarioAnswers.length
+  const sjtAvg = [0, 1, 2, 3].map((optIdx) =>
+    n === 0
+      ? 3
+      : scenarioAnswers.reduce((s, a) => s + (a.sjtRatings[optIdx] ?? 0), 0) / n
+  )
+  // [0]=A(自力改善), [1]=B(フィードバック/関係), [2]=C(回避), [3]=D(合理化)
+
+  // (1) Learning Agility: SJT-B avg + B6(idx5) / 2
+  const learningAgility = norm1to5((sjtAvg[1] + axisB[5]) / 2)
+
+  // (2) Self-Efficacy: A4(idx3) + A9(idx8) + B5(idx4) / 3
+  const selfEfficacy = norm1to5((axisA[3] + axisA[8] + axisB[4]) / 3)
+
+  // (3) Autonomous Motivation: C4(idx3) + A1(idx0) + A10(idx9) / 3
+  const autonomousMotivation = norm1to5((axisC[3] + axisA[0] + axisA[9]) / 3)
+
+  // (4) Crisis Response: SJT-A avg + B3(idx2) + B5(idx4) / 3
+  const crisisResponse = norm1to5((sjtAvg[0] + axisB[2] + axisB[4]) / 3)
+
+  // (5) Team Contribution: SJT-B avg + B6(idx5) + B10(idx9) / 3
+  const teamContribution = norm1to5((sjtAvg[1] + axisB[5] + axisB[9]) / 3)
+
+  // (6) Anti-Fragility: A7(idx6) + (6-B7(idx6)) + (6-SJT-C avg) / 3
+  const antifragility = norm1to5((axisA[6] + (6 - axisB[6]) + (6 - sjtAvg[2])) / 3)
+
+  return { learningAgility, selfEfficacy, autonomousMotivation, crisisResponse, teamContribution, antifragility }
+}
+
+export function getLearningAgilityDescription(score: number): string {
+  if (score >= 80) return '他者からのフィードバックを積極的に求め、それを即座に行動に反映できる力があります。成長スピードが速く、短期間で戦力化する可能性が高いです。'
+  if (score >= 60) return 'フィードバックを受け入れる素直さがあります。自分から聞きに行く積極性を少し高めると、さらに成長が加速します。'
+  if (score >= 40) return 'フィードバックへの受容度は平均的。批判を個人攻撃と感じやすい面があるかもしれません。"改善のヒント"として捉える訓練が有効です。'
+  return '他者からのフィードバックを受け入れることに抵抗感がある傾向。まずは信頼できる一人からのアドバイスを受ける小さな習慣から始めてみてください。'
+}
+
+export function getSelfEfficacyDescription(score: number): string {
+  if (score >= 80) return '"自分ならできる"という確信が強く、困難な場面でも行動を止めません。Banduraの研究では、自己効力感は学歴やIQよりも成果を予測する強力な指標です。'
+  if (score >= 60) return '自己効力感は十分な水準。経験を積むごとにさらに強化されていきます。新しい挑戦の際は、過去の成功体験を思い出すことで自信を維持しやすくなります。'
+  if (score >= 40) return '自分の能力に対してやや慎重な見方をする傾向。まだ成功体験が少ない可能性があります。小さな"できた"を意識的に記録していくと自己効力感が育ちます。'
+  return '"自分にはできないかも"という気持ちが行動のブレーキになりやすい傾向。マスタリー体験（段階的な成功体験）が最も効果的な改善策です。'
+}
+
+export function getAutonomousMotivationDescription(score: number): string {
+  if (score >= 80) return '"やらされている"ではなく"やりたいからやる"という内発的な動機が強い。SDT理論では、この特性を持つ人は外的報酬がなくても高いパフォーマンスを維持できます。'
+  if (score >= 60) return '内発的な動機は十分にあります。"なぜこれをやるのか"が明確なときにエンジンがかかるタイプ。目的の言語化を習慣にすると安定します。'
+  if (score >= 40) return '動機が外的要因（給料、評価、指示）に依存する傾向。これ自体は悪くないですが、外的報酬がなくなったときにモチベーションが急落するリスクがあります。'
+  return '"なぜやるのか"が見えていない状態。まずは自分の価値観の棚卸しから始めてください。やりたいことが明確になれば、行動量は自然と増えていきます。'
+}
+
+export function getCrisisResponseDescription(score: number): string {
+  if (score >= 80) return '予期せぬトラブルが起きても冷静に状況を整理し、即座に行動に移せるタイプ。チームの"消防士"的存在になれます。'
+  if (score >= 60) return '危機的状況でもある程度冷静さを保てます。少し時間をもらえれば適切な判断ができるタイプ。'
+  if (score >= 40) return '予期せぬ事態で一時的にフリーズしやすい傾向。事前にシミュレーションしておくと、実際の場面での対応力が上がります。'
+  return '突発的なトラブルで大きく動揺しやすい傾向。まずはルーティン業務で安定した成果を出すことに集中し、徐々に変化のある業務に慣れていく段階的アプローチが有効です。'
+}
+
+export function getTeamContributionDescription(score: number): string {
+  if (score >= 80) return 'チームの調和を保ちながら、メンバーの成長にも貢献できる"接着剤"タイプ。リーダーシップにも適性があります。'
+  if (score >= 60) return 'チーム内での協調性が高く、信頼を得やすいタイプ。もう少し自分の意見を積極的に発信すると、影響力がさらに増します。'
+  if (score >= 40) return '個人プレーの方が得意で、チームワークにやや苦手意識がある傾向。少人数チームや明確な役割分担がある環境が合っています。'
+  return 'チームでの活動よりも、一人で集中する方がパフォーマンスが出やすいタイプ。無理にチームプレーを求めるよりも、個人の裁量が大きい役割が向いています。'
+}
+
+export function getAntifragilityDescription(score: number): string {
+  if (score >= 80) return '失敗しても翌日にはリセットして再挑戦できる"不死鳥"タイプ。営業の世界で最も求められる特性の一つです。'
+  if (score >= 60) return '失敗からの回復力は十分。少し時間はかかっても、自力で立ち直れるレベルです。'
+  if (score >= 40) return '失敗や否定的経験を引きずりやすい傾向。意識的なリセット習慣（運動、趣味、人と話す）を持つと回復が早くなります。'
+  return '挫折経験からの回復に時間がかかりやすいタイプ。一人で抱え込まず、信頼できる人に話すことが最も効果的なリカバリー方法です。'
 }

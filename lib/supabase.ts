@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { ScenarioAnswer, Layer2Answers } from '@/types'
+import { DeepAnalysis } from '@/lib/scoring'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -17,6 +18,7 @@ export async function saveDiagnosisResult(data: {
   axisC: number
   zone: string
   personalityType: string
+  deepAnalysis?: DeepAnalysis
 }) {
   const { error } = await supabase.from('diagnosis_results').insert([
     {
@@ -30,6 +32,7 @@ export async function saveDiagnosisResult(data: {
       axis_c_score: data.axisC,
       zone: data.zone,
       personality_type: data.personalityType,
+      deep_analysis: data.deepAnalysis ?? null,
     },
   ])
 
