@@ -46,10 +46,18 @@ function scoreBarColor(score: number): string {
 
 function ColorProgressBar({ score }: { score: number }) {
   return (
-    <div className="mt-2 mb-1 h-3 rounded-full bg-gray-700 overflow-hidden">
+    <div className="mt-2 mb-1 relative flex items-center" style={{ height: '20px' }}>
+      {/* 4-color range bar */}
+      <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-3 rounded-full overflow-hidden flex">
+        <div className="bg-red-500/80" style={{ width: '40%' }} />
+        <div className="bg-yellow-500/80" style={{ width: '20%' }} />
+        <div className="bg-blue-500/80" style={{ width: '20%' }} />
+        <div className="bg-green-500/80" style={{ width: '20%' }} />
+      </div>
+      {/* Position marker */}
       <div
-        className={`h-full rounded-full transition-all duration-500 ${scoreBarColor(score)}`}
-        style={{ width: `${score}%` }}
+        className="absolute w-0.5 h-5 bg-white rounded-full shadow-md"
+        style={{ left: `${score}%`, transform: 'translateX(-50%)' }}
       />
     </div>
   )
