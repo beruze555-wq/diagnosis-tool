@@ -165,25 +165,26 @@ export default function DiagnosisPage() {
       return
     }
 
+    const savedScenarioAnswers = sessionStorage.getItem('scenarioAnswers')
+    const savedLayer2Answers = sessionStorage.getItem('layer2Answers')
     const savedPhase = sessionStorage.getItem('diagnosisPhase')
 
-    if (savedPhase === 'layer2') {
-      // Restore PART2 progress
-      const savedScenarioAnswers = sessionStorage.getItem('scenarioAnswers')
-      const savedLayer2Answers = sessionStorage.getItem('layer2Answers')
-      if (savedScenarioAnswers && savedLayer2Answers) {
-        const restoredL2 = JSON.parse(savedLayer2Answers) as Layer2Answers
-        const firstPage = findFirstIncompletePage(randomizedLayer2, restoredL2)
-        setScenarioAnswers(JSON.parse(savedScenarioAnswers))
-        setLayer2Answers(restoredL2)
-        setLayer2Page(firstPage)
+    if (savedScenarioAnswers && savedLayer2Answers) {
+      // PART2 途中 or PART2開始直後 — answers by axis/idx so order-independent
+      const restoredL2 = JSON.parse(savedLayer2Answers) as Layer2Answers
+      const firstPage = findFirstIncompletePage(randomizedLayer2, restoredL2)
+      setScenarioAnswers(JSON.parse(savedScenarioAnswers))
+      setLayer2Answers(restoredL2)
+      setLayer2Page(firstPage)
+      setPhase('layer2')
+    } else if (savedScenarioAnswers) {
+      const restored: ScenarioAnswer[] = JSON.parse(savedScenarioAnswers)
+      if (restored.length === scenarios.length && savedPhase !== 'layer1') {
+        // PART1完了済み・PART2未着手（diagnosisPhaseがなくても対応）
+        setScenarioAnswers(restored)
         setPhase('layer2')
-      }
-    } else if (savedPhase === 'layer1') {
-      // Restore PART1 mid-progress: resume at the next unanswered scenario
-      const savedScenarioAnswers = sessionStorage.getItem('scenarioAnswers')
-      if (savedScenarioAnswers) {
-        const restored: ScenarioAnswer[] = JSON.parse(savedScenarioAnswers)
+      } else if (restored.length > 0 && restored.length < scenarios.length) {
+        // PART1 途中
         setScenarioAnswers(restored)
         setScenarioIndex(restored.length)
       }
