@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function StartPage() {
@@ -8,6 +8,11 @@ export default function StartPage() {
   const [age, setAge] = useState('')
   const [affiliation, setAffiliation] = useState('')
   const [errors, setErrors] = useState({ age: '', affiliation: '' })
+  const [isDev, setIsDev] = useState(false)
+
+  useEffect(() => {
+    setIsDev(new URLSearchParams(window.location.search).get('dev') === 'true')
+  }, [])
 
   const handleStart = () => {
     const newErrors = { age: '', affiliation: '' }
@@ -23,6 +28,17 @@ export default function StartPage() {
 
     sessionStorage.setItem('userInfo', JSON.stringify({ age: ageNum, affiliation: affiliation.trim() }))
     router.push('/diagnosis')
+  }
+
+  const handleDevSkip = () => {
+    sessionStorage.setItem('userInfo', JSON.stringify({ age: 0, affiliation: 'dev' }))
+    sessionStorage.setItem('scenarioAnswers', JSON.stringify([]))
+    sessionStorage.setItem('devMode', 'true')
+    sessionStorage.setItem(
+      'devScores',
+      JSON.stringify({ OS: 72, A: 68, B: 55, C: 81, zone: 'Yellow' })
+    )
+    router.push('/result')
   }
 
   return (
@@ -78,6 +94,15 @@ export default function StartPage() {
           >
             診断を始める →
           </button>
+
+          {isDev && (
+            <button
+              onClick={handleDevSkip}
+              className="w-full bg-orange-600/20 hover:bg-orange-600/30 border border-orange-600/50 text-orange-400 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
+            >
+              🛠 開発モード：結果画面にスキップ
+            </button>
+          )}
         </div>
 
         <div className="mt-6 bg-gray-800/50 rounded-xl p-4">

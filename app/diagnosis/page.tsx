@@ -282,10 +282,7 @@ export default function DiagnosisPage() {
                   const opt = scenario.sjtOptions[originalIdx]
                   return (
                     <div key={opt.label} className="space-y-2">
-                      <p className="text-sm text-gray-300">
-                        <span className="font-bold text-blue-400 mr-1.5">{opt.label}.</span>
-                        {opt.text}
-                      </p>
+                      <p className="text-sm text-gray-300">{opt.text}</p>
                       <LikertRow5
                         label={opt.label}
                         value={currentAnswer.sjtRatings[originalIdx]}

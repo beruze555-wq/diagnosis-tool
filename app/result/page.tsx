@@ -21,6 +21,8 @@ import {
 } from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
 import { ScenarioAnswer, Layer2Answers, Scores, Zone } from '@/types'
+import { scenarios } from '@/lib/scenarios'
+import { layer2Sections } from '@/lib/layer2Questions'
 
 const ZONE_COLOR: Record<Zone, string> = {
   Green: '#22c55e',
@@ -55,12 +57,6 @@ function ColorProgressBar({ score }: { score: number }) {
           style={{ left: `calc(${score}% - 2px)` }}
         />
       </div>
-      <div className="flex text-xs mt-1" style={{ color: 'transparent' }}>
-        <span className="text-red-400" style={{ width: '39%', textAlign: 'center' }}>0–39</span>
-        <span className="text-yellow-400" style={{ width: '20%', textAlign: 'center' }}>40–59</span>
-        <span className="text-blue-400" style={{ width: '20%', textAlign: 'center' }}>60–79</span>
-        <span className="text-green-400" style={{ width: '21%', textAlign: 'center' }}>80–100</span>
-      </div>
       <div className="flex text-xs mt-0.5">
         <span className="text-red-400" style={{ width: '39%', textAlign: 'center' }}>0–39</span>
         <span className="text-yellow-400" style={{ width: '20%', textAlign: 'center' }}>40–59</span>
@@ -94,12 +90,148 @@ function ScoreSection({
       {!skipped && <ColorProgressBar score={score} />}
       {!skipped
         ? paragraphs.map((p, i) => (
-            <p key={i} className="text-sm text-gray-300 leading-relaxed">
-              {p}
-            </p>
+            <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
           ))
         : <p className="text-sm text-gray-500">未評価（パート1の結果によりスキップ）</p>
       }
+    </div>
+  )
+}
+
+function AnswerViewer({
+  scenarioAnswers,
+  layer2Answers,
+  scores,
+}: {
+  scenarioAnswers: ScenarioAnswer[]
+  layer2Answers?: Layer2Answers
+  scores: Scores
+}) {
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const allData = {
+    scores: {
+      OS: scores.OS,
+      粘り強さ: scores.A,
+      鈍感力: scores.B,
+      達成動機: scores.C,
+      zone: scores.zone,
+    },
+    layer1: scenarioAnswers.map((ans, i) => ({
+      scenarioId: i + 1,
+      title: scenarios[i]?.title ?? `シナリオ${i + 1}`,
+      sjtRatings: scenarios[i]?.sjtOptions.map((opt, j) => ({
+        label: opt.label,
+        text: opt.text,
+        rating: ans.sjtRatings[j],
+      })) ?? ans.sjtRatings,
+      attributions: ans.attributions,
+    })),
+    layer2: layer2Sections.flatMap((s) =>
+      s.questions.map((q, idx) => ({
+        id: q.id,
+        axis: s.axis,
+        text: q.text,
+        value: layer2Answers
+          ? (layer2Answers[`axis${s.axis}` as keyof Layer2Answers][idx] ?? 0)
+          : 0,
+      }))
+    ),
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(JSON.stringify(allData, null, 2))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="border border-gray-700 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full px-5 py-3 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 transition-colors text-left flex justify-between items-center"
+      >
+        <span>回答データを表示</span>
+        <span className="text-xs">{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-gray-700 p-5 space-y-5">
+          {/* Scores summary */}
+          <div>
+            <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">スコア</h3>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {[
+                { label: 'OS（帰属）', val: scores.OS },
+                { label: '粘り強さ', val: scores.A },
+                { label: '鈍感力', val: scores.B },
+                { label: '達成動機', val: scores.C },
+              ].map(({ label, val }) => (
+                <div key={label} className="bg-gray-900 rounded-lg p-2.5 flex justify-between">
+                  <span className="text-gray-500">{label}</span>
+                  <span className="text-white font-bold">{val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Layer 1 */}
+          {scenarioAnswers.length > 0 ? (
+            <div>
+              <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Part 1 回答</h3>
+              <div className="space-y-2">
+                {scenarioAnswers.map((ans, i) => (
+                  <div key={i} className="bg-gray-900 rounded-lg p-3 text-xs space-y-1">
+                    <p className="font-semibold text-gray-200">
+                      シナリオ{i + 1}：{scenarios[i]?.title}
+                    </p>
+                    <p className="text-gray-500">
+                      SJT (A/B/C/D)：{ans.sjtRatings.join(' / ')}
+                    </p>
+                    <p className="text-gray-500">
+                      帰属評定 (Q1/Q2/Q3)：{ans.attributions.join(' / ')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-600">Layer1データなし（開発モード）</p>
+          )}
+
+          {/* Layer 2 */}
+          {layer2Answers ? (
+            <div>
+              <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Part 2 回答</h3>
+              <div className="space-y-1">
+                {layer2Sections.flatMap((s) =>
+                  s.questions.map((q, idx) => {
+                    const val = layer2Answers[`axis${s.axis}` as keyof Layer2Answers][idx]
+                    return (
+                      <div key={q.id} className="flex items-start gap-2 text-xs bg-gray-900 rounded p-2">
+                        <span className="text-blue-400 font-mono w-6 shrink-0">{q.id}</span>
+                        <span className="text-gray-400 flex-1 leading-relaxed">{q.text}</span>
+                        <span className="text-white font-bold shrink-0">{val}</span>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-600">Layer2データなし（スキップまたは開発モード）</p>
+          )}
+
+          {/* Copy JSON */}
+          <button
+            onClick={handleCopy}
+            className="w-full py-2.5 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-700 transition-colors text-sm"
+          >
+            {copied ? '✓ コピーしました' : 'JSONをコピー'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -112,6 +244,10 @@ export default function ResultPage() {
   const [layer2Skipped, setLayer2Skipped] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState(false)
+  const [rawAnswers, setRawAnswers] = useState<{
+    scenarioAnswers: ScenarioAnswer[]
+    layer2Answers?: Layer2Answers
+  } | null>(null)
 
   useEffect(() => {
     const userInfoRaw = sessionStorage.getItem('userInfo')
@@ -122,6 +258,26 @@ export default function ResultPage() {
       return
     }
 
+    // Dev mode: use hardcoded scores, skip Supabase
+    const devMode = sessionStorage.getItem('devMode') === 'true'
+    const devScoresRaw = sessionStorage.getItem('devScores')
+    if (devMode && devScoresRaw) {
+      const devScores = JSON.parse(devScoresRaw) as Scores
+      setScores(devScores)
+      setLayer2Skipped(false)
+      setPersonalityType(
+        getPersonalityType(devScores.OS, devScores.A, devScores.B, devScores.C)
+      )
+      setBehaviorTendency({
+        tag1: '自力改善',
+        tag2: 'フィードバック志向',
+        description: '（開発モード：ダミーデータ）',
+      })
+      setRawAnswers({ scenarioAnswers: [], layer2Answers: undefined })
+      setSaved(true) // skip save indicator
+      return
+    }
+
     const userInfo = JSON.parse(userInfoRaw)
     const scenarioAnswers: ScenarioAnswer[] = JSON.parse(scenarioAnswersRaw)
     const skipped = sessionStorage.getItem('layer2Skipped') === 'true'
@@ -129,14 +285,12 @@ export default function ResultPage() {
     const layer2Answers: Layer2Answers | undefined = layer2Raw ? JSON.parse(layer2Raw) : undefined
 
     setLayer2Skipped(skipped)
+    setRawAnswers({ scenarioAnswers, layer2Answers })
 
     const calculated = calculateScores(scenarioAnswers, layer2Answers)
     setScores(calculated)
-
-    // SJT behavior tendency (always available)
     setBehaviorTendency(getSJTBehaviorTendency(scenarioAnswers))
 
-    // Personality type (only if layer2 was answered)
     let pType = { name: '—', description: '' }
     if (!skipped && layer2Answers) {
       pType = getPersonalityType(calculated.OS, calculated.A, calculated.B, calculated.C)
@@ -160,7 +314,7 @@ export default function ResultPage() {
       .catch(() => setSaveError(true))
   }, [router])
 
-  if (!scores || !behaviorTendency) {
+  if (!scores || !behaviorTendency || !rawAnswers) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-gray-400">結果を計算中...</div>
@@ -259,6 +413,13 @@ export default function ResultPage() {
             skipped={layer2Skipped}
           />
         </div>
+
+        {/* Answer data viewer */}
+        <AnswerViewer
+          scenarioAnswers={rawAnswers.scenarioAnswers}
+          layer2Answers={rawAnswers.layer2Answers}
+          scores={scores}
+        />
 
         {/* Save status */}
         <div className="text-center text-xs">
