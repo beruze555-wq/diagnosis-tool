@@ -84,98 +84,105 @@ export default function StartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-gray-900">
 
-        {/* Hero */}
-        <div className="text-center space-y-3">
-          <p className="text-xs text-gray-500 tracking-widest uppercase">MIRROR</p>
-          <h1 className="text-2xl font-bold text-white">メンタルタイプ診断</h1>
-          <p className="text-sm text-gray-400 leading-relaxed">
-            6つの場面を通じて、あなたのメンタルの<span className="text-white">"型"</span>と、力を発揮できる環境がわかります
+      {/* セクション1: ヒーロー */}
+      <section className="text-center pt-12 pb-4">
+        <p className="text-sm tracking-widest text-gray-500 uppercase mb-2">MIRROR</p>
+        <h1 className="text-3xl font-bold mb-3">メンタルタイプ診断</h1>
+        <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+          6つの場面を通じて、あなたのメンタルの&quot;型&quot;と、<br/>力を発揮できる環境がわかります
+        </p>
+        <p className="text-gray-600 text-xs mt-2">所要時間：約10〜15分</p>
+      </section>
+
+      {/* セクション2: この診断について */}
+      <section className="max-w-lg mx-auto px-4 pb-6">
+        <div className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-white mb-4">この診断について</h2>
+          <p className="text-sm text-gray-300 leading-relaxed mb-4">
+            この診断は、あなたが本当に力を発揮できる環境や、隠れた強みを見つけるためのものです。
           </p>
+          <p className="text-sm text-gray-300 leading-relaxed mb-4">
+            「良い回答」や「正解」はありません。感じたままに答えるほど、あなたに合った結果が出ます。
+          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-300 leading-relaxed">
+              <span className="text-white font-medium">就活中の方へ</span>　自分のメンタルの型を知ることは、面接やES作成に直結します。
+            </p>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              <span className="text-white font-medium">インターン・仕事を始める方へ</span>　「向いている環境」と「消耗する環境」を事前に知ることで、ミスマッチを防げます。
+            </p>
+          </div>
         </div>
+      </section>
 
-        {/* この診断について */}
-        <div className="bg-gray-800/40 rounded-2xl p-5 border border-gray-700/40 space-y-2.5 text-sm text-gray-400 leading-relaxed">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">この診断について</p>
-          <p>この診断は、あなたが本当に力を発揮できる環境や、隠れた強みを見つけるためのものです。</p>
-          <p>「良い回答」や「正解」はありません。感じたままに答えるほど、あなたに合った結果が出ます。</p>
-          <p><span className="text-gray-300 font-medium">就活中の方</span>　自分のメンタルの型を知ることは、面接やES作成に直結します。</p>
-          <p><span className="text-gray-300 font-medium">インターン・仕事を始める方</span>　「向いている環境」と「消耗する環境」を事前に知ることで、ミスマッチを防げます。</p>
-        </div>
+      {/* セクション3: フォームカード */}
+      <section className="max-w-lg mx-auto px-4 pb-6">
+        <div className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-6">
 
-        {/* Form card */}
-        <div className="bg-gray-800/40 rounded-2xl p-6 border border-gray-700/40 space-y-4">
-
-          {/* Trust badges */}
-          <div className="flex justify-center gap-4 text-xs text-gray-500 pb-2">
+          {/* 信頼性バッジ */}
+          <div className="flex justify-center gap-4 text-xs text-gray-500 mb-6">
             <span>📊 7つの学術理論</span>
-            <span>⏱️ 所要時間：約10〜15分</span>
+            <span>⏱️ 約10分</span>
             <span>🔬 42問</span>
           </div>
 
-          {/* Age */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">年齢</label>
-            <input
-              type="number"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && canStart && handleStart()}
-              className="w-full bg-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
-              placeholder="例：23"
-              min={15}
-              max={80}
-            />
-            {errors.age && <p className="text-red-400 text-xs mt-1">{errors.age}</p>}
+          {/* 年齢 */}
+          <label className="block text-sm text-gray-400 mb-1">年齢</label>
+          <input
+            type="number"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && canStart && handleStart()}
+            className="w-full bg-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+            placeholder="例：23"
+            min={15}
+            max={80}
+          />
+          {errors.age && <p className="text-red-400 text-xs mt-1">{errors.age}</p>}
+
+          {/* 所属 */}
+          <label className="block text-sm text-gray-400 mb-1 mt-4">所属</label>
+          <select
+            value={affiliation}
+            onChange={(e) => setAffiliation(e.target.value)}
+            className="bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white w-full focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="" disabled>選択してください</option>
+            {AFFILIATION_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+          {errors.affiliation && <p className="text-red-400 text-xs mt-1">{errors.affiliation}</p>}
+
+          {/* プライミング */}
+          <p className="text-sm text-gray-400 mt-4 mb-2">ありのままの自分で答えられそうですか？</p>
+          <div className="space-y-2">
+            {[
+              { value: 'yes', label: 'はい、素直に答えます' },
+              { value: 'try', label: 'たぶん大丈夫です' },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setHonesty(value)}
+                className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors duration-150 ${
+                  honesty === value
+                    ? 'border-blue-500 bg-blue-500/10 text-white'
+                    : 'border-gray-700 bg-gray-800/50 text-gray-300 hover:border-gray-500'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
-          {/* Affiliation */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">所属</label>
-            <select
-              value={affiliation}
-              onChange={(e) => setAffiliation(e.target.value)}
-              className="bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white w-full focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="" disabled>選択してください</option>
-              {AFFILIATION_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-            {errors.affiliation && <p className="text-red-400 text-xs mt-1">{errors.affiliation}</p>}
-          </div>
-
-          {/* Honesty priming */}
-          <div>
-            <p className="text-sm text-gray-300 mb-3">ありのままの自分で答えられそうですか？</p>
-            <div className="space-y-2">
-              {[
-                { value: 'yes', label: 'はい、素直に答えます' },
-                { value: 'try', label: 'たぶん大丈夫です' },
-              ].map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setHonesty(value)}
-                  className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors duration-150 ${
-                    honesty === value
-                      ? 'border-blue-500 bg-blue-500/10 text-white'
-                      : 'border-gray-700 bg-gray-800/50 text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Start button */}
+          {/* 診断開始ボタン */}
           <button
             onClick={handleStart}
             disabled={!canStart}
-            className={`w-full font-semibold py-4 rounded-xl transition-colors duration-200 text-lg ${
+            className={`w-full font-semibold py-4 rounded-xl transition-colors duration-200 text-lg mt-4 ${
               canStart
                 ? 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white'
                 : 'bg-blue-600 text-white opacity-50 cursor-not-allowed'
@@ -183,23 +190,24 @@ export default function StartPage() {
           >
             診断を始める →
           </button>
-
-          {isDev && (
-            <button
-              onClick={handleDevSkip}
-              className="w-full bg-orange-600/20 hover:bg-orange-600/30 border border-orange-600/50 text-orange-400 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
-            >
-              🛠 開発モード：結果画面にスキップ
-            </button>
-          )}
         </div>
+      </section>
 
-        {/* Footer */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500">結果はあなた自身のために使われます。</p>
+      {/* セクション4: フッター */}
+      <p className="text-center text-xs text-gray-600 mt-2 mb-8">結果はあなた自身のために使われます。</p>
+
+      {/* セクション5: 開発モード */}
+      {isDev && (
+        <div className="max-w-lg mx-auto px-4 pb-8">
+          <button
+            onClick={handleDevSkip}
+            className="w-full bg-orange-600/20 hover:bg-orange-600/30 border border-orange-600/50 text-orange-400 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
+          >
+            🛠 開発モード：結果画面にスキップ
+          </button>
         </div>
+      )}
 
-      </div>
     </div>
   )
 }
