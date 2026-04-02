@@ -65,39 +65,30 @@ export default function StartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg space-y-6">
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-lg space-y-8">
 
-        {/* 1. Title */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-wide text-white">MIRROR</h1>
-          <p className="text-xl text-gray-300 mt-1">メンタルタイプ診断</p>
-          <p className="text-sm text-gray-400 mt-3">
-            6つの場面を通じて、あなたのメンタルの"型"と、力を発揮できる環境がわかります
+        {/* Hero */}
+        <div className="text-center space-y-3">
+          <p className="text-xs text-gray-500 tracking-widest uppercase">MIRROR</p>
+          <h1 className="text-3xl font-bold text-white">メンタルタイプ診断</h1>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            6つの場面への反応から、あなたのメンタルの"型"——<br />
+            強みの活かし方と、力を発揮できる環境が分かります。
           </p>
-          <p className="text-xs text-gray-500 mt-1">所要時間：約10〜15分</p>
         </div>
 
-        {/* 2. About card */}
-        <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-2xl p-6 border border-gray-700/40 shadow-lg space-y-4">
-          <div className="flex items-center gap-2">
-            <span>📋</span>
-            <p className="text-lg font-semibold text-white">この診断について</p>
-          </div>
-          <p className="text-sm text-gray-300 leading-relaxed">この診断には正解も不正解もありません。直感で、ありのまま答えてください。</p>
-          <p className="text-sm text-gray-300 leading-relaxed">正直に答えるほど、あなたの「本当の強み」「思考のクセ」「合う環境」が正確に見えてきます。良く見せようとするほど、結果はぼやけます。</p>
-          <div className="bg-gray-700/30 rounded-lg p-3 border-l-2 border-blue-500">
-            <p className="text-blue-400 font-semibold text-sm">📝 就活中の方へ</p>
-            <p className="text-gray-300 text-sm mt-1">自己分析が一気に深まります。面接で「自分はこういう人間です」と語れるデータが手に入ります。</p>
-          </div>
-          <div className="bg-gray-700/30 rounded-lg p-3 border-l-2 border-green-500">
-            <p className="text-green-400 font-semibold text-sm">💼 インターン・仕事を始める方へ</p>
-            <p className="text-gray-300 text-sm mt-1">入ってから「合わなかった」を防げます。自分に合う環境・合わない環境が、始める前に分かります。</p>
-          </div>
+        {/* Trust badges */}
+        <div className="flex justify-center gap-6 text-xs text-gray-500">
+          <span>📊 7つの学術理論に基づく設計</span>
+          <span>⏱️ 約10分</span>
+          <span>🔬 36の質問 + 6つのシナリオ</span>
         </div>
 
-        {/* 3–4. Input fields */}
-        <div className="bg-gray-800 rounded-2xl p-8 space-y-6">
+        {/* Form card */}
+        <div className="bg-gray-800/40 rounded-2xl p-6 border border-gray-700/40 max-w-md mx-auto w-full space-y-4">
+
+          {/* Age */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">年齢</label>
             <input
@@ -113,6 +104,7 @@ export default function StartPage() {
             {errors.age && <p className="text-red-400 text-xs mt-1">{errors.age}</p>}
           </div>
 
+          {/* Affiliation */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">所属</label>
             <select
@@ -128,16 +120,13 @@ export default function StartPage() {
             {errors.affiliation && <p className="text-red-400 text-xs mt-1">{errors.affiliation}</p>}
           </div>
 
-          {/* 5. Honesty priming */}
+          {/* Honesty priming */}
           <div>
-            <p className="text-sm font-medium text-gray-400 mb-2">回答前の確認</p>
-            <p className="text-sm text-gray-300 mb-3">
-              この診断で、自分を良く見せようとせず、ありのままの自分で答えようと思いますか？
-            </p>
+            <p className="text-sm text-gray-300 mb-3">ありのままの自分で答えられそうですか？</p>
             <div className="space-y-2">
               {[
-                { value: 'yes', label: 'はい、ありのままで答えます' },
-                { value: 'try', label: 'できるだけそうします' },
+                { value: 'yes', label: 'はい、素直に答えます' },
+                { value: 'try', label: 'たぶん大丈夫です' },
               ].map(({ value, label }) => (
                 <button
                   key={value}
@@ -155,7 +144,7 @@ export default function StartPage() {
             </div>
           </div>
 
-          {/* 6. Start button */}
+          {/* Start button */}
           <button
             onClick={handleStart}
             disabled={!canStart}
@@ -178,8 +167,35 @@ export default function StartPage() {
           )}
         </div>
 
-        {/* 7. Footer note */}
-        <p className="text-xs text-gray-500 text-center">結果はあなた自身のために使われます。</p>
+        {/* Benefit rows */}
+        <div className="max-w-md mx-auto w-full space-y-2 text-sm text-gray-400">
+          <div className="flex items-start gap-3">
+            <span>📝</span>
+            <div>
+              <span className="text-gray-300 font-medium">就活中の方</span>
+              <span className="ml-2">— 面接で語れる"自分の特性データ"が手に入ります</span>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <span>💼</span>
+            <div>
+              <span className="text-gray-300 font-medium">仕事を始める方</span>
+              <span className="ml-2">— 自分に合う環境・合わない環境が事前に分かります</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center space-y-1">
+          <p className="text-xs text-gray-500">結果はあなた自身のために使われます。</p>
+          <button
+            onClick={() => router.push('/about')}
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            この診断の仕組みについて詳しく →
+          </button>
+        </div>
+
       </div>
     </div>
   )
