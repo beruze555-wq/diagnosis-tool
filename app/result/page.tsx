@@ -128,14 +128,16 @@ function DeepMetricCard({
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-medium text-gray-300">{label}</span>
-          {isRef && (
-            <span className="text-xs bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full">参考</span>
-          )}
         </div>
-        <span className="text-base font-bold text-white">
-          {score}
-          <span className="text-xs text-gray-400 font-normal"> / 100</span>
-        </span>
+        <div className="flex items-center gap-2">
+          {isRef && (
+            <span className="text-xs text-gray-500">（行動パターンから推定）</span>
+          )}
+          <span className="text-base font-bold text-white">
+            {score}
+            <span className="text-xs text-gray-400 font-normal"> / 100</span>
+          </span>
+        </div>
       </div>
       <ColorProgressBar score={score} />
       <p className="text-xs text-gray-400 leading-relaxed">{description}</p>
@@ -518,6 +520,9 @@ export default function ResultPage() {
             ))}
           </div>
           <p className="text-sm text-gray-300 leading-relaxed">{behaviorTendency.description}</p>
+          <a href="/types#behavior-tags" className="text-xs text-blue-400 hover:text-blue-300 transition-colors mt-1 inline-block">
+            全ての行動傾向タグを見る →
+          </a>
         </div>
 
         {/* ④ Zone pattern card */}
@@ -531,6 +536,9 @@ export default function ResultPage() {
             {zonePattern.paragraphs.map((p, i) => (
               <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
             ))}
+            <a href="/types#zones" className="text-xs text-blue-400 hover:text-blue-300 transition-colors mt-1 inline-block">
+              全てのゾーンパターンを見る →
+            </a>
           </div>
         </div>
 
@@ -589,7 +597,7 @@ export default function ResultPage() {
 
             <div className="pt-2 border-t border-gray-700/50">
               <p className="text-xs font-semibold text-gray-400 mb-3">行動傾向指標</p>
-              <p className="text-xs text-gray-600 mb-3">※SJTの行動選択パターンから推定した参考値です</p>
+              <p className="text-xs text-gray-500 mb-3">シナリオでのあなたの行動選択から推定した値です。自己評価スコアとは別の角度からの指標になります。</p>
               <div className="space-y-3">
                 <DeepMetricCard
                   label="学習敏捷性（Learning Agility）"
@@ -634,6 +642,12 @@ export default function ResultPage() {
         >
           もう一度診断する
         </button>
+
+        <div className="text-center pb-4">
+          <a href="/about" className="text-xs text-gray-500 hover:text-gray-400 transition-colors">
+            この診断の学術的背景について
+          </a>
+        </div>
       </div>
     </div>
   )

@@ -80,7 +80,7 @@ export default function TypesPage() {
       <div className="max-w-2xl mx-auto px-4 pt-6 space-y-8">
 
         {/* Type grid */}
-        <div>
+        <div id="personality-types">
           <p className="text-xs text-gray-500 mb-4">
             OS（帰属スタイル）×A（粘り強さ）×B（情緒安定性）×C（達成動機）の4軸 各H/Lで16タイプ
           </p>
@@ -122,7 +122,7 @@ export default function TypesPage() {
         </div>
 
         {/* Tag labels section */}
-        <div>
+        <div id="behavior-tags">
           <h2 className="text-base font-bold text-white mb-2">行動傾向タグ</h2>
           <p className="text-xs text-gray-500 mb-4">
             SJT（状況判断テスト）のシナリオ回答から算出される8つの行動傾向タグです。
@@ -148,7 +148,7 @@ export default function TypesPage() {
         </div>
 
         {/* Zone categories section */}
-        <div className="space-y-4">
+        <div id="zones" className="space-y-4">
           <h2 className="text-base font-bold text-white">ゾーン判定カテゴリ</h2>
           <p className="text-xs text-gray-500">
             OS・A・B・Cのスコアパターンから13のゾーンに分類されます。
@@ -182,6 +182,15 @@ export default function TypesPage() {
         >
           診断結果に戻る
         </button>
+
+        <div className="text-center space-y-3 pb-4">
+          <a href="/about" className="text-xs text-gray-500 hover:text-gray-400 transition-colors block">
+            この診断の学術的背景について
+          </a>
+          <a href="/" className="text-xs text-blue-400 hover:text-blue-300 transition-colors block">
+            診断を受ける →
+          </a>
+        </div>
       </div>
     </div>
   )

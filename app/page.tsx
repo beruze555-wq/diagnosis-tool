@@ -79,8 +79,8 @@ export default function StartPage() {
               ——本当にそうですか？
             </p>
             <p className="text-sm text-gray-400 leading-relaxed">
-              6つの場面への反応から、あなた自身も気づいていない<br />
-              <span className="text-white">メンタルの"型"</span>・<span className="text-white">隠れた強み</span>・<span className="text-white">力を発揮できる環境</span>が見えてきます。
+              6つの場面であなたがどう反応するかを見るだけ。自分でも気づいていなかった<br />
+              <span className="text-white">メンタルの"型"</span>、<span className="text-white">隠れた強み</span>、<span className="text-white">本当に合う環境</span>が浮かび上がります。
             </p>
           </div>
         </div>
@@ -180,14 +180,14 @@ export default function StartPage() {
             <span>📝</span>
             <div>
               <span className="text-gray-300 font-medium">就活中の方</span>
-              <span className="ml-2">— 面接で語れる"自分の特性データ"が手に入ります</span>
+              <span className="ml-2">— "自分はこういう人間です"って、ちゃんと言えるようになる</span>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <span>💼</span>
             <div>
               <span className="text-gray-300 font-medium">仕事を始める方</span>
-              <span className="ml-2">— 自分に合う環境・合わない環境が事前に分かります</span>
+              <span className="ml-2">— 「入ってみたら全然合わなかった」を防げる</span>
             </div>
           </div>
         </div>
