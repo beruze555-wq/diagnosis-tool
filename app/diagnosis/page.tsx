@@ -103,6 +103,18 @@ interface FlatL2Item {
   reversed: boolean
 }
 
+// Find the first page (0-5) in the given order that has unanswered questions
+function findFirstIncompletePage(items: FlatL2Item[], answers: Layer2Answers): number {
+  for (let page = 0; page < 6; page++) {
+    const pageItems = items.slice(page * 6, (page + 1) * 6)
+    const complete = pageItems.every(
+      (item) => answers[`axis${item.axis}` as keyof Layer2Answers][item.idx] > 0
+    )
+    if (!complete) return page
+  }
+  return 5
+}
+
 export default function DiagnosisPage() {
   const router = useRouter()
   const [phase, setPhase] = useState<'layer1' | 'layer2'>('layer1')
@@ -146,11 +158,37 @@ export default function DiagnosisPage() {
     [shuffledOrders, scenarioIndex]
   )
 
+  // Initialize: redirect if no userInfo, otherwise restore any saved progress
   useEffect(() => {
     if (!sessionStorage.getItem('userInfo')) {
       router.replace('/')
+      return
     }
-  }, [router])
+
+    const savedPhase = sessionStorage.getItem('diagnosisPhase')
+
+    if (savedPhase === 'layer2') {
+      // Restore PART2 progress
+      const savedScenarioAnswers = sessionStorage.getItem('scenarioAnswers')
+      const savedLayer2Answers = sessionStorage.getItem('layer2Answers')
+      if (savedScenarioAnswers && savedLayer2Answers) {
+        const restoredL2 = JSON.parse(savedLayer2Answers) as Layer2Answers
+        const firstPage = findFirstIncompletePage(randomizedLayer2, restoredL2)
+        setScenarioAnswers(JSON.parse(savedScenarioAnswers))
+        setLayer2Answers(restoredL2)
+        setLayer2Page(firstPage)
+        setPhase('layer2')
+      }
+    } else if (savedPhase === 'layer1') {
+      // Restore PART1 mid-progress: resume at the next unanswered scenario
+      const savedScenarioAnswers = sessionStorage.getItem('scenarioAnswers')
+      if (savedScenarioAnswers) {
+        const restored: ScenarioAnswer[] = JSON.parse(savedScenarioAnswers)
+        setScenarioAnswers(restored)
+        setScenarioIndex(restored.length)
+      }
+    }
+  }, [router, randomizedLayer2])
 
   const isLayer1Complete =
     currentAnswer.sjtRatings.every((v) => v > 0) &&
@@ -187,6 +225,9 @@ export default function DiagnosisPage() {
     const newAnswers = [...scenarioAnswers, currentAnswer]
 
     if (scenarioIndex < scenarios.length - 1) {
+      // Save partial PART1 progress for resume
+      sessionStorage.setItem('scenarioAnswers', JSON.stringify(newAnswers))
+      sessionStorage.setItem('diagnosisPhase', 'layer1')
       transition(() => {
         setScenarioAnswers(newAnswers)
         setScenarioIndex((i) => i + 1)
@@ -198,9 +239,11 @@ export default function DiagnosisPage() {
       sessionStorage.setItem('scenarioAnswers', JSON.stringify(newAnswers))
       if (OS < 35) {
         sessionStorage.setItem('layer2Skipped', 'true')
+        sessionStorage.removeItem('diagnosisPhase')
         router.push('/result')
       } else {
         sessionStorage.removeItem('layer2Skipped')
+        sessionStorage.setItem('diagnosisPhase', 'layer2')
         transition(() => {
           setScenarioAnswers(newAnswers)
           setPhase('layer2')
@@ -219,6 +262,7 @@ export default function DiagnosisPage() {
       // All 6 pages done
       if (!isLayer2Complete) return
       sessionStorage.removeItem('layer2Skipped')
+      sessionStorage.removeItem('diagnosisPhase')
       sessionStorage.setItem('layer2Answers', JSON.stringify(layer2Answers))
       router.push('/result')
     }
@@ -246,7 +290,11 @@ export default function DiagnosisPage() {
       const key = `axis${axis}` as keyof Layer2Answers
       const arr = [...prev[key]]
       arr[idx] = value
-      return { ...prev, [key]: arr }
+      const next = { ...prev, [key]: arr }
+      // Save partial PART2 progress for resume
+      sessionStorage.setItem('layer2Answers', JSON.stringify(next))
+      sessionStorage.setItem('diagnosisPhase', 'layer2')
+      return next
     })
   }
 
