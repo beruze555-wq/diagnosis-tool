@@ -84,49 +84,41 @@ export default function StartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center px-4 py-12">
-      <div className="w-full max-w-2xl space-y-10">
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md space-y-6">
 
-        {/* Hero */}
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
+        {/* Hero + メリット */}
+        <div className="text-center space-y-3">
           <p className="text-xs text-gray-500 tracking-widest uppercase">MIRROR</p>
-          <h1 className="text-3xl font-bold text-white">あなたのメンタルを、16タイプで可視化する</h1>
+          <h1 className="text-2xl font-bold text-white">メンタルタイプ診断</h1>
+          <div className="space-y-2 text-sm text-gray-400 leading-relaxed">
+            <p>
+              <span className="text-gray-200">「自分の強みは？」</span>と聞かれて、固まったことはないですか。
+            </p>
+            <p>
+              MIRRORは7つの心理指標からあなたのメンタルの型を割り出します。面接でも、配属でも、<span className="text-gray-200">「自分はこうだ」と根拠を持って言える</span>ようになります。
+            </p>
+          </div>
         </div>
 
-        {/* 16 type preview grid */}
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {PERSONALITY_TYPES_PREVIEW.map(type => (
+        {/* 16タイプ プレビュー */}
+        <div className="space-y-2">
+          <p className="text-center text-xs text-gray-500">16タイプの中から、あなたの型を特定</p>
+          <div className="grid grid-cols-8 gap-1 max-w-sm mx-auto">
+            {PERSONALITY_TYPES_PREVIEW.map((t) => (
               <div
-                key={type.name}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r ${type.themeFrom} ${type.themeTo} border border-gray-700/40 text-sm text-gray-300`}
+                key={t.name}
+                title={t.name}
+                className={`w-10 h-10 flex items-center justify-center text-lg rounded-lg bg-gradient-to-br ${t.themeFrom} ${t.themeTo} border border-gray-700/40`}
               >
-                <span>{type.icon}</span>
-                <span>{type.name}</span>
+                {t.icon}
               </div>
             ))}
-          </div>
-          <p className="text-center text-xs text-gray-500">あなたはどのタイプ？</p>
-        </div>
-
-        {/* Pain point cards */}
-        <div className="grid grid-cols-1 gap-3 max-w-2xl mx-auto w-full sm:grid-cols-3">
-          <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 text-sm text-gray-400 leading-relaxed">
-            面接で「あなたの強みは？」と聞かれて、<br />
-            <span className="text-gray-300">いまいちピンとくる答えが出てこない</span>
-          </div>
-          <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 text-sm text-gray-400 leading-relaxed">
-            「なんであの時メンタルやられたんだろう」<br />
-            <span className="text-gray-300">の原因が、自分でも分からない</span>
-          </div>
-          <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 text-sm text-gray-400 leading-relaxed">
-            次の環境では失敗したくない。<br />
-            <span className="text-gray-300">でも何を基準に選べばいいか分からない</span>
           </div>
         </div>
 
         {/* Form card */}
-        <div className="bg-gray-800/40 rounded-2xl p-6 border border-gray-700/40 max-w-md mx-auto w-full space-y-4">
+        <div className="bg-gray-800/40 rounded-2xl p-6 border border-gray-700/40 space-y-4">
 
           {/* Trust badges */}
           <div className="flex justify-center gap-4 text-xs text-gray-500 pb-2">
