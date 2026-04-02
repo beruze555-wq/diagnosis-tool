@@ -9,26 +9,6 @@ export interface Scenario {
   attributions: { question: string; leftLabel: string; rightLabel: string }[]
 }
 
-function makeAttrQuestions() {
-  return [
-    {
-      question: 'この出来事の影響は、時間が経てば薄れると思いますか？',
-      leftLabel: 'すぐ薄れる',
-      rightLabel: 'ずっと続く',
-    },
-    {
-      question: 'こういうことは、この場面に限った話だと思いますか？ それとも自分の周りでは繰り返し起きそうですか？',
-      leftLabel: 'この場面だけ',
-      rightLabel: '繰り返し起きる',
-    },
-    {
-      question: 'この出来事に、自分の行動や判断はどの程度関係していると思いますか？',
-      leftLabel: '自分は関係ない',
-      rightLabel: '大きく関係している',
-    },
-  ]
-}
-
 export const scenarios: Scenario[] = [
   {
     id: 1,
@@ -42,7 +22,23 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '「訪問営業自体が時代に合っていない」と感じ、別の方法を提案する', tags: ['analytical', 'proactive'] },
       { label: 'D', text: '正直やる気が出ないので、とりあえず件数だけこなして早めに切り上げる', tags: ['avoidant'] },
     ],
-    attributions: makeAttrQuestions(),
+    attributions: [
+      {
+        question: '営業がうまくいかなかった原因は、その日たまたまうまくいかなかっただけだと思いますか？ それとも、簡単には変わらない問題だと思いますか？',
+        leftLabel: 'たまたまの不調',
+        rightLabel: '簡単には変わらない',
+      },
+      {
+        question: 'この原因は、今回の営業だけの話だと思いますか？ それとも、他の仕事でも同じように影響すると思いますか？',
+        leftLabel: '今回の営業だけ',
+        rightLabel: '他の仕事にも影響する',
+      },
+      {
+        question: 'うまくいかなかったのは、状況や運の要素が大きいと思いますか？ それとも、自分自身に原因があると思いますか？',
+        leftLabel: '状況や運',
+        rightLabel: '自分自身',
+      },
+    ],
   },
   {
     id: 2,
@@ -56,7 +52,23 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '自分にはこのレベルの企画を作る力がまだないと感じ、しばらく提案を控える', tags: ['avoidant'] },
       { label: 'D', text: '「方向性が違う」のは役員側の理解不足だと思い、別ルートで再提案する', tags: ['rigid', 'proactive'] },
     ],
-    attributions: makeAttrQuestions(),
+    attributions: [
+      {
+        question: '企画が却下された原因は、今回たまたま方向性が合わなかっただけだと思いますか？ それとも、簡単には変わらない問題だと思いますか？',
+        leftLabel: 'たまたま合わなかった',
+        rightLabel: '簡単には変わらない',
+      },
+      {
+        question: 'この原因は、今回の企画だけの話だと思いますか？ それとも、今後の仕事全般にも当てはまると思いますか？',
+        leftLabel: '今回の企画だけ',
+        rightLabel: '仕事全般に当てはまる',
+      },
+      {
+        question: '却下されたのは、役員との方向性の違いが大きいと思いますか？ それとも、自分の実力不足が大きいと思いますか？',
+        leftLabel: '方向性の違い',
+        rightLabel: '自分の実力不足',
+      },
+    ],
   },
   {
     id: 3,
@@ -70,7 +82,23 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '自分のメンタルの弱さが原因だと感じ、試合に出ること自体を避けたいと思う', tags: ['avoidant'] },
       { label: 'D', text: 'ミスは仕方ないと割り切り、チーム全体の課題として捉え直す', tags: ['analytical', 'emotion-regulation'] },
     ],
-    attributions: makeAttrQuestions(),
+    attributions: [
+      {
+        question: 'ミスが起きた原因は、その試合の特殊な状況によるものだと思いますか？ それとも、簡単には変わらない根本的な問題だと思いますか？',
+        leftLabel: 'その試合の特殊な状況',
+        rightLabel: '根本的な問題',
+      },
+      {
+        question: 'この原因は、この試合だけの話だと思いますか？ それとも、他の場面でも同じことが起きると思いますか？',
+        leftLabel: 'この試合だけ',
+        rightLabel: '他の場面でも起きる',
+      },
+      {
+        question: 'ミスが起きたのは、状況やチーム全体の問題が大きいと思いますか？ それとも、自分個人に原因があると思いますか？',
+        leftLabel: '状況やチーム全体',
+        rightLabel: '自分個人',
+      },
+    ],
   },
   {
     id: 4,
@@ -84,7 +112,23 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '「裏切られた」という気持ちが強く、しばらく仕事に集中できない', tags: ['avoidant'] },
       { label: 'D', text: '自分のマネジメント不足（1人に頼りすぎた）と捉え、体制を見直す', tags: ['analytical', 'proactive'] },
     ],
-    attributions: makeAttrQuestions(),
+    attributions: [
+      {
+        question: '同期が辞めるような状況になった原因は、今回限りの事情だと思いますか？ それとも、この職場に根本的に存在する問題だと思いますか？',
+        leftLabel: '今回限りの事情',
+        rightLabel: '根本的な問題',
+      },
+      {
+        question: 'この原因は、今の職場だけの話だと思いますか？ それとも、どこに行っても似たようなことが起きると思いますか？',
+        leftLabel: '今の職場だけ',
+        rightLabel: 'どこでも起きる',
+      },
+      {
+        question: '同期が辞めたのは、会社や環境の要因が大きいと思いますか？ それとも、自分との関係性に原因があると思いますか？',
+        leftLabel: '会社や環境',
+        rightLabel: '自分との関係性',
+      },
+    ],
   },
   {
     id: 5,
@@ -98,7 +142,23 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '「3ヶ月が無駄だった」という気持ちが消えず、しばらく新規開拓のモチベーションが出ない', tags: ['avoidant'] },
       { label: 'D', text: '予算凍結は自分にはどうしようもないことなので、深く考えずに次に行く', tags: ['emotion-regulation', 'analytical'] },
     ],
-    attributions: makeAttrQuestions(),
+    attributions: [
+      {
+        question: '予算凍結になった原因は、今回だけの特殊な事情だと思いますか？ それとも、しばらく続く根本的な問題だと思いますか？',
+        leftLabel: '特殊な事情',
+        rightLabel: '根本的な問題',
+      },
+      {
+        question: 'この原因は、今回のプロジェクトだけの話だと思いますか？ それとも、他の仕事にも同じように影響すると思いますか？',
+        leftLabel: '今回のプロジェクトだけ',
+        rightLabel: '他の仕事にも影響する',
+      },
+      {
+        question: '努力が白紙になったのは、外部環境のせいが大きいと思いますか？ それとも、自分の進め方に問題があったと思いますか？',
+        leftLabel: '外部環境',
+        rightLabel: '自分の進め方',
+      },
+    ],
   },
   {
     id: 6,
@@ -112,6 +172,22 @@ export const scenarios: Scenario[] = [
       { label: 'C', text: '自分にはこの環境が合っていないのかもしれないと思い、別のインターン先を探し始める', tags: ['avoidant', 'analytical'] },
       { label: 'D', text: '焦りはあるが、自分なりのやり方を見つけながら追いつこうとする', tags: ['proactive', 'emotion-regulation'] },
     ],
-    attributions: makeAttrQuestions(),
+    attributions: [
+      {
+        question: '周囲との差がついた原因は、今の時期だけの一時的なものだと思いますか？ それとも、今後もずっと続く問題だと思いますか？',
+        leftLabel: '一時的なもの',
+        rightLabel: 'ずっと続く',
+      },
+      {
+        question: 'この原因は、今のインターン先だけの話だと思いますか？ それとも、どんな環境に行っても同じことが起きると思いますか？',
+        leftLabel: '今のインターン先だけ',
+        rightLabel: 'どんな環境でも',
+      },
+      {
+        question: '差がついたのは、環境や与えられた業務の違いが大きいと思いますか？ それとも、自分自身の能力に原因があると思いますか？',
+        leftLabel: '環境や業務の違い',
+        rightLabel: '自分の能力',
+      },
+    ],
   },
 ]

@@ -130,6 +130,7 @@ export default function DiagnosisPage() {
     axisC: Array(10).fill(0),
     axisD: Array(6).fill(0),
   })
+  const [layer1SubPhase, setLayer1SubPhase] = useState<'sjt' | 'attribution'>('sjt')
   const [layer2Page, setLayer2Page] = useState(0)
   const [visible, setVisible] = useState(true)
   const [isDev, setIsDev] = useState(false)
@@ -194,9 +195,8 @@ export default function DiagnosisPage() {
     }
   }, [router, randomizedLayer2])
 
-  const isLayer1Complete =
-    currentAnswer.sjtRatings.every((v) => v > 0) &&
-    currentAnswer.attributions.every((v) => v > 0)
+  const isSJTComplete = currentAnswer.sjtRatings.every((v) => v > 0)
+  const isAttributionComplete = currentAnswer.attributions.every((v) => v > 0)
 
   const isLayer2Complete =
     layer2Answers.axisA.every((v) => v > 0) &&
@@ -231,20 +231,28 @@ export default function DiagnosisPage() {
       }
       // layer2Page === 0: PART1には戻れない
     } else {
-      if (scenarioIndex > 0) {
+      if (layer1SubPhase === 'attribution') {
+        transition(() => setLayer1SubPhase('sjt'))
+      } else if (scenarioIndex > 0) {
         const prevAnswer = scenarioAnswers[scenarioIndex - 1]
         const prevAnswers = scenarioAnswers.slice(0, -1)
         transition(() => {
           setCurrentAnswer(prevAnswer)
           setScenarioAnswers(prevAnswers)
           setScenarioIndex((i) => i - 1)
+          setLayer1SubPhase('attribution')
         })
       }
     }
   }
 
-  const handleNextScenario = () => {
-    if (!isLayer1Complete) return
+  const handleNextSJT = () => {
+    if (!isSJTComplete) return
+    transition(() => setLayer1SubPhase('attribution'))
+  }
+
+  const handleNextAttribution = () => {
+    if (!isAttributionComplete) return
     const newAnswers = [...scenarioAnswers, currentAnswer]
 
     if (scenarioIndex < scenarios.length - 1) {
@@ -255,6 +263,7 @@ export default function DiagnosisPage() {
         setScenarioAnswers(newAnswers)
         setScenarioIndex((i) => i + 1)
         setCurrentAnswer({ sjtRatings: [0, 0, 0, 0], attributions: [0, 0, 0] })
+        setLayer1SubPhase('sjt')
       })
     } else {
       // Last scenario done — evaluate OS
@@ -348,7 +357,7 @@ export default function DiagnosisPage() {
             <button
               onClick={handleBack}
               disabled={
-                (phase === 'layer1' && scenarioIndex === 0) ||
+                (phase === 'layer1' && layer1SubPhase === 'sjt' && scenarioIndex === 0) ||
                 (phase === 'layer2' && layer2Page === 0)
               }
               className="mt-2 text-xs text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -365,7 +374,8 @@ export default function DiagnosisPage() {
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
           }`}
         >
-          {phase === 'layer1' && (
+          {/* PART1 - SJTサブフェーズ */}
+          {phase === 'layer1' && layer1SubPhase === 'sjt' && (
             <div className="space-y-6">
               {/* Scenario card */}
               <div className="bg-white text-gray-800 rounded-2xl shadow-lg p-6">
@@ -404,6 +414,28 @@ export default function DiagnosisPage() {
                 })}
               </div>
 
+              <button
+                onClick={handleNextSJT}
+                disabled={!isSJTComplete}
+                className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                  isSJTComplete
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                次へ →
+              </button>
+            </div>
+          )}
+
+          {/* PART1 - 帰属評定サブフェーズ */}
+          {phase === 'layer1' && layer1SubPhase === 'attribution' && (
+            <div className="space-y-6">
+              {/* シナリオタイトルのみ（本文は非表示） */}
+              <p className="text-xs text-gray-500 text-center tracking-wide">
+                シナリオ {scenario.id}：{scenario.title}
+              </p>
+
               {/* Attribution section */}
               <div className="bg-gray-800 rounded-2xl p-5 space-y-5">
                 <p className="text-sm font-semibold text-gray-200">この出来事についての印象を教えてください</p>
@@ -421,10 +453,10 @@ export default function DiagnosisPage() {
               </div>
 
               <button
-                onClick={handleNextScenario}
-                disabled={!isLayer1Complete}
+                onClick={handleNextAttribution}
+                disabled={!isAttributionComplete}
                 className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                  isLayer1Complete
+                  isAttributionComplete
                     ? 'bg-blue-600 hover:bg-blue-700 text-white'
                     : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                 }`}
