@@ -14,6 +14,25 @@ const AFFILIATION_OPTIONS = [
   'その他',
 ]
 
+const PERSONALITY_TYPES_PREVIEW = [
+  { name: "突破者型", icon: "⚡", themeFrom: "from-yellow-500/20", themeTo: "to-orange-500/20" },
+  { name: "安定遂行型", icon: "🛡️", themeFrom: "from-blue-400/20", themeTo: "to-blue-600/20" },
+  { name: "情熱猪突型", icon: "🔥", themeFrom: "from-red-500/20", themeTo: "to-orange-500/20" },
+  { name: "楽観持久型", icon: "🌊", themeFrom: "from-cyan-400/20", themeTo: "to-blue-500/20" },
+  { name: "戦略挑戦型", icon: "🎯", themeFrom: "from-purple-500/20", themeTo: "to-pink-500/20" },
+  { name: "慎重楽観型", icon: "🌤️", themeFrom: "from-amber-300/20", themeTo: "to-yellow-500/20" },
+  { name: "直感突撃型", icon: "🚀", themeFrom: "from-rose-500/20", themeTo: "to-red-600/20" },
+  { name: "楽天自由型", icon: "🎈", themeFrom: "from-pink-300/20", themeTo: "to-rose-400/20" },
+  { name: "堅実努力型", icon: "💎", themeFrom: "from-emerald-500/20", themeTo: "to-teal-600/20" },
+  { name: "忍耐守備型", icon: "🏔️", themeFrom: "from-stone-400/20", themeTo: "to-gray-600/20" },
+  { name: "闘志内燃型", icon: "🌋", themeFrom: "from-orange-600/20", themeTo: "to-red-700/20" },
+  { name: "寡黙継続型", icon: "🐢", themeFrom: "from-green-600/20", themeTo: "to-emerald-800/20" },
+  { name: "冷静分析型", icon: "🔬", themeFrom: "from-indigo-400/20", themeTo: "to-violet-600/20" },
+  { name: "受容安定型", icon: "🌿", themeFrom: "from-lime-400/20", themeTo: "to-green-500/20" },
+  { name: "野心原石型", icon: "💡", themeFrom: "from-amber-500/20", themeTo: "to-orange-600/20" },
+  { name: "模索探求型", icon: "🧭", themeFrom: "from-slate-400/20", themeTo: "to-gray-500/20" },
+]
+
 export default function StartPage() {
   const router = useRouter()
   const [age, setAge] = useState('')
@@ -65,23 +84,44 @@ export default function StartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg space-y-8">
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center px-4 py-12">
+      <div className="w-full max-w-2xl space-y-10">
 
         {/* Hero */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-3 max-w-2xl mx-auto">
           <p className="text-xs text-gray-500 tracking-widest uppercase">MIRROR</p>
-          <h1 className="text-3xl font-bold text-white">メンタルタイプ診断</h1>
-          {/* 感情フック */}
-          <div className="space-y-2">
-            <p className="text-base text-gray-300 leading-relaxed">
-              <span className="text-white font-semibold">"自分のことは自分が一番分かっている"</span><br />
-              ——本当にそうですか？
-            </p>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              6つの場面であなたがどう反応するかを見るだけ。自分でも気づいていなかった<br />
-              <span className="text-white">メンタルの"型"</span>、<span className="text-white">隠れた強み</span>、<span className="text-white">本当に合う環境</span>が浮かび上がります。
-            </p>
+          <h1 className="text-3xl font-bold text-white">あなたのメンタルを、16タイプで可視化する</h1>
+        </div>
+
+        {/* 16 type preview grid */}
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {PERSONALITY_TYPES_PREVIEW.map(type => (
+              <div
+                key={type.name}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r ${type.themeFrom} ${type.themeTo} border border-gray-700/40 text-sm text-gray-300`}
+              >
+                <span>{type.icon}</span>
+                <span>{type.name}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-500">あなたはどのタイプ？</p>
+        </div>
+
+        {/* Pain point cards */}
+        <div className="grid grid-cols-1 gap-3 max-w-2xl mx-auto w-full sm:grid-cols-3">
+          <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 text-sm text-gray-400 leading-relaxed">
+            面接で「あなたの強みは？」と聞かれて、<br />
+            <span className="text-gray-300">いまいちピンとくる答えが出てこない</span>
+          </div>
+          <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 text-sm text-gray-400 leading-relaxed">
+            「なんであの時メンタルやられたんだろう」<br />
+            <span className="text-gray-300">の原因が、自分でも分からない</span>
+          </div>
+          <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30 text-sm text-gray-400 leading-relaxed">
+            次の環境では失敗したくない。<br />
+            <span className="text-gray-300">でも何を基準に選べばいいか分からない</span>
           </div>
         </div>
 
@@ -172,24 +212,6 @@ export default function StartPage() {
               🛠 開発モード：結果画面にスキップ
             </button>
           )}
-        </div>
-
-        {/* Benefit rows */}
-        <div className="max-w-md mx-auto w-full space-y-2 text-sm text-gray-400">
-          <div className="flex items-start gap-3">
-            <span>📝</span>
-            <div>
-              <span className="text-gray-300 font-medium">就活中の方</span>
-              <span className="ml-2">— "自分はこういう人間です"って、ちゃんと言えるようになる</span>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <span>💼</span>
-            <div>
-              <span className="text-gray-300 font-medium">仕事を始める方</span>
-              <span className="ml-2">— 「入ってみたら全然合わなかった」を防げる</span>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
