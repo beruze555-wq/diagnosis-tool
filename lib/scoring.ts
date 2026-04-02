@@ -1171,3 +1171,38 @@ export function getEnvironmentFit(personalityTypeKey: string): EnvironmentFit {
 export function getPersonalityTypeKey(OS: number, A: number, B: number, C: number): string {
   return (OS >= 60 ? 'H' : 'L') + (A >= 60 ? 'H' : 'L') + (B >= 60 ? 'H' : 'L') + (C >= 60 ? 'H' : 'L')
 }
+
+// ─── Risk indicators ──────────────────────────────────────────────────────────
+
+export interface RiskIndicators {
+  hardworkResilience: number      // 0-100: 努力の持続力（OS + A の平均）
+  commitSustainability: number    // 0-100: コミット持続性（A + B の平均）
+  adversityRisk: 'low' | 'medium' | 'high'
+  adversityRiskNote: string
+}
+
+export function computeRiskIndicators(OS: number, A: number, B: number): RiskIndicators {
+  const hardworkResilience = Math.round((OS + A) / 2)
+  const commitSustainability = Math.round((A + B) / 2)
+
+  let adversityRisk: 'low' | 'medium' | 'high'
+  let adversityRiskNote: string
+
+  if (OS >= 60 && B >= 60) {
+    adversityRisk = 'low'
+    adversityRiskNote = '楽観的な帰属スタイルと情緒安定性が高く、逆境での消耗リスクは低いです。高プレッシャー環境でも自走しやすい状態です。'
+  } else if (OS < 40 && B < 40) {
+    adversityRisk = 'high'
+    adversityRiskNote = '逆境を長期的・自己帰属的に捉えやすく、情緒安定性も低めです。高ストレス環境では早期に消耗するリスクがあります。まず心理的安全性の高い環境を選ぶことが重要です。'
+  } else if (OS < 40 || B < 40) {
+    adversityRisk = 'medium'
+    adversityRiskNote = OS < 40
+      ? '逆境の捉え方に改善の余地があります。失敗を一時的・限定的に捉える練習（Seligman, 1991）と、支援的なメンターの存在が回復力を高めます。'
+      : '感情の揺れが逆境時のパフォーマンスに影響することがあります。感情調整の練習と、定期的な1on1でのサポートが有効です。'
+  } else {
+    adversityRisk = 'medium'
+    adversityRiskNote = '基盤は整っていますが、特定の状況下では消耗しやすい面があります。メンターや定期フィードバックで安定的に力を発揮できます。'
+  }
+
+  return { hardworkResilience, commitSustainability, adversityRisk, adversityRiskNote }
+}

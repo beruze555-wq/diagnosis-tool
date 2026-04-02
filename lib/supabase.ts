@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { ScenarioAnswer, Layer2Answers } from '@/types'
-import { DeepAnalysis } from '@/lib/scoring'
+import { DeepAnalysis, RiskIndicators } from '@/lib/scoring'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase =
+  supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
 
 export async function saveDiagnosisResult(data: {
   age: number
@@ -19,7 +20,10 @@ export async function saveDiagnosisResult(data: {
   zone: string
   personalityType: string
   deepAnalysis?: DeepAnalysis
+  riskIndicators?: RiskIndicators
 }) {
+  if (!supabase) return
+
   const { error } = await supabase.from('diagnosis_results').insert([
     {
       age: data.age,
@@ -33,6 +37,10 @@ export async function saveDiagnosisResult(data: {
       zone: data.zone,
       personality_type: data.personalityType,
       deep_analysis: data.deepAnalysis ?? null,
+      hardwork_resilience: data.riskIndicators?.hardworkResilience ?? null,
+      commit_sustainability: data.riskIndicators?.commitSustainability ?? null,
+      adversity_risk: data.riskIndicators?.adversityRisk ?? null,
+      adversity_risk_note: data.riskIndicators?.adversityRiskNote ?? null,
     },
   ])
 

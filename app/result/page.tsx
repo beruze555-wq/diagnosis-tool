@@ -20,6 +20,7 @@ import {
   getSJTBehaviorTendency,
   calculateDeepAnalysis,
   getEnvironmentFit,
+  computeRiskIndicators,
   getLearningAgilityDescription,
   getSelfEfficacyDescription,
   getAutonomousMotivationDescription,
@@ -28,6 +29,7 @@ import {
   getTeamContributionDescription,
   TAG_LABELS,
   EnvironmentFit,
+  RiskIndicators,
 } from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
 import { ScenarioAnswer, Layer2Answers, Scores, DeepAnalysis } from '@/types'
@@ -452,6 +454,9 @@ export default function ResultPage() {
       zone: calculated.zone,
       personalityType: pType.name,
       deepAnalysis: da ?? undefined,
+      riskIndicators: !skipped && layer2Answers
+        ? computeRiskIndicators(calculated.OS, calculated.A, calculated.B)
+        : undefined,
     })
       .then(() => setSaved(true))
       .catch(() => setSaveError(true))
