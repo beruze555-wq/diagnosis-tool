@@ -648,7 +648,7 @@ export default function ResultPage() {
         {/* Save status */}
         <div className="text-center text-xs">
           {saved && <span className="text-green-500">✓ 回答が保存されました</span>}
-          {saveError && <span className="text-yellow-500">⚠ 保存に失敗しました（結果は変わりません）</span>}
+          {saveError && <span className="text-xs text-gray-600">※ データの保存はスキップされました</span>}
         </div>
 
         {/* Restart */}

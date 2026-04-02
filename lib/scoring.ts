@@ -187,7 +187,7 @@ const ZONE_PATTERNS: Record<string, ZonePattern> = {
   },
   R1: {
     zoneId: 'R1',
-    zoneName: '帰属課題型',
+    zoneName: '楽観性キャッチアップ型',
     zoneColor: 'red',
     zoneIcon: '🔴',
     paragraphs: [
