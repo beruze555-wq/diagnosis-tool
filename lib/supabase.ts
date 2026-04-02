@@ -17,7 +17,6 @@ export async function saveDiagnosisResult(data: {
   axisB: number
   axisC: number
   zone: string
-  zoneId: string
   personalityType: string
   deepAnalysis?: DeepAnalysis
 }) {
@@ -32,7 +31,6 @@ export async function saveDiagnosisResult(data: {
       axis_b_score: data.axisB,
       axis_c_score: data.axisC,
       zone: data.zone,
-      zone_id: data.zoneId,
       personality_type: data.personalityType,
       deep_analysis: data.deepAnalysis ?? null,
     },

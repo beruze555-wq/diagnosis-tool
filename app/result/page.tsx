@@ -16,9 +16,10 @@ import {
   getAxisBDescription,
   getAxisCDescription,
   getPersonalityType,
+  getPersonalityTypeKey,
   getSJTBehaviorTendency,
   calculateDeepAnalysis,
-  getZonePattern,
+  getEnvironmentFit,
   getLearningAgilityDescription,
   getSelfEfficacyDescription,
   getAutonomousMotivationDescription,
@@ -26,7 +27,7 @@ import {
   getCrisisResponseDescription,
   getTeamContributionDescription,
   TAG_LABELS,
-  ZonePattern,
+  EnvironmentFit,
 } from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
 import { ScenarioAnswer, Layer2Answers, Scores, DeepAnalysis } from '@/types'
@@ -314,7 +315,7 @@ export default function ResultPage() {
     description: string
   } | null>(null)
   const [deepAnalysis, setDeepAnalysis] = useState<DeepAnalysis | null>(null)
-  const [zonePattern, setZonePattern] = useState<ZonePattern | null>(null)
+  const [environmentFit, setEnvironmentFit] = useState<EnvironmentFit | null>(null)
   const [layer2Skipped, setLayer2Skipped] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState(false)
@@ -340,7 +341,7 @@ export default function ResultPage() {
       const devLayer2Raw = sessionStorage.getItem('layer2Answers')
       const devLayer2: Layer2Answers | undefined = devLayer2Raw ? JSON.parse(devLayer2Raw) : undefined
       setScores(devScores)
-      setZonePattern(getZonePattern(devScores.OS, devScores.A, devScores.B, devScores.C))
+      setEnvironmentFit(getEnvironmentFit(getPersonalityTypeKey(devScores.OS, devScores.A, devScores.B, devScores.C)))
       setPersonalityType(getPersonalityType(devScores.OS, devScores.A, devScores.B, devScores.C))
       setBehaviorTendency({
         label: '主体的行動×分析的思考型',
@@ -425,19 +426,19 @@ export default function ResultPage() {
 
     let pType = getPersonalityType(0, 0, 0, 0)
     let da: DeepAnalysis | null = null
-    let zp: ZonePattern
+    let typeKey = 'LLLL'
 
     if (!skipped && layer2Answers) {
       pType = getPersonalityType(calculated.OS, calculated.A, calculated.B, calculated.C)
       da = calculateDeepAnalysis(scenarioAnswers, layer2Answers)
-      zp = getZonePattern(calculated.OS, calculated.A, calculated.B, calculated.C)
+      typeKey = getPersonalityTypeKey(calculated.OS, calculated.A, calculated.B, calculated.C)
     } else {
-      zp = getZonePattern(calculated.OS, 0, 0, 0)
+      typeKey = getPersonalityTypeKey(calculated.OS, 0, 0, 0)
     }
 
     setPersonalityType(pType)
     setDeepAnalysis(da)
-    setZonePattern(zp)
+    setEnvironmentFit(getEnvironmentFit(typeKey))
 
     saveDiagnosisResult({
       age: userInfo.age,
@@ -449,7 +450,6 @@ export default function ResultPage() {
       axisB: calculated.B,
       axisC: calculated.C,
       zone: calculated.zone,
-      zoneId: zp.zoneId,
       personalityType: pType.name,
       deepAnalysis: da ?? undefined,
     })
@@ -457,27 +457,13 @@ export default function ResultPage() {
       .catch(() => setSaveError(true))
   }, [router])
 
-  if (!scores || !behaviorTendency || !rawAnswers || !zonePattern || !personalityType) {
+  if (!scores || !behaviorTendency || !rawAnswers || !environmentFit || !personalityType) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-gray-400">結果を計算中...</div>
       </div>
     )
   }
-
-  const zoneBandColor =
-    zonePattern.zoneColor === 'green'
-      ? 'bg-green-500'
-      : zonePattern.zoneColor === 'yellow'
-      ? 'bg-yellow-500'
-      : 'bg-red-500'
-
-  const zoneStroke =
-    zonePattern.zoneColor === 'green'
-      ? '#22c55e'
-      : zonePattern.zoneColor === 'yellow'
-      ? '#eab308'
-      : '#ef4444'
 
   const chartData = [
     { axis: '楽観性', value: scores.OS },
@@ -536,8 +522,8 @@ export default function ResultPage() {
               <Radar
                 name="score"
                 dataKey="value"
-                stroke={zoneStroke}
-                fill={zoneStroke}
+                stroke="#3b82f6"
+                fill="#3b82f6"
                 fillOpacity={0.25}
                 strokeWidth={2}
               />
@@ -566,20 +552,61 @@ export default function ResultPage() {
           </a>
         </div>
 
-        {/* ④ Zone pattern card */}
+        {/* ④ Environment fit card */}
         <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
-          <div className={`h-2 ${zoneBandColor}`} />
-          <div className="p-6 space-y-3">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">ゾーンパターン</p>
-            <h3 className="text-lg font-bold text-white">
-              {zonePattern.zoneIcon} [{zonePattern.zoneId}] {zonePattern.zoneName}
-            </h3>
-            {zonePattern.paragraphs.map((p, i) => (
-              <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
-            ))}
-            <a href="/types#zones" className="text-xs text-blue-400 hover:text-blue-300 transition-colors mt-1 inline-block">
-              全てのゾーンパターンを見る →
-            </a>
+          <div className="h-2 bg-blue-500" />
+          <div className="p-6 space-y-5">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">あなたに合う環境</p>
+
+            <div>
+              <p className="text-sm font-semibold text-green-400 mb-2">力が発揮できる環境</p>
+              <ul className="space-y-1">
+                {environmentFit.bestEnvironments.map((item, i) => (
+                  <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
+                    <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-red-400 mb-2">消耗しやすい環境</p>
+              <ul className="space-y-1">
+                {environmentFit.drainEnvironments.map((item, i) => (
+                  <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
+                    <span className="text-red-500 mt-0.5 shrink-0">✕</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-blue-400 mb-2">上司・メンターへのヒント</p>
+              <ul className="space-y-1">
+                {environmentFit.managementTips.map((item, i) => (
+                  <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
+                    <span className="text-blue-400 mt-0.5 shrink-0">›</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-amber-400 mb-2">今すぐできる成長アクション</p>
+              <ul className="space-y-1">
+                {environmentFit.growthActions.map((item, i) => (
+                  <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
+                    <span className="text-amber-400 mt-0.5 shrink-0">→</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <p className="text-xs text-gray-500 leading-relaxed border-t border-gray-700/50 pt-4">{environmentFit.scientificBasis}</p>
           </div>
         </div>
 
