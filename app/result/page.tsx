@@ -222,6 +222,18 @@ function AnswerViewer({
                   <div key={i} className="bg-gray-900 rounded-lg p-3 text-xs space-y-1">
                     <p className="font-semibold text-gray-200">シナリオ{i + 1}：{scenarios[i]?.title}</p>
                     <p className="text-gray-500">SJT (A/B/C/D)：{ans.sjtRatings.join(' / ')}</p>
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {scenarios[i]?.sjtOptions.flatMap((opt, j) =>
+                        (opt.tags ?? []).map((tag) => (
+                          <span
+                            key={`${j}-${tag}`}
+                            className="bg-gray-700/50 text-gray-300 text-xs px-2 py-0.5 rounded-full inline-block"
+                          >
+                            {TAG_LABELS[tag] ?? tag}
+                          </span>
+                        ))
+                      )}
+                    </div>
                     <p className="text-gray-500">帰属評定 (Q1/Q2/Q3)：{ans.attributions.join(' / ')}</p>
                   </div>
                 ))}

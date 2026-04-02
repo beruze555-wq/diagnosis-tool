@@ -258,7 +258,10 @@ export default function DiagnosisPage() {
       {/* Progress */}
       <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur px-4 py-3">
         <div className="max-w-lg mx-auto">
-          <p className="text-sm text-gray-500 tracking-wide mb-2">MIRROR</p>
+          <div className="text-center mb-4">
+            <span className="text-sm font-bold tracking-widest text-gray-400 uppercase">MIRROR</span>
+            <div className="h-px w-12 mx-auto mt-1 bg-gradient-to-r from-transparent via-gray-600 to-transparent" />
+          </div>
           <div className="flex justify-between text-xs text-gray-400 mb-1.5">
             <span>
               {phase === 'layer1'
