@@ -69,24 +69,31 @@ export default function StartPage() {
       <div className="w-full max-w-lg space-y-8">
 
         {/* Hero */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-4">
           <p className="text-xs text-gray-500 tracking-widest uppercase">MIRROR</p>
           <h1 className="text-3xl font-bold text-white">メンタルタイプ診断</h1>
-          <p className="text-sm text-gray-400 leading-relaxed">
-            6つの場面への反応から、あなたのメンタルの"型"——<br />
-            強みの活かし方と、力を発揮できる環境が分かります。
-          </p>
-        </div>
-
-        {/* Trust badges */}
-        <div className="flex justify-center gap-6 text-xs text-gray-500">
-          <span>📊 7つの学術理論に基づく設計</span>
-          <span>⏱️ 約10分</span>
-          <span>🔬 36の質問 + 6つのシナリオ</span>
+          {/* 感情フック */}
+          <div className="space-y-2">
+            <p className="text-base text-gray-300 leading-relaxed">
+              <span className="text-white font-semibold">"自分のことは自分が一番分かっている"</span><br />
+              ——本当にそうですか？
+            </p>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              6つの場面への反応から、あなた自身も気づいていない<br />
+              <span className="text-white">メンタルの"型"</span>・<span className="text-white">隠れた強み</span>・<span className="text-white">力を発揮できる環境</span>が見えてきます。
+            </p>
+          </div>
         </div>
 
         {/* Form card */}
         <div className="bg-gray-800/40 rounded-2xl p-6 border border-gray-700/40 max-w-md mx-auto w-full space-y-4">
+
+          {/* Trust badges */}
+          <div className="flex justify-center gap-4 text-xs text-gray-500 pb-2">
+            <span>📊 7つの学術理論</span>
+            <span>⏱️ 約10分</span>
+            <span>🔬 42問</span>
+          </div>
 
           {/* Age */}
           <div>
@@ -186,14 +193,8 @@ export default function StartPage() {
         </div>
 
         {/* Footer */}
-        <div className="text-center space-y-1">
+        <div className="text-center">
           <p className="text-xs text-gray-500">結果はあなた自身のために使われます。</p>
-          <button
-            onClick={() => router.push('/about')}
-            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            この診断の仕組みについて詳しく →
-          </button>
         </div>
 
       </div>
