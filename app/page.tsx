@@ -36,7 +36,15 @@ export default function StartPage() {
     sessionStorage.setItem('devMode', 'true')
     sessionStorage.setItem(
       'devScores',
-      JSON.stringify({ OS: 72, A: 68, B: 55, C: 81, zone: 'Yellow' })
+      JSON.stringify({ OS: 72, A: 76, B: 64, C: 80, zone: 'Yellow' })
+    )
+    sessionStorage.setItem(
+      'layer2Answers',
+      JSON.stringify({
+        axisA: [4, 4, 2, 4, 2, 4, 4, 4, 2, 4],
+        axisB: [3, 3, 3, 3, 3, 3, 3, 4, 4, 3],
+        axisC: [4, 4, 4, 4, 4, 2, 2, 2, 2, 2],
+      })
     )
     router.push('/result')
   }

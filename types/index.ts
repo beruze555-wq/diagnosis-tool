@@ -1,3 +1,9 @@
+export interface SJTOption {
+  label: string
+  text: string
+  tags: string[]
+}
+
 export interface UserInfo {
   age: number
   affiliation: string

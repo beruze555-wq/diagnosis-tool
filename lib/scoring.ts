@@ -1,4 +1,5 @@
 import { ScenarioAnswer, Layer2Answers, Scores, Zone } from '@/types'
+import { scenarios } from '@/lib/scenarios'
 
 export function calculateOS(scenarioAnswers: ScenarioAnswer[]): number {
   const allAttributions = scenarioAnswers.flatMap((a) => a.attributions)
@@ -8,21 +9,21 @@ export function calculateOS(scenarioAnswers: ScenarioAnswer[]): number {
 }
 
 export function calculateAxisA(axisA: number[]): number {
-  const reversedIdx = [2, 4, 7]
+  const reversedIdx = [0, 2, 4, 8]
   const adjusted = axisA.map((v, i) => (reversedIdx.includes(i) ? 6 - v : v))
   const sum = adjusted.reduce((a, b) => a + b, 0)
   return Math.round((sum * 100) / 50)
 }
 
 export function calculateAxisB(axisB: number[]): number {
-  const reversedIdx = [1, 3, 6, 8]
+  const reversedIdx = [0, 1, 2, 3, 5, 6, 9]
   const adjusted = axisB.map((v, i) => (reversedIdx.includes(i) ? 6 - v : v))
   const sum = adjusted.reduce((a, b) => a + b, 0)
   return Math.round((sum * 100) / 50)
 }
 
 export function calculateAxisC(axisC: number[]): number {
-  const reversedIdx = [4]
+  const reversedIdx = [5, 6, 7, 8, 9]
   const adjusted = axisC.map((v, i) => (reversedIdx.includes(i) ? 6 - v : v))
   const sum = adjusted.reduce((a, b) => a + b, 0)
   return Math.round((sum * 100) / 50)
@@ -51,7 +52,7 @@ export function calculateScores(
   return { OS, A, B, C, zone }
 }
 
-// ─── Zone comment (multi-paragraph) ──────────────────────────────────────────
+// ─── Zone comment (multi-paragraph, 3-zone) ───────────────────────────────────
 
 export function getZoneComment(zone: Zone): string[] {
   if (zone === 'Green') {
@@ -78,11 +79,198 @@ export function getZoneComment(zone: Zone): string[] {
   ]
 }
 
+// ─── Zone pattern (13 patterns) ───────────────────────────────────────────────
+
+export interface ZonePattern {
+  zoneId: string
+  zoneName: string
+  zoneColor: 'green' | 'yellow' | 'red'
+  zoneIcon: string
+  paragraphs: string[]
+}
+
+const ZONE_PATTERNS: Record<string, ZonePattern> = {
+  G1: {
+    zoneId: 'G1',
+    zoneName: '全面突破型',
+    zoneColor: 'green',
+    zoneIcon: '🌟',
+    paragraphs: [
+      '帰属スタイル・粘り強さ・情緒安定性・達成動機の4要素すべてが高い水準にあります。Seligman(1991)、Duckworth(2016)、Bandura(1997)のいずれの理論からも、高ストレス環境での持続的パフォーマンスを示す理想的なプロファイルです。',
+      '営業・新規事業・スタートアップなど挑戦的な環境でのパフォーマンスが期待できます。周囲が諦めた後も最後まで粘り、結果を出し切る力がある一方、チームメンバーへの共感力を意識することでリーダーとしての影響力がさらに増します。',
+    ],
+  },
+  G2: {
+    zoneId: 'G2',
+    zoneName: '超楽観突破型',
+    zoneColor: 'green',
+    zoneIcon: '⚡',
+    paragraphs: [
+      '逆境の捉え方（OS）が突出して高く、他の3指標も十分な水準にあります。セリグマンの研究では、楽観的帰属スタイルが営業パフォーマンスを最も強く予測することが示されています。',
+      '連続した失敗でも心理的ダメージが最小化され、失敗を「一時的・外的」なものとして処理する能力が特に優れています。高ストレス環境でのストレス耐性は群を抜いており、チームの精神的支柱になれます。',
+    ],
+  },
+  G3: {
+    zoneId: 'G3',
+    zoneName: '燃焼型',
+    zoneColor: 'green',
+    zoneIcon: '🔥',
+    paragraphs: [
+      '達成動機（希望動機）が際立って高く、成功への渇望が行動のエンジンとなっています。AMS-R（Lang & Fries, 2006）の観点では、「失敗への恐れ」ではなく「成功への希求」が主な動機源であることが長期的な燃え尽き予防につながります。',
+      '内発的な達成欲求が行動を牽引するため、明確な目標と裁量権が与えられた環境で特に輝きます。他の指標も高いため、熱量が空回りせず着実に成果に結びつく安定感があります。',
+    ],
+  },
+  G4: {
+    zoneId: 'G4',
+    zoneName: '鉄壁型',
+    zoneColor: 'green',
+    zoneIcon: '🛡️',
+    paragraphs: [
+      '情緒安定性が突出して高く、拒絶・批判・失敗による心理的ダメージが最小限です。BFI-2-J（Oshio et al., 2022）の神経症傾向が非常に低いプロファイルで、訪問営業や交渉など対人ストレスの高い環境で圧倒的な有利性を発揮します。',
+      '「打たれ強さ」が際立っており、何があっても翌日にはリセットできる精神的タフネスがあります。他の指標も高いため、感情の安定を基盤にした持続的なパフォーマンスが期待できます。',
+    ],
+  },
+  Y1: {
+    zoneId: 'Y1',
+    zoneName: '基盤形成中',
+    zoneColor: 'yellow',
+    zoneIcon: '🌱',
+    paragraphs: [
+      '3指標はそれぞれ及第点をクリアしていますが、逆境の捉え方（OS）にやや課題があります。失敗を「自分のせいで、ずっと続く」と感じやすい傾向が残っていますが、Seligman(1991)が示すように帰属スタイルは後天的に改善できます。',
+      '良質なフィードバック環境と小さな成功体験の積み重ねが、OSスコアの向上に直結します。週1回の1on1と「今日うまくいったこと」を言語化する習慣が特に効果的です。適切なサポートがあれば、3ヶ月でG1相当の活躍が見込めます。',
+    ],
+  },
+  Y2: {
+    zoneId: 'Y2',
+    zoneName: '持続力課題型',
+    zoneColor: 'yellow',
+    zoneIcon: '⚙️',
+    paragraphs: [
+      '情緒安定性と達成動機は十分ですが、長期的な継続力（グリット）に伸びしろがあります。Duckworth(2009)のGrit-Sが示すように、粘り強さは「興味の一貫性」と「努力の持続」の2因子で構成されます。',
+      '短期目標の細分化（90日ゴール→週次マイルストーン）と「なぜやるのか」の言語化が有効です。情緒と動機が安定しているため、継続力の課題さえ補えば高パフォーマンスを発揮できます。',
+    ],
+  },
+  Y3: {
+    zoneId: 'Y3',
+    zoneName: '情緒課題型',
+    zoneColor: 'yellow',
+    zoneIcon: '🌊',
+    paragraphs: [
+      '粘り強さと達成動機はあるものの、ネガティブな刺激に対する感情的反応の調節に課題があります。BFI-2-Jの研究では、不安傾向や感情の波は環境と習慣によって緩和できることが示されています。',
+      '心理的安全性の高いチームでの経験、マインドフルネス実践、定期的な感情リセット習慣が効果的です。強みの粘り強さと動機を活かしながら、感情管理スキルを意識的に鍛えることで急速に成長できます。',
+    ],
+  },
+  Y4: {
+    zoneId: 'Y4',
+    zoneName: '動機課題型',
+    zoneColor: 'yellow',
+    zoneIcon: '🎯',
+    paragraphs: [
+      '逆境への強さと持続力は備わっていますが、「これを成し遂げたい」という強い動機づけが弱い状態です。AMS-R（Lang & Fries, 2006）では動機は内発的要因（成功への希求）と回避的要因（失敗への恐れ）に分かれます。',
+      '自分の「なぜ働くのか」を深掘りし、価値観に紐づいた目標設定を行うことが達成動機を高める鍵です。強みの安定性と粘り強さがあるため、動機が明確になった瞬間に爆発的な成長が起きやすいプロファイルです。',
+    ],
+  },
+  Y5: {
+    zoneId: 'Y5',
+    zoneName: '全体底上げ型',
+    zoneColor: 'yellow',
+    zoneIcon: '📈',
+    paragraphs: [
+      'すべての指標が下限を超えていますが、2つの指標がボーダーライン付近にあります。現在は「伸びしろが最も大きい状態」とも言えます。PsyCap（Luthans et al., 2007）のHEROモデル（Hope, Efficacy, Resilience, Optimism）に基づけば、バランスよくすべての要素を少しずつ強化するアプローチが効率的です。',
+      '特定の弱点を無理に補強するより、強みをさらに伸ばしながら弱い領域を少しずつ底上げする戦略が有効です。サポートが整った環境で6ヶ月経験を積むことで、複数の指標が同時に向上する可能性があります。',
+    ],
+  },
+  R1: {
+    zoneId: 'R1',
+    zoneName: '楽観性課題型',
+    zoneColor: 'red',
+    zoneIcon: '⚠️',
+    paragraphs: [
+      '逆境が起きたとき、「自分のせいで、ずっと続き、すべてに影響する」と感じる帰属スタイルが強く出ています。これは認知のクセであり、能力とは無関係です。セリグマンの楽観性訓練（ABCDE法）や認知行動療法的アプローチで改善できます。',
+      'まずは心理的安全性の高い環境で経験を積むことを優先してください。失敗を責めずに「次どうするか」にフォーカスするチーム、こまめなポジティブフィードバックがある組織が最適です。環境を整えることで、スコアは確実に変化します。',
+    ],
+  },
+  R2: {
+    zoneId: 'R2',
+    zoneName: '粘り・耐久課題型',
+    zoneColor: 'red',
+    zoneIcon: '🔧',
+    paragraphs: [
+      '継続力と情緒安定性の両方に課題がある状態です。この組み合わせは、挑戦した際の精神的疲弊が大きく、回復に時間がかかることを示しています。高ストレス環境では消耗しやすい傾向があります。',
+      'いきなり過酷な環境に飛び込むよりも、まずメンタルヘルスの基盤を整え、段階的に負荷を上げていく環境設計が重要です。まず情緒安定を優先し（良質な睡眠・運動・信頼できる人との対話）、次に小目標の達成を繰り返すことで継続力が育まれます。',
+    ],
+  },
+  R3: {
+    zoneId: 'R3',
+    zoneName: '複合課題型',
+    zoneColor: 'red',
+    zoneIcon: '🔄',
+    paragraphs: [
+      '達成動機と他の1指標が低い組み合わせです。「何のためにやるのか」が不明確な状態で困難に直面しやすく、行動の原動力が不安定になります。',
+      '動機の明確化が最初のステップです。内発的動機（やりがい・使命感）と外発的動機（報酬・評価）のバランスを見直し、「この仕事で何を達成したいか」を言語化することが、他の指標の改善にも波及します。SDT（Deci & Ryan, 2000）が示すように、自律性が高まると粘り強さと安定性も同時に向上します。',
+    ],
+  },
+  R4: {
+    zoneId: 'R4',
+    zoneName: '基礎構築型',
+    zoneColor: 'red',
+    zoneIcon: '🌰',
+    paragraphs: [
+      '複数の指標が低い状態です。これは「能力がない」ということではなく、「まだ開発が必要な状態」です。SDT（Deci & Ryan, 2000）が示すように、自律性・有能感・関係性の3つが満たされる環境から始めることで、すべての指標が同時に改善していきます。',
+      '今は高ストレス環境よりも、基盤を整える時期です。段階的な目標設定・手厚いメンタリング・週次の1on1がある守られた環境で経験を積み、達成体験を積み重ねることで、6〜12ヶ月後には大きな変化が期待できます。',
+    ],
+  },
+}
+
+export function getZonePattern(OS: number, A: number, B: number, C: number): ZonePattern {
+  // Special case: layer2 not taken (A=B=C=0)
+  if (A === 0 && B === 0 && C === 0) {
+    if (OS >= 60) return ZONE_PATTERNS.G1
+    if (OS >= 35) return ZONE_PATTERNS.Y1
+    return ZONE_PATTERNS.R1
+  }
+
+  const countBelow40 = [A, B, C].filter((v) => v < 40).length
+
+  // Red zones
+  if (OS < 35 && countBelow40 >= 2) return ZONE_PATTERNS.R4
+  if (OS < 35) return ZONE_PATTERNS.R1
+  if (countBelow40 === 3) return ZONE_PATTERNS.R4
+  if (A < 40 && B < 40) return ZONE_PATTERNS.R2
+  if ((A < 40 && C < 40) || (B < 40 && C < 40)) return ZONE_PATTERNS.R3
+
+  // Yellow zones
+  const borderline = [A, B, C].filter((v) => v >= 40 && v <= 45).length
+  if (countBelow40 === 0 && borderline >= 2) return ZONE_PATTERNS.Y5
+  if (A < 40) return ZONE_PATTERNS.Y2
+  if (B < 40) return ZONE_PATTERNS.Y3
+  if (C < 40) return ZONE_PATTERNS.Y4
+
+  // Green zones
+  if (A >= 60 && B >= 60 && C >= 60) {
+    if (OS >= 85) return ZONE_PATTERNS.G2
+    if (C >= 85) return ZONE_PATTERNS.G3
+    if (B >= 85) return ZONE_PATTERNS.G4
+    return ZONE_PATTERNS.G1
+  }
+
+  // Yellow remaining
+  if (OS < 60) return ZONE_PATTERNS.Y1
+
+  // Fallback
+  return ZONE_PATTERNS.G1
+}
+
 // ─── Personality types (16 types, 4 paragraphs each) ─────────────────────────
 
-const PERSONALITY_TYPES: Record<string, { name: string; paragraphs: string[] }> = {
+const PERSONALITY_TYPES: Record<
+  string,
+  { name: string; icon: string; bandClass: string; paragraphs: string[] }
+> = {
   HHHH: {
     name: '突破者（ブレイクスルー）型',
+    icon: '⚡',
+    bandClass: 'bg-gradient-to-r from-blue-400 to-purple-500',
     paragraphs: [
       '逆境を一時的と捉え、感情に流されず、粘り強く目標を追い続ける。最も高ストレスな環境に適性がある"鉄人"タイプ。',
       '仕事では、周囲が諦めた後も最後まで粘り、結果を出し切る力があります。営業であれば断られ続けても数字を積み上げ、スタートアップであれば資金が尽きかけても次の一手を打てる。チームの精神的支柱になれる存在です。',
@@ -92,6 +280,8 @@ const PERSONALITY_TYPES: Record<string, { name: string; paragraphs: string[] }> 
   },
   HHHL: {
     name: '静かな継続者型',
+    icon: '🌊',
+    bandClass: 'bg-gradient-to-r from-cyan-400 to-blue-500',
     paragraphs: [
       '目立たないが、黙々とやり続ける安定感がある。競争より自分のペースで確実に積み上げるタイプ。',
       '仕事では、派手さはないが確実に成果を積み上げる"縁の下の力持ち"。長期プロジェクトや、丁寧さが求められる業務で真価を発揮します。',
@@ -101,15 +291,19 @@ const PERSONALITY_TYPES: Record<string, { name: string; paragraphs: string[] }> 
   },
   HHLH: {
     name: '情熱戦士型',
+    icon: '🔥',
+    bandClass: 'bg-gradient-to-r from-red-400 to-orange-500',
     paragraphs: [
       '目標への情熱が強く粘り強いが、批判や拒絶に敏感。仲間の支えがあると爆発的に伸びるタイプ。',
-      '仕事では、"これを成し遂げたい"という強い想いが原動力。目標が明確なときの推進力は圧倒的で、チームメンバーを巻き込む熱量があります。営業でも"この商品で顧客の課題を解決したい"という使命感が成果につながります。',
-      '一方で、否定的なフィードバックや人間関係のトラブルで大きく消耗します。上司からの何気ない一言で数日間パフォーマンスが落ちることも。感情の波が成果の波に直結しやすいのが弱点です。',
-      '最も輝く環境：ビジョンに共感できるチーム、心理的安全性のある組織、こまめな承認とフィードバックがある環境。"何のためにやるのか"が明確な仕事。',
+      '仕事では、"これを成し遂げたい"という強い想いが原動力。目標が明確なときの推進力は圧倒的で、チームメンバーを巻き込む熱量があります。',
+      '一方で、否定的なフィードバックや人間関係のトラブルで大きく消耗します。感情の波が成果の波に直結しやすいのが弱点です。',
+      '最も輝く環境：ビジョンに共感できるチーム、心理的安全性のある組織、こまめな承認とフィードバックがある環境。',
     ],
   },
   HHLL: {
     name: '堅実マイペース型',
+    icon: '🛡️',
+    bandClass: 'bg-gradient-to-r from-green-400 to-emerald-500',
     paragraphs: [
       '自分のやるべきことを淡々とこなす。プレッシャーの少ない環境で持続的に成果を出す。',
       '仕事では、与えられた役割を確実に遂行する信頼性の高さが強みです。締め切りを守り、品質を維持し、チームの安定に貢献します。',
@@ -119,6 +313,8 @@ const PERSONALITY_TYPES: Record<string, { name: string; paragraphs: string[] }> 
   },
   HLHH: {
     name: '瞬発アタッカー型',
+    icon: '⚔️',
+    bandClass: 'bg-gradient-to-r from-amber-400 to-red-500',
     paragraphs: [
       '立ち直りが早く打たれ強いが、飽きやすい。短期集中型のプロジェクトで真価を発揮する。',
       '仕事では、新しいプロジェクトの立ち上げフェーズで爆発的な推進力を見せます。失敗しても翌日にはケロッとしているメンタルの強さがあります。',
@@ -128,6 +324,8 @@ const PERSONALITY_TYPES: Record<string, { name: string; paragraphs: string[] }> 
   },
   HLHL: {
     name: '楽観サバイバー型',
+    icon: '☀️',
+    bandClass: 'bg-gradient-to-r from-yellow-400 to-amber-500',
     paragraphs: [
       'ストレスに強くポジティブだが、目標への執着は薄い。柔軟な環境で持ち味が活きる。',
       '仕事では、チームの雰囲気を明るくする存在。ストレスフルな状況でも周囲を和ませ、チームの精神的健康に貢献します。',
@@ -137,51 +335,63 @@ const PERSONALITY_TYPES: Record<string, { name: string; paragraphs: string[] }> 
   },
   HLLH: {
     name: '野心スプリンター型',
+    icon: '🚀',
+    bandClass: 'bg-gradient-to-r from-violet-400 to-indigo-500',
     paragraphs: [
       '高い目標に向かう意欲はあるが、壁にぶつかると感情が揺れやすい。メンターの存在が鍵。',
       '仕事では、"上に行きたい"という強い意志が行動量を生みます。ただし、挫折時のダメージが大きく、立ち直りに時間がかかることがあります。',
-      'メンターや上司からの定期的な精神的サポートがあると、持ち前の野心が安定的に成果につながります。放置されると一気に崩れるリスクも。',
+      'メンターや上司からの定期的な精神的サポートがあると、持ち前の野心が安定的に成果につながります。',
       '最も輝く環境：メンター制度が充実した組織、段階的に難易度が上がる成長パス。定期的な1on1とフィードバックがある環境。',
     ],
   },
   HLLL: {
     name: '自由探索型',
+    icon: '🧭',
+    bandClass: 'bg-gradient-to-r from-teal-400 to-cyan-500',
     paragraphs: [
       '楽観的で好奇心旺盛だが、一つに絞ることが苦手。多様な経験を積む段階で力を発揮する。',
       '仕事では、幅広い興味関心が新しいアイデアや視点を生みます。"何でもやってみたい"というエネルギーがチームに刺激を与えます。',
       'ただし、一つのことに深くコミットすることが苦手で、浅く広くなりがちです。今は"探索期"と捉え、多様な経験を積むことを優先する方が長期的には有利です。',
-      '最も輝く環境：ジョブローテーションがある組織、マルチタスク型の業務、企画やマーケティング。好奇心を活かせる多様性のあるポジション。',
+      '最も輝く環境：ジョブローテーションがある組織、マルチタスク型の業務、企画やマーケティング。',
     ],
   },
   LHHH: {
     name: '隠れエース型',
+    icon: '🎯',
+    bandClass: 'bg-gradient-to-r from-rose-400 to-pink-500',
     paragraphs: [
       '実行力は高いが、逆境の捉え方にやや課題あり。成功体験を積めば急成長する可能性大。',
       '仕事では、やると決めたら確実に実行する力があります。ただし、失敗を必要以上に深刻に捉えてしまう傾向があり、自信を失いやすいです。',
-      '上司やメンターからの"大丈夫、方向性は合っている"という承認が、このタイプの最大のブースターになります。一度自信をつければ、突破者型に匹敵する活躍をする可能性があります。',
+      '上司やメンターからの"大丈夫、方向性は合っている"という承認が、このタイプの最大のブースターになります。',
       '最も輝く環境：成功体験を計画的に積める環境、こまめなポジティブフィードバック。最初の3ヶ月で"勝ち癖"をつけられるオンボーディング。',
     ],
   },
   LHHL: {
     name: '黙々職人型',
+    icon: '🔨',
+    bandClass: 'bg-gradient-to-r from-stone-400 to-zinc-500',
     paragraphs: [
       '与えられた仕事は確実にこなすが、自発的な目標設定が弱い。明確な役割定義がある環境向き。',
       '仕事では、指示が明確であれば非常に高い精度で業務を遂行します。品質管理やオペレーション業務で高い信頼を得るタイプです。',
-      '自分から目標を立てることは苦手で、"何をすればいいかが分からない"状態に弱いです。マネージャーが明確なKPIを設定すると安定的に成果を出します。',
+      '自分から目標を立てることは苦手で、マネージャーが明確なKPIを設定すると安定的に成果を出します。',
       '最も輝く環境：役割と期待値が明確なポジション、マニュアルが整備された環境。定型業務の効率化や品質向上を担う役割。',
     ],
   },
   LHLH: {
     name: '繊細エンジン型',
+    icon: '💎',
+    bandClass: 'bg-gradient-to-r from-sky-400 to-blue-500',
     paragraphs: [
       'やる気と粘り強さはあるが、メンタルの浮き沈みが大きい。心理的安全性のあるチームで開花する。',
       '仕事では、調子が良いときの推進力は目を見張るものがあります。感受性の高さは顧客の課題を深く理解する力にもつながっています。',
-      'ただし、人間関係のストレスや否定的フィードバックで急激にパフォーマンスが低下することがあります。チーム内の人間関係が良好かどうかが、このタイプの成果を大きく左右します。',
+      'ただし、人間関係のストレスや否定的フィードバックで急激にパフォーマンスが低下することがあります。',
       '最も輝く環境：チームの人間関係が良好な組織、共感的なリーダーの下。感受性を強みとして活かせる顧客対応やカウンセリング的な業務。',
     ],
   },
   LHLL: {
     name: '慎重ストイック型',
+    icon: '🏔️',
+    bandClass: 'bg-gradient-to-r from-slate-400 to-gray-500',
     paragraphs: [
       '真面目で努力家だが、悲観的になりやすい。安定した環境で地道に成長するタイプ。',
       '仕事では、責任感が強く手を抜きません。任された業務は必ずやり遂げるという信頼感があります。',
@@ -191,37 +401,45 @@ const PERSONALITY_TYPES: Record<string, { name: string; paragraphs: string[] }> 
   },
   LLHH: {
     name: '勝負師型（ムラあり）',
+    icon: '🎲',
+    bandClass: 'bg-gradient-to-r from-fuchsia-400 to-purple-500',
     paragraphs: [
       '打たれ強く勝ちにこだわるが、継続力に課題。短期の競争環境で一気に結果を出すタイプ。',
       '仕事では、コンテストやキャンペーンなど"勝負の場"で爆発力を発揮します。競争相手がいることで最大限のパフォーマンスを出します。',
-      'ただし、日常の地道な積み上げは苦手で、"本番"以外のモチベーション維持が課題です。常にゲーム性のある環境設計が必要です。',
+      'ただし、日常の地道な積み上げは苦手で、常にゲーム性のある環境設計が必要です。',
       '最も輝く環境：営業コンテスト、短期キャンペーン、ランキング可視化。勝ち負けが明確で、短期サイクルの成果が求められるポジション。',
     ],
   },
   LLHL: {
     name: 'マイペース鈍感型',
+    icon: '🐢',
+    bandClass: 'bg-gradient-to-r from-lime-400 to-green-500',
     paragraphs: [
       'ストレスには強いが、目標や継続への意欲が低い。本人の"やりたい"が見つかれば化ける。',
       '仕事では、プレッシャーに強くマイペースを崩さない安定感があります。ただし、外から見ると"やる気がない"と誤解されることも。',
-      'このタイプの最大の課題は"動機の発見"。やりたいことが見つかったとき、打たれ強さが最大の武器になります。今は焦らず、様々な経験を通じて自分の情熱を探す段階です。',
+      'このタイプの最大の課題は"動機の発見"。やりたいことが見つかったとき、打たれ強さが最大の武器になります。',
       '最も輝く環境：様々な業務を経験できるジェネラリストポジション、自分のペースで働ける環境。内発的動機が見つかるまでの"修行期間"として多様な経験を積める場所。',
     ],
   },
   LLLH: {
     name: 'ガラスの野心家型',
+    icon: '🪞',
+    bandClass: 'bg-gradient-to-r from-pink-400 to-rose-500',
     paragraphs: [
       '高い目標は持つが、逆境に弱く継続も苦手。手厚いサポートと小さな成功体験の積み重ねが必要。',
       '仕事では、"大きなことを成し遂げたい"という意欲は本物です。ただし、その意欲に現在のメンタル耐性が追いついていない状態。',
-      '最も重要なのは、いきなり大きな挑戦をさせるのではなく、達成可能な小さな目標を段階的にクリアさせること。成功体験が自己効力感を育て、それがメンタル耐性の向上につながります。',
+      '最も重要なのは、達成可能な小さな目標を段階的にクリアさせること。成功体験が自己効力感を育て、それがメンタル耐性の向上につながります。',
       '最も輝く環境：段階的な目標設定、手厚いメンタリング、週次の1on1。"守られながら挑戦できる"環境が理想。',
     ],
   },
   LLLL: {
     name: '探索準備型',
+    icon: '🔬',
+    bandClass: 'bg-gradient-to-r from-indigo-400 to-violet-500',
     paragraphs: [
       'まだ自分の方向性を模索中。高ストレス環境よりも、自己理解を深める経験が今は大切。',
       '仕事では、今は"何が向いているか"を見つける段階です。これは弱みではなく、キャリアの自然なプロセスです。',
-      '焦って高ストレス環境に飛び込むよりも、インターンや短期プロジェクトで多様な経験を積み、自分の反応パターンを知ることが先決です。自己理解が深まれば、次のステップが自然と見えてきます。',
+      '焦って高ストレス環境に飛び込むよりも、インターンや短期プロジェクトで多様な経験を積み、自分の反応パターンを知ることが先決です。',
       '最も輝く環境：複数のプロジェクトを経験できるインターン、メンターがつく研修プログラム。自己理解を促進するフィードバックが豊富な環境。',
     ],
   },
@@ -232,7 +450,7 @@ export function getPersonalityType(
   A: number,
   B: number,
   C: number
-): { name: string; paragraphs: string[] } {
+): { name: string; icon: string; bandClass: string; paragraphs: string[] } {
   const key =
     (OS >= 60 ? 'H' : 'L') +
     (A >= 60 ? 'H' : 'L') +
@@ -241,35 +459,54 @@ export function getPersonalityType(
   return PERSONALITY_TYPES[key] ?? PERSONALITY_TYPES['LLLL']
 }
 
-// ─── SJT behavior tendency ────────────────────────────────────────────────────
+// ─── SJT behavior tendency (8 tags) ──────────────────────────────────────────
 
-const OPTION_TAGS = [
-  { tags: ['自力改善', '行動変容'], phrase: '自ら原因を分析し行動を変えていこうとする' },
-  { tags: ['フィードバック志向', '関係構築'], phrase: '他者のフィードバックを活かし関係を築く' },
-  { tags: ['回避傾向', '自己防衛'], phrase: '困難な状況から距離を置いて自分を守ろうとする' },
-  { tags: ['合理化', '俯瞰思考'], phrase: '状況を俯瞰して合理的に捉え直す' },
-]
+const TAG_DESCRIPTIONS: Record<string, string> = {
+  '行動変容': '自ら原因を分析して行動を変えていこうとする',
+  'フィードバック志向': '他者のフィードバックを積極的に活用する',
+  '回避・撤退': '困難な状況から距離を置こうとする',
+  '合理化・俯瞰': '状況を俯瞰して合理的に捉え直す',
+  '自己効力': '自分の力で解決できると信じて動く',
+  'チーム志向': 'チームの力を活かして課題に向き合う',
+  '感情制御': '感情を適切に制御して冷静に対処する',
+  '情熱駆動': '強い情熱と使命感を原動力にする',
+}
 
 export function getSJTBehaviorTendency(scenarioAnswers: ScenarioAnswer[]): {
   tag1: string
   tag2: string
   description: string
 } {
-  const scores = [0, 0, 0, 0]
-  for (const ans of scenarioAnswers) {
-    for (let i = 0; i < 4; i++) scores[i] += ans.sjtRatings[i] ?? 0
+  const tagScores: Record<string, number> = {}
+
+  for (let si = 0; si < scenarioAnswers.length; si++) {
+    const scenario = scenarios[si]
+    if (!scenario) continue
+    const ans = scenarioAnswers[si]
+    for (let oi = 0; oi < 4; oi++) {
+      const rating = ans.sjtRatings[oi] ?? 0
+      const tags = scenario.sjtOptions[oi]?.tags ?? []
+      for (const tag of tags) {
+        tagScores[tag] = (tagScores[tag] ?? 0) + rating
+      }
+    }
   }
-  const ranked = [0, 1, 2, 3].sort((a, b) => scores[b] - scores[a])
-  const top1 = ranked[0]
-  const top2 = ranked[1]
+
+  const sorted = Object.entries(tagScores).sort((a, b) => b[1] - a[1])
+  const tag1 = sorted[0]?.[0] ?? '行動変容'
+  const tag2 = sorted[1]?.[0] ?? 'フィードバック志向'
+
+  const d1 = TAG_DESCRIPTIONS[tag1] ?? tag1
+  const d2 = TAG_DESCRIPTIONS[tag2] ?? tag2
+
   return {
-    tag1: OPTION_TAGS[top1].tags[0],
-    tag2: OPTION_TAGS[top2].tags[0],
-    description: `困難な場面で${OPTION_TAGS[top1].phrase}傾向と、${OPTION_TAGS[top2].phrase}傾向が組み合わさっています。`,
+    tag1,
+    tag2,
+    description: `困難な場面で${d1}傾向と、${d2}傾向が組み合わさっています。`,
   }
 }
 
-// ─── Main axis descriptions (string[], one item per paragraph) ───────────────
+// ─── Main axis descriptions ───────────────────────────────────────────────────
 
 export function getOSDescription(score: number): string[] {
   if (score >= 80) {
@@ -296,7 +533,7 @@ export function getOSDescription(score: number): string[] {
   return [
     '逆境を"自分のせいで、ずっと続く、人生全体に影響する"と捉えやすい傾向が強めに出ています。このパターンは、心理学で"悲観的帰属スタイル"と呼ばれます。',
     'これは能力の問題ではありません。物事の捉え方のクセであり、意識的に変えていくことができます。認知行動療法（CBT）の手法が特に有効です。',
-    '今のあなたに最適なのは、心理的安全性が高く、小さな成功体験を積み重ねられる環境です。いきなり高ストレスな環境に飛び込むよりも、まず自信をつけるステップを踏むことをおすすめします。',
+    '今のあなたに最適なのは、心理的安全性が高く、小さな成功体験を積み重ねられる環境です。',
   ]
 }
 
@@ -318,7 +555,7 @@ export function getAxisADescription(score: number): string[] {
   if (score >= 40) {
     return [
       '粘り強さは平均的。興味があることには集中できるが、義務感だけでは長続きしにくい傾向です。',
-      'これは悪いことではなく、"本当に情熱を持てるもの"を見つけることが重要という意味。Jachimowicz(2018)のPNAS論文では、粘り強さは情熱と組み合わさったときにのみ成果を予測することが示されています。',
+      'Jachimowicz(2018)のPNAS論文では、粘り強さは情熱と組み合わさったときにのみ成果を予測することが示されています。"本当に情熱を持てるもの"を見つけることが重要です。',
     ]
   }
   return [
@@ -372,7 +609,7 @@ export function getAxisCDescription(score: number): string[] {
   if (score >= 40) {
     return [
       '競争よりも協調や過程を重視する傾向。これは"チームプレイヤー"としての強みでもあります。',
-      'ただし、成果主義の強い環境では周囲とのギャップに苦しむ可能性も。あなたの達成動機を引き出すには、"数字で勝つ"より"誰かの役に立つ""チームに貢献する"という動機づけが効果的です。',
+      'ただし、成果主義の強い環境では周囲とのギャップに苦しむ可能性も。"数字で勝つ"より"誰かの役に立つ""チームに貢献する"という動機づけが効果的です。',
     ]
   }
   return [
@@ -393,7 +630,28 @@ export interface DeepAnalysis {
 }
 
 function norm1to5(val: number): number {
-  return Math.round(Math.max(0, Math.min(100, (val - 1) / 4 * 100)))
+  return Math.round(Math.max(0, Math.min(100, ((val - 1) / 4) * 100)))
+}
+
+function getSJTTagAvg(scenarioAnswers: ScenarioAnswer[], tag: string): number {
+  const n = scenarioAnswers.length
+  if (n === 0) return 3
+
+  let total = 0
+  let count = 0
+  for (let si = 0; si < n; si++) {
+    const scenario = scenarios[si]
+    if (!scenario) continue
+    const ans = scenarioAnswers[si]
+    for (let oi = 0; oi < 4; oi++) {
+      if (scenario.sjtOptions[oi]?.tags.includes(tag)) {
+        total += ans.sjtRatings[oi] ?? 0
+        count++
+      }
+    }
+  }
+
+  return count === 0 ? 3 : total / count
 }
 
 export function calculateDeepAnalysis(
@@ -402,34 +660,38 @@ export function calculateDeepAnalysis(
 ): DeepAnalysis {
   const { axisA, axisB, axisC } = layer2Answers
 
-  // SJT option averages (1-5). Neutral fallback (3) when no answers.
-  const n = scenarioAnswers.length
-  const sjtAvg = [0, 1, 2, 3].map((optIdx) =>
-    n === 0
-      ? 3
-      : scenarioAnswers.reduce((s, a) => s + (a.sjtRatings[optIdx] ?? 0), 0) / n
-  )
-  // [0]=A(自力改善), [1]=B(フィードバック/関係), [2]=C(回避), [3]=D(合理化)
+  const sjtFeedback = getSJTTagAvg(scenarioAnswers, 'フィードバック志向')
+  const sjtAction = getSJTTagAvg(scenarioAnswers, '行動変容')
+  const sjtEmotion = getSJTTagAvg(scenarioAnswers, '感情制御')
+  const sjtTeam = getSJTTagAvg(scenarioAnswers, 'チーム志向')
+  const sjtAvoidance = getSJTTagAvg(scenarioAnswers, '回避・撤退')
 
-  // (1) Learning Agility: SJT-B avg + B6(idx5) / 2
-  const learningAgility = norm1to5((sjtAvg[1] + axisB[5]) / 2)
+  // (1) Learning Agility: SJT_feedback_avg + (6 - B6[idx5]) / 2
+  const learningAgility = norm1to5((sjtFeedback + (6 - axisB[5])) / 2)
 
-  // (2) Self-Efficacy: A4(idx3) + A9(idx8) + B5(idx4) / 3
-  const selfEfficacy = norm1to5((axisA[3] + axisA[8] + axisB[4]) / 3)
+  // (2) Self-Efficacy: A6[idx5] + A7[idx6] + B8[idx7] / 3
+  const selfEfficacy = norm1to5((axisA[5] + axisA[6] + axisB[7]) / 3)
 
-  // (3) Autonomous Motivation: C4(idx3) + A1(idx0) + A10(idx9) / 3
-  const autonomousMotivation = norm1to5((axisC[3] + axisA[0] + axisA[9]) / 3)
+  // (3) Autonomous Motivation: C1[idx0] + C3[idx2] + A2[idx1] / 3
+  const autonomousMotivation = norm1to5((axisC[0] + axisC[2] + axisA[1]) / 3)
 
-  // (4) Crisis Response: SJT-A avg + B3(idx2) + B5(idx4) / 3
-  const crisisResponse = norm1to5((sjtAvg[0] + axisB[2] + axisB[4]) / 3)
+  // (4) Crisis Response: SJT_action_avg + B5[idx4] + SJT_emotion_avg / 3
+  const crisisResponse = norm1to5((sjtAction + axisB[4] + sjtEmotion) / 3)
 
-  // (5) Team Contribution: SJT-B avg + B6(idx5) + B10(idx9) / 3
-  const teamContribution = norm1to5((sjtAvg[1] + axisB[5] + axisB[9]) / 3)
+  // (5) Team Contribution: SJT_team_avg + SJT_feedback_avg / 2
+  const teamContribution = norm1to5((sjtTeam + sjtFeedback) / 2)
 
-  // (6) Anti-Fragility: A7(idx6) + (6-B7(idx6)) + (6-SJT-C avg) / 3
-  const antifragility = norm1to5((axisA[6] + (6 - axisB[6]) + (6 - sjtAvg[2])) / 3)
+  // (6) Anti-Fragility: A7[idx6] + B8[idx7] + (6 - SJT_avoidance_avg) / 3
+  const antifragility = norm1to5((axisA[6] + axisB[7] + (6 - sjtAvoidance)) / 3)
 
-  return { learningAgility, selfEfficacy, autonomousMotivation, crisisResponse, teamContribution, antifragility }
+  return {
+    learningAgility,
+    selfEfficacy,
+    autonomousMotivation,
+    crisisResponse,
+    teamContribution,
+    antifragility,
+  }
 }
 
 export function getLearningAgilityDescription(score: number): string {
@@ -449,7 +711,7 @@ export function getSelfEfficacyDescription(score: number): string {
 export function getAutonomousMotivationDescription(score: number): string {
   if (score >= 80) return '"やらされている"ではなく"やりたいからやる"という内発的な動機が強い。SDT理論では、この特性を持つ人は外的報酬がなくても高いパフォーマンスを維持できます。'
   if (score >= 60) return '内発的な動機は十分にあります。"なぜこれをやるのか"が明確なときにエンジンがかかるタイプ。目的の言語化を習慣にすると安定します。'
-  if (score >= 40) return '動機が外的要因（給料、評価、指示）に依存する傾向。これ自体は悪くないですが、外的報酬がなくなったときにモチベーションが急落するリスクがあります。'
+  if (score >= 40) return '動機が外的要因（給料、評価、指示）に依存する傾向。外的報酬がなくなったときにモチベーションが急落するリスクがあります。'
   return '"なぜやるのか"が見えていない状態。まずは自分の価値観の棚卸しから始めてください。やりたいことが明確になれば、行動量は自然と増えていきます。'
 }
 

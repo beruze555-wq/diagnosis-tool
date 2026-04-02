@@ -15,10 +15,10 @@ import {
   getAxisADescription,
   getAxisBDescription,
   getAxisCDescription,
-  getZoneComment,
   getPersonalityType,
   getSJTBehaviorTendency,
   calculateDeepAnalysis,
+  getZonePattern,
   getLearningAgilityDescription,
   getSelfEfficacyDescription,
   getAutonomousMotivationDescription,
@@ -26,28 +26,17 @@ import {
   getTeamContributionDescription,
   getAntifragilityDescription,
   DeepAnalysis,
+  ZonePattern,
 } from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
-import { ScenarioAnswer, Layer2Answers, Scores, Zone } from '@/types'
+import { ScenarioAnswer, Layer2Answers, Scores } from '@/types'
 import { scenarios } from '@/lib/scenarios'
 import { layer2Sections } from '@/lib/layer2Questions'
 
-const ZONE_COLOR: Record<Zone, string> = {
-  Green: '#22c55e',
-  Yellow: '#eab308',
-  Red: '#ef4444',
-}
-
-const ZONE_LABEL: Record<Zone, string> = {
-  Green: 'Green ✓',
-  Yellow: 'Yellow △',
-  Red: 'Red ✕',
-}
-
-const ZONE_BG: Record<Zone, string> = {
-  Green: 'bg-green-500/20 text-green-400 border-green-500/40',
-  Yellow: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40',
-  Red: 'bg-red-500/20 text-red-400 border-red-500/40',
+const ZONE_STROKE: Record<'green' | 'yellow' | 'red', string> = {
+  green: '#22c55e',
+  yellow: '#eab308',
+  red: '#ef4444',
 }
 
 // ─── Shared color progress bar ────────────────────────────────────────────────
@@ -75,7 +64,7 @@ function ColorProgressBar({ score }: { score: number }) {
   )
 }
 
-// ─── Main axis score section ──────────────────────────────────────────────────
+// ─── Axis score section ───────────────────────────────────────────────────────
 
 function ScoreSection({
   label,
@@ -89,7 +78,7 @@ function ScoreSection({
   skipped?: boolean
 }) {
   return (
-    <div className="bg-gray-800 rounded-xl p-5 space-y-3">
+    <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-3">
       <div className="flex justify-between items-center">
         <span className="text-sm font-semibold text-gray-200">{label}</span>
         <span className="text-xl font-bold text-white">
@@ -149,13 +138,14 @@ function AnswerViewer({
   const [copied, setCopied] = useState(false)
 
   const allData = {
-    scores: { OS: scores.OS, 粘り強さ: scores.A, 鈍感力: scores.B, 達成動機: scores.C, zone: scores.zone },
+    scores: { OS: scores.OS, 粘り強さ: scores.A, 情緒安定性: scores.B, 達成動機: scores.C, zone: scores.zone },
     layer1: scenarioAnswers.map((ans, i) => ({
       scenarioId: i + 1,
       title: scenarios[i]?.title ?? `シナリオ${i + 1}`,
       sjtRatings: scenarios[i]?.sjtOptions.map((opt, j) => ({
         label: opt.label,
         text: opt.text,
+        tags: opt.tags,
         rating: ans.sjtRatings[j],
       })) ?? ans.sjtRatings,
       attributions: ans.attributions,
@@ -165,6 +155,7 @@ function AnswerViewer({
         id: q.id,
         axis: s.axis,
         text: q.text,
+        source: q.source,
         value: layer2Answers
           ? (layer2Answers[`axis${s.axis}` as keyof Layer2Answers][idx] ?? 0)
           : 0,
@@ -179,23 +170,23 @@ function AnswerViewer({
   }
 
   return (
-    <div className="border border-gray-700 rounded-xl overflow-hidden">
+    <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-5 py-3 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 transition-colors text-left flex justify-between items-center"
+        className="w-full px-6 py-4 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800/80 transition-colors text-left flex justify-between items-center"
       >
         <span>回答データを表示</span>
         <span className="text-xs">{open ? '▲' : '▼'}</span>
       </button>
       {open && (
-        <div className="border-t border-gray-700 p-5 space-y-5">
+        <div className="border-t border-gray-700 p-6 space-y-5">
           <div>
             <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">スコア</h3>
             <div className="grid grid-cols-2 gap-2 text-sm">
               {[
                 { label: 'OS（帰属）', val: scores.OS },
                 { label: '粘り強さ', val: scores.A },
-                { label: '鈍感力', val: scores.B },
+                { label: '情緒安定性', val: scores.B },
                 { label: '達成動機', val: scores.C },
               ].map(({ label, val }) => (
                 <div key={label} className="bg-gray-900 rounded-lg p-2.5 flex justify-between">
@@ -231,7 +222,10 @@ function AnswerViewer({
                     return (
                       <div key={q.id} className="flex items-start gap-2 text-xs bg-gray-900 rounded p-2">
                         <span className="text-blue-400 font-mono w-6 shrink-0">{q.id}</span>
-                        <span className="text-gray-400 flex-1 leading-relaxed">{q.text}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-400 leading-relaxed">{q.text}</p>
+                          <p className="text-gray-600 mt-0.5">{q.source}</p>
+                        </div>
                         <span className="text-white font-bold shrink-0">{val}</span>
                       </div>
                     )
@@ -259,10 +253,19 @@ function AnswerViewer({
 export default function ResultPage() {
   const router = useRouter()
   const [scores, setScores] = useState<Scores | null>(null)
-  const [personalityType, setPersonalityType] = useState<{ name: string; paragraphs: string[] } | null>(null)
-  const [behaviorTendency, setBehaviorTendency] = useState<{ tag1: string; tag2: string; description: string } | null>(null)
+  const [personalityType, setPersonalityType] = useState<{
+    name: string
+    icon: string
+    bandClass: string
+    paragraphs: string[]
+  } | null>(null)
+  const [behaviorTendency, setBehaviorTendency] = useState<{
+    tag1: string
+    tag2: string
+    description: string
+  } | null>(null)
   const [deepAnalysis, setDeepAnalysis] = useState<DeepAnalysis | null>(null)
-  const [zoneComment, setZoneComment] = useState<string[]>([])
+  const [zonePattern, setZonePattern] = useState<ZonePattern | null>(null)
   const [layer2Skipped, setLayer2Skipped] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState(false)
@@ -285,12 +288,18 @@ export default function ResultPage() {
     const devScoresRaw = sessionStorage.getItem('devScores')
     if (devMode && devScoresRaw) {
       const devScores = JSON.parse(devScoresRaw) as Scores
+      const devLayer2Raw = sessionStorage.getItem('layer2Answers')
+      const devLayer2: Layer2Answers | undefined = devLayer2Raw ? JSON.parse(devLayer2Raw) : undefined
       setScores(devScores)
-      setZoneComment(getZoneComment(devScores.zone))
+      setZonePattern(getZonePattern(devScores.OS, devScores.A, devScores.B, devScores.C))
       setPersonalityType(getPersonalityType(devScores.OS, devScores.A, devScores.B, devScores.C))
-      setBehaviorTendency({ tag1: '自力改善', tag2: 'フィードバック志向', description: '（開発モード：ダミーデータ）' })
-      setDeepAnalysis({ learningAgility: 70, selfEfficacy: 65, autonomousMotivation: 75, crisisResponse: 60, teamContribution: 72, antifragility: 68 })
-      setRawAnswers({ scenarioAnswers: [], layer2Answers: undefined })
+      setBehaviorTendency({ tag1: '行動変容', tag2: 'フィードバック志向', description: '（開発モード：ダミーデータ）' })
+      if (devLayer2) {
+        setDeepAnalysis(calculateDeepAnalysis([], devLayer2))
+      } else {
+        setDeepAnalysis({ learningAgility: 70, selfEfficacy: 65, autonomousMotivation: 75, crisisResponse: 60, teamContribution: 72, antifragility: 68 })
+      }
+      setRawAnswers({ scenarioAnswers: [], layer2Answers: devLayer2 })
       setSaved(true)
       return
     }
@@ -306,18 +315,23 @@ export default function ResultPage() {
 
     const calculated = calculateScores(scenarioAnswers, layer2Answers)
     setScores(calculated)
-    setZoneComment(getZoneComment(calculated.zone))
     setBehaviorTendency(getSJTBehaviorTendency(scenarioAnswers))
 
-    let pType = { name: '—', paragraphs: [] as string[] }
+    let pType = { name: '—', icon: '', bandClass: '', paragraphs: [] as string[] }
     let da: DeepAnalysis | null = null
+    let zp: ZonePattern
 
     if (!skipped && layer2Answers) {
       pType = getPersonalityType(calculated.OS, calculated.A, calculated.B, calculated.C)
       da = calculateDeepAnalysis(scenarioAnswers, layer2Answers)
+      zp = getZonePattern(calculated.OS, calculated.A, calculated.B, calculated.C)
+    } else {
+      zp = getZonePattern(calculated.OS, 0, 0, 0)
     }
+
     setPersonalityType(pType)
     setDeepAnalysis(da)
+    setZonePattern(zp)
 
     saveDiagnosisResult({
       age: userInfo.age,
@@ -329,6 +343,7 @@ export default function ResultPage() {
       axisB: calculated.B,
       axisC: calculated.C,
       zone: calculated.zone,
+      zoneId: zp.zoneId,
       personalityType: pType.name,
       deepAnalysis: da ?? undefined,
     })
@@ -336,7 +351,7 @@ export default function ResultPage() {
       .catch(() => setSaveError(true))
   }, [router])
 
-  if (!scores || !behaviorTendency || !rawAnswers) {
+  if (!scores || !behaviorTendency || !rawAnswers || !zonePattern) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-gray-400">結果を計算中...</div>
@@ -344,11 +359,18 @@ export default function ResultPage() {
     )
   }
 
-  const zoneColor = ZONE_COLOR[scores.zone]
+  const zoneStroke = ZONE_STROKE[zonePattern.zoneColor]
+  const zoneBandClass =
+    zonePattern.zoneColor === 'green'
+      ? 'bg-green-500'
+      : zonePattern.zoneColor === 'yellow'
+      ? 'bg-yellow-500'
+      : 'bg-red-500'
+
   const chartData = [
     { axis: 'OS（帰属）', value: scores.OS },
     { axis: '粘り強さ', value: scores.A },
-    { axis: '鈍感力', value: scores.B },
+    { axis: '情緒安定性', value: scores.B },
     { axis: '達成動機', value: scores.C },
   ]
 
@@ -356,64 +378,79 @@ export default function ResultPage() {
     <div className="min-h-screen bg-gray-900 pb-20">
       <div className="max-w-lg mx-auto px-4 pt-8 space-y-6 fade-in">
 
-        {/* Zone badge */}
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">診断結果</h1>
-          <div className={`inline-flex items-center gap-2 px-8 py-4 rounded-2xl border-2 text-2xl font-bold ${ZONE_BG[scores.zone]}`}>
-            {ZONE_LABEL[scores.zone]}
-          </div>
-          <div className="mt-4 space-y-3 text-left px-2">
-            {zoneComment.map((p, i) => (
-              <p key={i} className="text-gray-400 text-sm leading-relaxed">{p}</p>
-            ))}
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold text-white text-center">診断結果</h1>
 
-        {/* Personality type */}
+        {/* ① Personality type */}
         {personalityType && personalityType.name !== '—' && personalityType.paragraphs.length > 0 && (
-          <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-700/40 rounded-2xl p-5 space-y-3">
-            <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">パーソナリティタイプ</p>
-            <h2 className="text-xl font-bold text-white">{personalityType.name}</h2>
-            {personalityType.paragraphs.map((p, i) => (
-              <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
-            ))}
+          <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
+            <div className={`h-2 ${personalityType.bandClass}`} />
+            <div className="p-6 space-y-3">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">パーソナリティタイプ</p>
+              <h2 className="text-xl font-bold text-white">
+                {personalityType.icon} {personalityType.name}
+              </h2>
+              {personalityType.paragraphs.map((p, i) => (
+                <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Radar chart */}
-        <div className="bg-gray-800 rounded-2xl p-4">
+        {/* ② Radar chart */}
+        <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg">
           <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={chartData}>
               <PolarGrid stroke="#374151" />
               <PolarAngleAxis dataKey="axis" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-              <Radar name="score" dataKey="value" stroke={zoneColor} fill={zoneColor} fillOpacity={0.25} strokeWidth={2} />
+              <Radar
+                name="score"
+                dataKey="value"
+                stroke={zoneStroke}
+                fill={zoneStroke}
+                fillOpacity={0.25}
+                strokeWidth={2}
+              />
             </RadarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* SJT behavior tendency */}
-        <div className="bg-gray-800 rounded-xl p-5">
-          <p className="text-xs font-semibold text-purple-400 mb-2 uppercase tracking-wider">行動傾向</p>
-          <p className="text-sm font-semibold text-white mb-2">
-            💡{behaviorTendency.tag1} × {behaviorTendency.tag2}型
+        {/* ③ SJT behavior tendency */}
+        <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-2">
+          <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider">行動傾向</p>
+          <p className="text-sm font-semibold text-white">
+            {behaviorTendency.tag1} × {behaviorTendency.tag2}型
           </p>
           <p className="text-sm text-gray-300 leading-relaxed">{behaviorTendency.description}</p>
         </div>
 
-        {/* Main 4 axis score sections */}
+        {/* ④ Zone pattern */}
+        <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
+          <div className={`h-2 ${zoneBandClass}`} />
+          <div className="p-6 space-y-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">ゾーンパターン</p>
+            <h3 className="text-lg font-bold text-white">
+              {zonePattern.zoneIcon} [{zonePattern.zoneId}] {zonePattern.zoneName}
+            </h3>
+            {zonePattern.paragraphs.map((p, i) => (
+              <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
+            ))}
+          </div>
+        </div>
+
+        {/* ⑤ Axis scores */}
         <div className="space-y-4">
           <ScoreSection label="OS（帰属スタイル）" score={scores.OS} paragraphs={getOSDescription(scores.OS)} />
-          <ScoreSection label="粘り強さ" score={scores.A} paragraphs={getAxisADescription(scores.A)} skipped={layer2Skipped} />
-          <ScoreSection label="鈍感力（情緒安定性）" score={scores.B} paragraphs={getAxisBDescription(scores.B)} skipped={layer2Skipped} />
+          <ScoreSection label="粘り強さ（Grit）" score={scores.A} paragraphs={getAxisADescription(scores.A)} skipped={layer2Skipped} />
+          <ScoreSection label="情緒安定性" score={scores.B} paragraphs={getAxisBDescription(scores.B)} skipped={layer2Skipped} />
           <ScoreSection label="達成動機" score={scores.C} paragraphs={getAxisCDescription(scores.C)} skipped={layer2Skipped} />
         </div>
 
-        {/* Deep analysis section */}
+        {/* ⑥ Deep analysis */}
         {deepAnalysis && (
-          <div className="space-y-3">
+          <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-4">
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold text-white">深層分析</h2>
-              <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">リサーチベース</span>
+              <span className="text-xs text-gray-500 bg-gray-900 px-2 py-0.5 rounded-full">リサーチベース</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
               SJTと自己評価の回答パターンから算出した6つの追加指標です。
@@ -451,7 +488,7 @@ export default function ResultPage() {
           </div>
         )}
 
-        {/* Answer data viewer */}
+        {/* ⑦ Answer viewer */}
         <AnswerViewer
           scenarioAnswers={rawAnswers.scenarioAnswers}
           layer2Answers={rawAnswers.layer2Answers}
