@@ -46,23 +46,11 @@ function scoreBarColor(score: number): string {
 
 function ColorProgressBar({ score }: { score: number }) {
   return (
-    <div className="mt-2 mb-1">
-      <div className="relative h-3 rounded-full overflow-hidden flex">
-        <div className="h-full bg-red-500/50" style={{ width: '39%' }} />
-        <div className="h-full bg-yellow-500/50" style={{ width: '20%' }} />
-        <div className="h-full bg-blue-500/50" style={{ width: '20%' }} />
-        <div className="h-full bg-green-500/50" style={{ width: '21%' }} />
-        <div
-          className="absolute top-0 h-3 w-1 bg-white rounded shadow-lg"
-          style={{ left: `calc(${score}% - 2px)` }}
-        />
-      </div>
-      <div className="flex text-xs mt-0.5">
-        <span className="text-red-400" style={{ width: '39%', textAlign: 'center' }}>0–39</span>
-        <span className="text-yellow-400" style={{ width: '20%', textAlign: 'center' }}>40–59</span>
-        <span className="text-blue-400" style={{ width: '20%', textAlign: 'center' }}>60–79</span>
-        <span className="text-green-400" style={{ width: '21%', textAlign: 'center' }}>80–100</span>
-      </div>
+    <div className="mt-2 mb-1 h-3 rounded-full bg-gray-700 overflow-hidden">
+      <div
+        className={`h-full rounded-full transition-all duration-500 ${scoreBarColor(score)}`}
+        style={{ width: `${score}%` }}
+      />
     </div>
   )
 }
@@ -89,14 +77,6 @@ function ScoreSection({
           {!skipped && <span className="text-xs text-gray-400 font-normal"> / 100</span>}
         </span>
       </div>
-      {!skipped && (
-        <div className="mt-1 h-2 rounded-full bg-gray-700 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${scoreBarColor(score)}`}
-            style={{ width: `${score}%` }}
-          />
-        </div>
-      )}
       {!skipped && <ColorProgressBar score={score} />}
       {!skipped
         ? paragraphs.map((p, i) => (
@@ -352,7 +332,15 @@ export default function ResultPage() {
           teamContribution: 65,
         })
       }
-      setRawAnswers({ scenarioAnswers: [], layer2Answers: devLayer2 })
+      const devScenarioAnswers: ScenarioAnswer[] = [
+        { sjtRatings: [5, 4, 3, 1], attributions: [2, 2, 3] }, // S1: 30件全滅
+        { sjtRatings: [5, 4, 1, 2], attributions: [3, 2, 2] }, // S2: 企画全面却下
+        { sjtRatings: [4, 5, 1, 3], attributions: [2, 3, 2] }, // S3: 試合でミス
+        { sjtRatings: [5, 3, 1, 4], attributions: [3, 2, 3] }, // S4: 仲間の離脱
+        { sjtRatings: [5, 4, 1, 3], attributions: [2, 2, 2] }, // S5: 3ヶ月が白紙
+        { sjtRatings: [5, 4, 1, 3], attributions: [3, 2, 2] }, // S6: 置いていかれる
+      ]
+      setRawAnswers({ scenarioAnswers: devScenarioAnswers, layer2Answers: devLayer2 })
       setSaved(true)
       return
     }

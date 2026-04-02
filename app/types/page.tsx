@@ -122,16 +122,26 @@ export default function TypesPage() {
         </div>
 
         {/* Tag labels section */}
-        <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg">
-          <h2 className="text-base font-bold text-white mb-4">行動傾向タグ</h2>
+        <div>
+          <h2 className="text-base font-bold text-white mb-2">行動傾向タグ</h2>
           <p className="text-xs text-gray-500 mb-4">
             SJT（状況判断テスト）のシナリオ回答から算出される8つの行動傾向タグです。
           </p>
-          <div className="space-y-2">
-            {Object.entries(TAG_LABELS).map(([key, label]) => (
-              <div key={key} className="flex items-center gap-3">
-                <span className="text-xs font-mono bg-gray-700 text-blue-300 px-2 py-1 rounded w-36 shrink-0">{key}</span>
-                <span className="text-sm text-gray-300">{label}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { key: 'proactive', label: '主体的行動', desc: '自ら率先して動き、指示を待たずに行動を起こす傾向。問題を見つけたら自分から解決に動き出します。リーダーシップの土台となる行動特性です。' },
+              { key: 'feedback-seeking', label: 'フィードバック志向', desc: '周囲からの意見や評価を積極的に求め、自分の改善に活かす傾向。成長スピードが速く、環境変化への適応力が高いです。' },
+              { key: 'team-oriented', label: 'チーム志向', desc: '個人の成果よりもチーム全体の成功を重視する傾向。協力関係の構築が得意で、メンバー間の橋渡し役になりやすいです。' },
+              { key: 'analytical', label: '分析的思考', desc: '感情や直感より、データや論理に基づいて判断する傾向。複雑な問題を構造的に整理し、合理的な解決策を導き出します。' },
+              { key: 'emotion-regulation', label: '感情制御', desc: 'ストレスやプレッシャーの中でも冷静さを保てる傾向。感情に振り回されず、安定したパフォーマンスを維持できます。' },
+              { key: 'help-seeking', label: '援助要請', desc: '困ったときに一人で抱え込まず、適切に助けを求められる傾向。これは弱さではなく、問題解決の効率を高める合理的な行動です。' },
+              { key: 'avoidant', label: '慎重判断', desc: '行動する前にリスクや状況をしっかり見極める傾向。拙速な判断を避け、確実性を重視します。丁寧で堅実なアプローチが持ち味です。' },
+              { key: 'rigid', label: '一貫追求', desc: '一度決めた方針を粘り強く貫く傾向。周囲の意見に流されず、自分の判断軸を持っています。信念の強さが行動の安定性につながります。' },
+            ].map(({ key, label, desc }) => (
+              <div key={key} className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+                <p className="text-lg font-semibold text-white">{label}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{key}</p>
+                <p className="text-sm text-gray-300 mt-2 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>

@@ -79,12 +79,21 @@ export default function StartPage() {
         </div>
 
         {/* 2. About card */}
-        <div className="bg-gray-800/30 rounded-xl p-5 border border-gray-700/30 text-gray-300 text-sm leading-relaxed space-y-2">
-          <p className="text-base font-semibold text-white mb-2">この診断について</p>
-          <p>この診断には正解も不正解もありません。あなたが普段どう感じ、どう行動するかをそのまま答えてください。</p>
-          <p>正直に答えるほど、あなた本来の強み・思考のクセ・合う環境が正確に浮かび上がります。自分を良く見せようとすると、結果がぼやけてしまいます。</p>
-          <p><span className="text-white font-semibold">就活中の方へ</span>　自己分析の精度が格段に上がります。面接で語れる"自分の特性"が、データとして手に入ります。</p>
-          <p><span className="text-white font-semibold">インターン・仕事を始める方へ</span>　自分に合う環境・合わない環境が事前に分かることで、ミスマッチを防げます。</p>
+        <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-2xl p-6 border border-gray-700/40 shadow-lg space-y-4">
+          <div className="flex items-center gap-2">
+            <span>📋</span>
+            <p className="text-lg font-semibold text-white">この診断について</p>
+          </div>
+          <p className="text-sm text-gray-300 leading-relaxed">この診断には正解も不正解もありません。直感で、ありのまま答えてください。</p>
+          <p className="text-sm text-gray-300 leading-relaxed">正直に答えるほど、あなたの「本当の強み」「思考のクセ」「合う環境」が正確に見えてきます。良く見せようとするほど、結果はぼやけます。</p>
+          <div className="bg-gray-700/30 rounded-lg p-3 border-l-2 border-blue-500">
+            <p className="text-blue-400 font-semibold text-sm">📝 就活中の方へ</p>
+            <p className="text-gray-300 text-sm mt-1">自己分析が一気に深まります。面接で「自分はこういう人間です」と語れるデータが手に入ります。</p>
+          </div>
+          <div className="bg-gray-700/30 rounded-lg p-3 border-l-2 border-green-500">
+            <p className="text-green-400 font-semibold text-sm">💼 インターン・仕事を始める方へ</p>
+            <p className="text-gray-300 text-sm mt-1">入ってから「合わなかった」を防げます。自分に合う環境・合わない環境が、始める前に分かります。</p>
+          </div>
         </div>
 
         {/* 3–4. Input fields */}
