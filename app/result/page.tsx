@@ -384,8 +384,8 @@ export default function ResultPage() {
 
     const userInfo = JSON.parse(userInfoRaw)
     const scenarioAnswers: ScenarioAnswer[] = JSON.parse(scenarioAnswersRaw)
-    const skipped = sessionStorage.getItem('layer2Skipped') === 'true'
     const layer2Raw = sessionStorage.getItem('layer2Answers')
+    const skipped = sessionStorage.getItem('layer2Skipped') === 'true' && !layer2Raw
     const layer2Answers: Layer2Answers | undefined = layer2Raw ? JSON.parse(layer2Raw) : undefined
 
     setLayer2Skipped(skipped)

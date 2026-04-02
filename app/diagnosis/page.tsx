@@ -200,6 +200,7 @@ export default function DiagnosisPage() {
         sessionStorage.setItem('layer2Skipped', 'true')
         router.push('/result')
       } else {
+        sessionStorage.removeItem('layer2Skipped')
         transition(() => {
           setScenarioAnswers(newAnswers)
           setPhase('layer2')
@@ -217,6 +218,7 @@ export default function DiagnosisPage() {
     } else {
       // All 6 pages done
       if (!isLayer2Complete) return
+      sessionStorage.removeItem('layer2Skipped')
       sessionStorage.setItem('layer2Answers', JSON.stringify(layer2Answers))
       router.push('/result')
     }
