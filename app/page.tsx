@@ -50,14 +50,15 @@ export default function StartPage() {
     sessionStorage.setItem('devMode', 'true')
     sessionStorage.setItem(
       'devScores',
-      JSON.stringify({ OS: 72, A: 76, B: 64, C: 80, zone: 'Yellow' })
+      JSON.stringify({ OS: 72, A: 68, B: 55, C: 81, zone: 'Yellow' })
     )
     sessionStorage.setItem(
       'layer2Answers',
       JSON.stringify({
-        axisA: [4, 4, 2, 4, 2, 4, 4, 4, 2, 4],
-        axisB: [3, 3, 3, 3, 3, 3, 3, 4, 4, 3],
-        axisC: [4, 4, 4, 4, 4, 2, 2, 2, 2, 2],
+        axisA: [2, 4, 2, 4, 2, 4, 4, 2, 4, 2],
+        axisB: [3, 4, 3, 3, 4, 4, 3, 4, 3, 4],
+        axisC: [4, 2, 4, 2, 4, 2, 4, 2, 4, 2],
+        axisD: [4, 4, 4, 2, 4, 2],
       })
     )
     router.push('/result')
@@ -80,10 +81,10 @@ export default function StartPage() {
         {/* 2. About card */}
         <div className="bg-gray-800/30 rounded-xl p-5 border border-gray-700/30 text-gray-300 text-sm leading-relaxed space-y-2">
           <p className="text-base font-semibold text-white mb-2">この診断について</p>
-          <p>この診断は、あなたが本当に力を発揮できる環境や、隠れた強みを見つけるためのものです。</p>
-          <p>「良い回答」や「正解」はありません。感じたままに答えるほど、あなたに合った結果が出ます。</p>
-          <p><span className="text-white font-semibold">就活中の方へ</span>　自分のメンタルの型を知ることは、面接やES作成に直結します。</p>
-          <p><span className="text-white font-semibold">インターン・仕事を始める方へ</span>　「向いている環境」と「消耗する環境」を事前に知ることで、ミスマッチを防げます。</p>
+          <p>この診断には正解も不正解もありません。あなたが普段どう感じ、どう行動するかをそのまま答えてください。</p>
+          <p>正直に答えるほど、あなた本来の強み・思考のクセ・合う環境が正確に浮かび上がります。自分を良く見せようとすると、結果がぼやけてしまいます。</p>
+          <p><span className="text-white font-semibold">就活中の方へ</span>　自己分析の精度が格段に上がります。面接で語れる"自分の特性"が、データとして手に入ります。</p>
+          <p><span className="text-white font-semibold">インターン・仕事を始める方へ</span>　自分に合う環境・合わない環境が事前に分かることで、ミスマッチを防げます。</p>
         </div>
 
         {/* 3–4. Input fields */}

@@ -22,21 +22,24 @@ import {
   getLearningAgilityDescription,
   getSelfEfficacyDescription,
   getAutonomousMotivationDescription,
+  getGrowthMindsetDescription,
   getCrisisResponseDescription,
   getTeamContributionDescription,
-  getAntifragilityDescription,
-  DeepAnalysis,
+  TAG_LABELS,
   ZonePattern,
 } from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
-import { ScenarioAnswer, Layer2Answers, Scores } from '@/types'
+import { ScenarioAnswer, Layer2Answers, Scores, DeepAnalysis } from '@/types'
 import { scenarios } from '@/lib/scenarios'
 import { layer2Sections } from '@/lib/layer2Questions'
 
-const ZONE_STROKE: Record<'green' | 'yellow' | 'red', string> = {
-  green: '#22c55e',
-  yellow: '#eab308',
-  red: '#ef4444',
+// ─── Color helpers ─────────────────────────────────────────────────────────────
+
+function scoreBarColor(score: number): string {
+  if (score >= 80) return 'bg-green-500'
+  if (score >= 60) return 'bg-blue-500'
+  if (score >= 40) return 'bg-yellow-500'
+  return 'bg-red-500'
 }
 
 // ─── Shared color progress bar ────────────────────────────────────────────────
@@ -86,6 +89,14 @@ function ScoreSection({
           {!skipped && <span className="text-xs text-gray-400 font-normal"> / 100</span>}
         </span>
       </div>
+      {!skipped && (
+        <div className="mt-1 h-2 rounded-full bg-gray-700 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${scoreBarColor(score)}`}
+            style={{ width: `${score}%` }}
+          />
+        </div>
+      )}
       {!skipped && <ColorProgressBar score={score} />}
       {!skipped
         ? paragraphs.map((p, i) => (
@@ -103,15 +114,22 @@ function DeepMetricCard({
   label,
   score,
   description,
+  isRef,
 }: {
   label: string
   score: number
   description: string
+  isRef?: boolean
 }) {
   return (
     <div className="bg-gray-800/60 rounded-xl p-4 space-y-2">
       <div className="flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-300">{label}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-medium text-gray-300">{label}</span>
+          {isRef && (
+            <span className="text-xs bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full">参考</span>
+          )}
+        </div>
         <span className="text-base font-bold text-white">
           {score}
           <span className="text-xs text-gray-400 font-normal"> / 100</span>
@@ -256,12 +274,14 @@ export default function ResultPage() {
   const [personalityType, setPersonalityType] = useState<{
     name: string
     icon: string
-    bandClass: string
+    themeFrom: string
+    themeTo: string
     paragraphs: string[]
   } | null>(null)
   const [behaviorTendency, setBehaviorTendency] = useState<{
-    tag1: string
-    tag2: string
+    label: string
+    topTags: [string, string]
+    tagCounts: Record<string, number>
     description: string
   } | null>(null)
   const [deepAnalysis, setDeepAnalysis] = useState<DeepAnalysis | null>(null)
@@ -293,11 +313,32 @@ export default function ResultPage() {
       setScores(devScores)
       setZonePattern(getZonePattern(devScores.OS, devScores.A, devScores.B, devScores.C))
       setPersonalityType(getPersonalityType(devScores.OS, devScores.A, devScores.B, devScores.C))
-      setBehaviorTendency({ tag1: '行動変容', tag2: 'フィードバック志向', description: '（開発モード：ダミーデータ）' })
+      setBehaviorTendency({
+        label: '主体的行動×分析的思考型',
+        topTags: ['proactive', 'analytical'],
+        tagCounts: {
+          proactive: 18,
+          analytical: 15,
+          'feedback-seeking': 10,
+          'team-oriented': 5,
+          'emotion-regulation': 8,
+          'help-seeking': 3,
+          avoidant: 4,
+          rigid: 6,
+        },
+        description: '（開発モード：ダミーデータ）',
+      })
       if (devLayer2) {
         setDeepAnalysis(calculateDeepAnalysis([], devLayer2))
       } else {
-        setDeepAnalysis({ learningAgility: 70, selfEfficacy: 65, autonomousMotivation: 75, crisisResponse: 60, teamContribution: 72, antifragility: 68 })
+        setDeepAnalysis({
+          selfEfficacy: 73,
+          autonomousMotivation: 75,
+          growthMindset: 82,
+          learningAgility: 68,
+          crisisResponse: 71,
+          teamContribution: 65,
+        })
       }
       setRawAnswers({ scenarioAnswers: [], layer2Answers: devLayer2 })
       setSaved(true)
@@ -317,7 +358,7 @@ export default function ResultPage() {
     setScores(calculated)
     setBehaviorTendency(getSJTBehaviorTendency(scenarioAnswers))
 
-    let pType = { name: '—', icon: '', bandClass: '', paragraphs: [] as string[] }
+    let pType = getPersonalityType(0, 0, 0, 0)
     let da: DeepAnalysis | null = null
     let zp: ZonePattern
 
@@ -351,7 +392,7 @@ export default function ResultPage() {
       .catch(() => setSaveError(true))
   }, [router])
 
-  if (!scores || !behaviorTendency || !rawAnswers || !zonePattern) {
+  if (!scores || !behaviorTendency || !rawAnswers || !zonePattern || !personalityType) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-gray-400">結果を計算中...</div>
@@ -359,13 +400,19 @@ export default function ResultPage() {
     )
   }
 
-  const zoneStroke = ZONE_STROKE[zonePattern.zoneColor]
-  const zoneBandClass =
+  const zoneBandColor =
     zonePattern.zoneColor === 'green'
       ? 'bg-green-500'
       : zonePattern.zoneColor === 'yellow'
       ? 'bg-yellow-500'
       : 'bg-red-500'
+
+  const zoneStroke =
+    zonePattern.zoneColor === 'green'
+      ? '#22c55e'
+      : zonePattern.zoneColor === 'yellow'
+      ? '#eab308'
+      : '#ef4444'
 
   const chartData = [
     { axis: 'OS（帰属）', value: scores.OS },
@@ -374,30 +421,46 @@ export default function ResultPage() {
     { axis: '達成動機', value: scores.C },
   ]
 
+  const axisCode = `OS-${scores.OS >= 60 ? 'H' : 'L'} / A-${scores.A >= 60 ? 'H' : 'L'} / B-${scores.B >= 60 ? 'H' : 'L'} / C-${scores.C >= 60 ? 'H' : 'L'}`
+
+  // Tag badges: show non-zero tags sorted by count
+  const tagEntries = Object.entries(behaviorTendency.tagCounts)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+
   return (
     <div className="min-h-screen bg-gray-900 pb-20">
       <div className="max-w-lg mx-auto px-4 pt-8 space-y-6 fade-in">
 
+        {/* Header */}
         <div className="text-center">
           <p className="text-sm text-gray-500 tracking-wide mb-1">MIRROR</p>
           <h1 className="text-2xl font-bold text-white">あなたの診断結果</h1>
         </div>
 
-        {/* ① Personality type */}
-        {personalityType && personalityType.name !== '—' && personalityType.paragraphs.length > 0 && (
-          <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
-            <div className={`h-2 ${personalityType.bandClass}`} />
-            <div className="p-6 space-y-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">パーソナリティタイプ</p>
-              <h2 className="text-xl font-bold text-white">
-                {personalityType.icon} {personalityType.name}
-              </h2>
-              {personalityType.paragraphs.map((p, i) => (
-                <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
-              ))}
+        {/* ① Personality type card */}
+        <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
+          <div className={`h-2 bg-gradient-to-r ${personalityType.themeFrom} ${personalityType.themeTo}`} />
+          <div className="p-6 space-y-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">パーソナリティタイプ</p>
+            <div className="flex items-center gap-3">
+              <span className="text-4xl">{personalityType.icon}</span>
+              <div>
+                <h2 className="text-2xl font-bold text-white">{personalityType.name}</h2>
+                <p className="text-xs text-gray-500 mt-0.5">{axisCode}</p>
+              </div>
             </div>
+            {personalityType.paragraphs.map((p, i) => (
+              <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
+            ))}
+            <button
+              onClick={() => router.push('/types')}
+              className="text-xs text-blue-400 hover:text-blue-300 transition-colors mt-1"
+            >
+              全タイプ一覧を見る →
+            </button>
           </div>
-        )}
+        </div>
 
         {/* ② Radar chart */}
         <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg">
@@ -417,18 +480,27 @@ export default function ResultPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* ③ SJT behavior tendency */}
-        <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-2">
+        {/* ③ Behavior tendency card */}
+        <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-3">
           <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider">行動傾向</p>
-          <p className="text-sm font-semibold text-white">
-            {behaviorTendency.tag1} × {behaviorTendency.tag2}型
-          </p>
+          <p className="text-xl font-bold text-white">{behaviorTendency.label}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {tagEntries.map(([tag, count]) => (
+              <span
+                key={tag}
+                className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full"
+              >
+                {TAG_LABELS[tag] ?? tag}
+                <span className="text-gray-500 ml-1">{count}</span>
+              </span>
+            ))}
+          </div>
           <p className="text-sm text-gray-300 leading-relaxed">{behaviorTendency.description}</p>
         </div>
 
-        {/* ④ Zone pattern */}
+        {/* ④ Zone pattern card */}
         <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
-          <div className={`h-2 ${zoneBandClass}`} />
+          <div className={`h-2 ${zoneBandColor}`} />
           <div className="p-6 space-y-3">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">ゾーンパターン</p>
             <h3 className="text-lg font-bold text-white">
@@ -440,29 +512,43 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* ⑤ Axis scores */}
+        {/* ⑤ Axis score cards */}
         <div className="space-y-4">
-          <ScoreSection label="OS（帰属スタイル）" score={scores.OS} paragraphs={getOSDescription(scores.OS)} />
-          <ScoreSection label="粘り強さ（Grit）" score={scores.A} paragraphs={getAxisADescription(scores.A)} skipped={layer2Skipped} />
-          <ScoreSection label="情緒安定性" score={scores.B} paragraphs={getAxisBDescription(scores.B)} skipped={layer2Skipped} />
-          <ScoreSection label="達成動機" score={scores.C} paragraphs={getAxisCDescription(scores.C)} skipped={layer2Skipped} />
+          <ScoreSection
+            label="OS（帰属スタイル）"
+            score={scores.OS}
+            paragraphs={getOSDescription(scores.OS)}
+          />
+          <ScoreSection
+            label="粘り強さ（Grit）"
+            score={scores.A}
+            paragraphs={getAxisADescription(scores.A)}
+            skipped={layer2Skipped}
+          />
+          <ScoreSection
+            label="情緒安定性"
+            score={scores.B}
+            paragraphs={getAxisBDescription(scores.B)}
+            skipped={layer2Skipped}
+          />
+          <ScoreSection
+            label="達成動機"
+            score={scores.C}
+            paragraphs={getAxisCDescription(scores.C)}
+            skipped={layer2Skipped}
+          />
         </div>
 
-        {/* ⑥ Deep analysis */}
+        {/* ⑥ Deep analysis section */}
         {deepAnalysis && (
           <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-white">深層分析</h2>
+              <h2 className="text-base font-bold text-white">メンタルコア指標</h2>
               <span className="text-xs text-gray-500 bg-gray-900 px-2 py-0.5 rounded-full">リサーチベース</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
-              SJTと自己評価の回答パターンから算出した6つの追加指標です。
+              自己評価の回答パターンから算出した心理的資本の中核指標です。
             </p>
-            <DeepMetricCard
-              label="学習敏捷性（Learning Agility）"
-              score={deepAnalysis.learningAgility}
-              description={getLearningAgilityDescription(deepAnalysis.learningAgility)}
-            />
             <DeepMetricCard
               label="自己効力感（Self-Efficacy）"
               score={deepAnalysis.selfEfficacy}
@@ -474,20 +560,35 @@ export default function ResultPage() {
               description={getAutonomousMotivationDescription(deepAnalysis.autonomousMotivation)}
             />
             <DeepMetricCard
-              label="危機対応力（Crisis Response）"
-              score={deepAnalysis.crisisResponse}
-              description={getCrisisResponseDescription(deepAnalysis.crisisResponse)}
+              label="成長マインドセット（Growth Mindset）"
+              score={deepAnalysis.growthMindset}
+              description={getGrowthMindsetDescription(deepAnalysis.growthMindset)}
             />
-            <DeepMetricCard
-              label="チーム貢献力（Team Contribution）"
-              score={deepAnalysis.teamContribution}
-              description={getTeamContributionDescription(deepAnalysis.teamContribution)}
-            />
-            <DeepMetricCard
-              label="折れない度（Anti-Fragility）"
-              score={deepAnalysis.antifragility}
-              description={getAntifragilityDescription(deepAnalysis.antifragility)}
-            />
+
+            <div className="pt-2 border-t border-gray-700/50">
+              <p className="text-xs font-semibold text-gray-400 mb-3">行動傾向指標</p>
+              <p className="text-xs text-gray-600 mb-3">※SJTの行動選択パターンから推定した参考値です</p>
+              <div className="space-y-3">
+                <DeepMetricCard
+                  label="学習敏捷性（Learning Agility）"
+                  score={deepAnalysis.learningAgility}
+                  description={getLearningAgilityDescription(deepAnalysis.learningAgility)}
+                  isRef
+                />
+                <DeepMetricCard
+                  label="危機対応力（Crisis Response）"
+                  score={deepAnalysis.crisisResponse}
+                  description={getCrisisResponseDescription(deepAnalysis.crisisResponse)}
+                  isRef
+                />
+                <DeepMetricCard
+                  label="チーム貢献力（Team Contribution）"
+                  score={deepAnalysis.teamContribution}
+                  description={getTeamContributionDescription(deepAnalysis.teamContribution)}
+                  isRef
+                />
+              </div>
+            </div>
           </div>
         )}
 

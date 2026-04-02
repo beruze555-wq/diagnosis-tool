@@ -18,6 +18,7 @@ export interface Layer2Answers {
   axisA: number[]
   axisB: number[]
   axisC: number[]
+  axisD: number[]
 }
 
 export type Zone = 'Green' | 'Yellow' | 'Red'
@@ -28,6 +29,15 @@ export interface Scores {
   B: number
   C: number
   zone: Zone
+}
+
+export interface DeepAnalysis {
+  selfEfficacy: number
+  autonomousMotivation: number
+  growthMindset: number
+  learningAgility: number
+  crisisResponse: number
+  teamContribution: number
 }
 
 export interface DiagnosisSession {

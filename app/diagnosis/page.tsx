@@ -96,7 +96,7 @@ function LikertRow7({
 
 // Flat layer2 question item with axis + position index
 interface FlatL2Item {
-  axis: 'A' | 'B' | 'C'
+  axis: 'A' | 'B' | 'C' | 'D'
   idx: number
   id: string
   text: string
@@ -116,7 +116,9 @@ export default function DiagnosisPage() {
     axisA: Array(10).fill(0),
     axisB: Array(10).fill(0),
     axisC: Array(10).fill(0),
+    axisD: Array(6).fill(0),
   })
+  const [layer2Page, setLayer2Page] = useState(0)
   const [visible, setVisible] = useState(true)
 
   // One-time randomized SJT display order per scenario: array of [0,1,2,3] shuffled
@@ -124,11 +126,11 @@ export default function DiagnosisPage() {
     scenarios.map(() => shuffleArray([0, 1, 2, 3]))
   )
 
-  // One-time randomized flat Layer2 question list
+  // One-time randomized flat Layer2 question list (all 4 sections, 36 items total)
   const [randomizedLayer2] = useState<FlatL2Item[]>(() => {
     const all: FlatL2Item[] = layer2Sections.flatMap((s) =>
       s.questions.map((q, idx) => ({
-        axis: s.axis,
+        axis: s.axis as 'A' | 'B' | 'C' | 'D',
         idx,
         id: q.id,
         text: q.text,
@@ -157,7 +159,19 @@ export default function DiagnosisPage() {
   const isLayer2Complete =
     layer2Answers.axisA.every((v) => v > 0) &&
     layer2Answers.axisB.every((v) => v > 0) &&
-    layer2Answers.axisC.every((v) => v > 0)
+    layer2Answers.axisC.every((v) => v > 0) &&
+    layer2Answers.axisD.every((v) => v > 0)
+
+  // Current page items (6 per page)
+  const currentPageItems = useMemo(
+    () => randomizedLayer2.slice(layer2Page * 6, (layer2Page + 1) * 6),
+    [randomizedLayer2, layer2Page]
+  )
+
+  const isCurrentPageComplete = currentPageItems.every((item) => {
+    const key = `axis${item.axis}` as keyof Layer2Answers
+    return layer2Answers[key][item.idx] > 0
+  })
 
   const transition = useCallback((cb: () => void) => {
     setVisible(false)
@@ -194,10 +208,18 @@ export default function DiagnosisPage() {
     }
   }
 
-  const handleSubmitLayer2 = () => {
-    if (!isLayer2Complete) return
-    sessionStorage.setItem('layer2Answers', JSON.stringify(layer2Answers))
-    router.push('/result')
+  const handleLayer2Next = () => {
+    if (!isCurrentPageComplete) return
+    if (layer2Page < 5) {
+      transition(() => {
+        setLayer2Page((p) => p + 1)
+      })
+    } else {
+      // All 6 pages done
+      if (!isLayer2Complete) return
+      sessionStorage.setItem('layer2Answers', JSON.stringify(layer2Answers))
+      router.push('/result')
+    }
   }
 
   // Store rating at the original option index (not display index)
@@ -217,9 +239,9 @@ export default function DiagnosisPage() {
     })
   }
 
-  const setLayer2Answer = (axis: 'A' | 'B' | 'C', idx: number, value: number) => {
+  const setLayer2Answer = (axis: 'A' | 'B' | 'C' | 'D', idx: number, value: number) => {
     setLayer2Answers((prev) => {
-      const key = `axis${axis}` as 'axisA' | 'axisB' | 'axisC'
+      const key = `axis${axis}` as keyof Layer2Answers
       const arr = [...prev[key]]
       arr[idx] = value
       return { ...prev, [key]: arr }
@@ -241,7 +263,7 @@ export default function DiagnosisPage() {
             <span>
               {phase === 'layer1'
                 ? `シナリオ ${scenarioIndex + 1} / ${scenarios.length}`
-                : 'パート2'}
+                : `パート2  ${layer2Page + 1} / 6 ページ`}
             </span>
             <span>{Math.round((currentProgress / TOTAL_STEPS) * 100)}%</span>
           </div>
@@ -325,31 +347,32 @@ export default function DiagnosisPage() {
           )}
 
           {phase === 'layer2' && (
-            <div className="space-y-8">
+            <div className="space-y-6">
               <div className="text-center">
                 <h2 className="text-xl font-bold text-white mb-2">パート2：あなた自身について</h2>
                 <p className="text-gray-400 text-sm">
-                  各文章について、自分にどの程度当てはまるかを評価してください。
+                  各文章について、自分にどの程度当てはまるかを評価してください
                 </p>
                 <div className="flex justify-between text-xs text-gray-500 mt-2 px-4">
                   <span>1 = まったく当てはまらない</span>
                   <span>5 = 非常に当てはまる</span>
                 </div>
+                <p className="text-xs text-gray-600 mt-1">{layer2Page + 1} / 6 ページ</p>
               </div>
 
-              {/* Randomized flat question list — no section headers */}
+              {/* Current page questions (6 per page) */}
               <div className="bg-gray-800 rounded-2xl p-5 space-y-4">
-                {randomizedLayer2.map((item, displayIdx) => {
-                  const axisKey = `axis${item.axis}` as 'axisA' | 'axisB' | 'axisC'
+                {currentPageItems.map((item, displayIdx) => {
+                  const key = `axis${item.axis}` as keyof Layer2Answers
                   return (
                     <div key={item.id} className="space-y-2">
                       <p className="text-sm text-gray-300">
-                        <span className="text-gray-600 mr-1.5 text-xs">{displayIdx + 1}.</span>
+                        <span className="text-gray-600 mr-1.5 text-xs">{layer2Page * 6 + displayIdx + 1}.</span>
                         {item.text}
                       </p>
                       <LikertRow5
                         label={item.id}
-                        value={layer2Answers[axisKey][item.idx]}
+                        value={layer2Answers[key][item.idx]}
                         onChange={(v) => setLayer2Answer(item.axis, item.idx, v)}
                       />
                     </div>
@@ -358,15 +381,15 @@ export default function DiagnosisPage() {
               </div>
 
               <button
-                onClick={handleSubmitLayer2}
-                disabled={!isLayer2Complete}
+                onClick={handleLayer2Next}
+                disabled={!isCurrentPageComplete}
                 className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                  isLayer2Complete
+                  isCurrentPageComplete
                     ? 'bg-blue-600 hover:bg-blue-700 text-white'
                     : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                結果を見る →
+                {layer2Page < 5 ? '次へ →' : '結果を見る →'}
               </button>
             </div>
           )}
