@@ -46,7 +46,7 @@ export function calculateScores(
   layer2Answers?: Layer2Answers
 ): Scores {
   const OS = calculateOS(scenarioAnswers)
-  if (OS < 35 || !layer2Answers) {
+  if (!layer2Answers) {
     return { OS, A: 0, B: 0, C: 0, zone: 'Red' }
   }
   const A = calculateAxisA(layer2Answers.axisA)
