@@ -378,7 +378,10 @@ export default function ResultPage() {
     <div className="min-h-screen bg-gray-900 pb-20">
       <div className="max-w-lg mx-auto px-4 pt-8 space-y-6 fade-in">
 
-        <h1 className="text-2xl font-bold text-white text-center">診断結果</h1>
+        <div className="text-center">
+          <p className="text-sm text-gray-500 tracking-wide mb-1">MIRROR</p>
+          <h1 className="text-2xl font-bold text-white">あなたの診断結果</h1>
+        </div>
 
         {/* ① Personality type */}
         {personalityType && personalityType.name !== '—' && personalityType.paragraphs.length > 0 && (
