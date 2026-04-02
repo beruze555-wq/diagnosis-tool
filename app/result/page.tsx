@@ -386,7 +386,35 @@ export default function ResultPage() {
     const scenarioAnswers: ScenarioAnswer[] = JSON.parse(scenarioAnswersRaw)
     const layer2Raw = sessionStorage.getItem('layer2Answers')
     const skipped = sessionStorage.getItem('layer2Skipped') === 'true' && !layer2Raw
-    const layer2Answers: Layer2Answers | undefined = layer2Raw ? JSON.parse(layer2Raw) : undefined
+
+    // Normalize layer2 data: handle both {axisA:[...], ...} and flat [{id, axis, value}...] formats
+    function parseLayer2Answers(raw: string): Layer2Answers | undefined {
+      const parsed = JSON.parse(raw)
+      if (!parsed) return undefined
+      // Already in correct format
+      if (parsed.axisA && Array.isArray(parsed.axisA)) return parsed as Layer2Answers
+      // Flat array format: [{id:"A1", axis:"A", value:4}, ...]
+      if (Array.isArray(parsed)) {
+        const result: Layer2Answers = { axisA: [], axisB: [], axisC: [], axisD: [] }
+        const axisCounts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 }
+        const sorted = [...parsed].sort((a, b) => {
+          const numA = parseInt(a.id?.slice(1) ?? '0')
+          const numB = parseInt(b.id?.slice(1) ?? '0')
+          return numA - numB
+        })
+        for (const item of sorted) {
+          const axis = item.axis as 'A' | 'B' | 'C' | 'D'
+          if (!axis || !result[`axis${axis}` as keyof Layer2Answers]) continue
+          const key = `axis${axis}` as keyof Layer2Answers
+          result[key].push(item.value)
+          axisCounts[axis]++
+        }
+        return result
+      }
+      return undefined
+    }
+
+    const layer2Answers: Layer2Answers | undefined = layer2Raw ? parseLayer2Answers(layer2Raw) : undefined
 
     setLayer2Skipped(skipped)
     setRawAnswers({ scenarioAnswers, layer2Answers })
