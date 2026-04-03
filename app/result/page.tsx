@@ -20,7 +20,6 @@ import {
   getSJTBehaviorTendency,
   calculateDeepAnalysis,
   getEnvironmentFit,
-  computeRiskIndicators,
   getLearningAgilityDescription,
   getSelfEfficacyDescription,
   getAutonomousMotivationDescription,
@@ -29,7 +28,6 @@ import {
   getTeamContributionDescription,
   TAG_LABELS,
   EnvironmentFit,
-  RiskIndicators,
 } from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
 import { ScenarioAnswer, Layer2Answers, Scores, DeepAnalysis } from '@/types'
@@ -461,9 +459,6 @@ export default function ResultPage() {
       zone_id: typeKey,
       personalityType: pType.name,
       deepAnalysis: da ?? undefined,
-      riskIndicators: !skipped && layer2Answers
-        ? computeRiskIndicators(calculated.OS, calculated.A, calculated.B)
-        : undefined,
     })
       .then(() => setSaved(true))
       .catch((err) => { console.error('診断結果の保存に失敗しました:', err); setSaveError(true) })
