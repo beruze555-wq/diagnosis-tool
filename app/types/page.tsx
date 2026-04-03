@@ -266,7 +266,7 @@ export default function TypesPage() {
               <span className="text-gray-400 text-sm">丸 = 楽観性 HIGH</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-xl bg-gray-400 shrink-0"></div>
+              <div className="w-6 h-6 rounded-lg bg-gray-400 shrink-0"></div>
               <span className="text-gray-400 text-sm">角丸 = 楽観性 LOW</span>
             </div>
             <div className="flex items-center gap-3">
