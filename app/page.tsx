@@ -70,6 +70,29 @@ export default function StartPage() {
     router.push('/diagnosis')
   }
 
+  const handleMoritaData = () => {
+    sessionStorage.removeItem('devMode')
+    sessionStorage.removeItem('devScores')
+    sessionStorage.removeItem('layer2Skipped')
+    sessionStorage.removeItem('diagnosisPhase')
+    sessionStorage.setItem('userInfo', JSON.stringify({ age: 21, affiliation: '大学3〜4年生' }))
+    sessionStorage.setItem('scenarioAnswers', JSON.stringify([
+      { sjtRatings: [5, 5, 2, 1], attributions: [4, 5, 7] },
+      { sjtRatings: [5, 4, 1, 2], attributions: [4, 4, 4] },
+      { sjtRatings: [4, 5, 1, 1], attributions: [5, 5, 7] },
+      { sjtRatings: [5, 5, 1, 5], attributions: [1, 6, 3] },
+      { sjtRatings: [4, 3, 4, 3], attributions: [5, 5, 5] },
+      { sjtRatings: [5, 5, 1, 5], attributions: [3, 5, 7] },
+    ]))
+    sessionStorage.setItem('layer2Answers', JSON.stringify({
+      axisA: [4, 5, 5, 5, 4, 3, 5, 5, 5, 5],
+      axisB: [1, 5, 1, 4, 5, 4, 1, 5, 1, 5],
+      axisC: [3, 1, 5, 1, 5, 1, 5, 1, 3, 1],
+      axisD: [4, 5, 5, 1, 5, 2],
+    }))
+    router.push('/result')
+  }
+
   const handleDevSkip = () => {
     sessionStorage.setItem('userInfo', JSON.stringify({ age: 0, affiliation: 'dev' }))
     sessionStorage.setItem('scenarioAnswers', JSON.stringify([]))
@@ -203,14 +226,26 @@ export default function StartPage() {
       {/* セクション4: フッター */}
       <p className="text-center text-xs text-gray-600 mt-2 mb-8">結果はあなた自身のために使われます。</p>
 
-      {/* セクション5: 開発モード */}
+      {/* セクション5: 開発モード（URLクエリ ?dev=true が必要） */}
       {isDev && (
-        <div className="max-w-lg mx-auto px-4 pb-8">
+        <div className="max-w-lg mx-auto px-4 pb-4">
           <button
             onClick={handleDevSkip}
             className="w-full bg-orange-600/20 hover:bg-orange-600/30 border border-orange-600/50 text-orange-400 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
           >
             🛠 開発モード：結果画面にスキップ
+          </button>
+        </div>
+      )}
+
+      {/* セクション6: 森田データ自動入力（dev環境のみ常時表示） */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="max-w-lg mx-auto px-4 pb-8">
+          <button
+            onClick={handleMoritaData}
+            className="w-full bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-600/50 text-emerald-400 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
+          >
+            🔧 DEV: 自動入力で結果へ
           </button>
         </div>
       )}
