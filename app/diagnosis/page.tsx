@@ -7,7 +7,7 @@ import { layer2Sections } from '@/lib/layer2Questions'
 import { calculateOS } from '@/lib/scoring'
 import { ScenarioAnswer, Layer2Answers } from '@/types'
 
-const TOTAL_STEPS = 7 // 6 scenarios + 1 layer2
+const TOTAL_STEPS = 12 // 6 scenarios + 6 layer2 pages
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -34,26 +34,38 @@ function LikertRow5({
   label,
   value,
   onChange,
+  leftLabel,
+  rightLabel,
 }: {
   label: string
   value: number
   onChange: (v: number) => void
+  leftLabel?: string
+  rightLabel?: string
 }) {
   return (
-    <div className="flex items-center gap-1.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          onClick={() => onChange(n)}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
-            value === n
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          {n}
-        </button>
-      ))}
+    <div>
+      <div className="flex items-center gap-1.5">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            onClick={() => onChange(n)}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
+              value === n
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      {(leftLabel || rightLabel) && (
+        <div className="flex justify-between text-xs text-gray-500 px-0.5 mt-1">
+          {leftLabel && <span>← {leftLabel}</span>}
+          {rightLabel && <span>{rightLabel} →</span>}
+        </div>
+      )}
     </div>
   )
 }
@@ -94,6 +106,11 @@ function LikertRow7({
   )
 }
 
+// Per-scenario 7-item shuffle type (4 SJT + 3 attribution)
+type ShuffledItem =
+  | { type: 'sjt'; originalIdx: number }
+  | { type: 'attribution'; qIdx: number }
+
 // Flat layer2 question item with axis + position index
 interface FlatL2Item {
   axis: 'A' | 'B' | 'C' | 'D'
@@ -130,14 +147,24 @@ export default function DiagnosisPage() {
     axisC: Array(10).fill(0),
     axisD: Array(6).fill(0),
   })
-  const [layer1SubPhase, setLayer1SubPhase] = useState<'sjt' | 'attribution'>('sjt')
   const [layer2Page, setLayer2Page] = useState(0)
   const [visible, setVisible] = useState(true)
   const [isDev, setIsDev] = useState(false)
 
-  // One-time randomized SJT display order per scenario: array of [0,1,2,3] shuffled
-  const [shuffledOrders] = useState<number[][]>(() =>
-    scenarios.map(() => shuffleArray([0, 1, 2, 3]))
+  // Per-scenario: 7 items (4 SJT + 3 attribution) in random order, fixed at mount
+  const [shuffledItems7] = useState<ShuffledItem[][]>(() =>
+    scenarios.map(() => {
+      const items: ShuffledItem[] = [
+        { type: 'sjt', originalIdx: 0 },
+        { type: 'sjt', originalIdx: 1 },
+        { type: 'sjt', originalIdx: 2 },
+        { type: 'sjt', originalIdx: 3 },
+        { type: 'attribution', qIdx: 0 },
+        { type: 'attribution', qIdx: 1 },
+        { type: 'attribution', qIdx: 2 },
+      ]
+      return shuffleArray(items)
+    })
   )
 
   // One-time randomized flat Layer2 question list (all 4 sections, 36 items total)
@@ -153,12 +180,6 @@ export default function DiagnosisPage() {
     )
     return shuffleArray(all)
   })
-
-  // Memoize display order for current scenario
-  const currentShuffledOrder = useMemo(
-    () => shuffledOrders[scenarioIndex],
-    [shuffledOrders, scenarioIndex]
-  )
 
   // Initialize: redirect if no userInfo, otherwise restore any saved progress
   useEffect(() => {
@@ -184,7 +205,7 @@ export default function DiagnosisPage() {
     } else if (savedScenarioAnswers) {
       const restored: ScenarioAnswer[] = JSON.parse(savedScenarioAnswers)
       if (restored.length === scenarios.length && savedPhase !== 'layer1') {
-        // PART1完了済み・PART2未着手（diagnosisPhaseがなくても対応）
+        // PART1完了済み・PART2未着手
         setScenarioAnswers(restored)
         setPhase('layer2')
       } else if (restored.length > 0 && restored.length < scenarios.length) {
@@ -195,8 +216,9 @@ export default function DiagnosisPage() {
     }
   }, [router, randomizedLayer2])
 
-  const isSJTComplete = currentAnswer.sjtRatings.every((v) => v > 0)
-  const isAttributionComplete = currentAnswer.attributions.every((v) => v > 0)
+  const isCurrentScenarioComplete =
+    currentAnswer.sjtRatings.every((v) => v > 0) &&
+    currentAnswer.attributions.every((v) => v > 0)
 
   const isLayer2Complete =
     layer2Answers.axisA.every((v) => v > 0) &&
@@ -230,29 +252,19 @@ export default function DiagnosisPage() {
         transition(() => setLayer2Page((p) => p - 1))
       }
       // layer2Page === 0: PART1には戻れない
-    } else {
-      if (layer1SubPhase === 'attribution') {
-        transition(() => setLayer1SubPhase('sjt'))
-      } else if (scenarioIndex > 0) {
-        const prevAnswer = scenarioAnswers[scenarioIndex - 1]
-        const prevAnswers = scenarioAnswers.slice(0, -1)
-        transition(() => {
-          setCurrentAnswer(prevAnswer)
-          setScenarioAnswers(prevAnswers)
-          setScenarioIndex((i) => i - 1)
-          setLayer1SubPhase('attribution')
-        })
-      }
+    } else if (scenarioIndex > 0) {
+      const prevAnswer = scenarioAnswers[scenarioIndex - 1]
+      const prevAnswers = scenarioAnswers.slice(0, -1)
+      transition(() => {
+        setCurrentAnswer(prevAnswer)
+        setScenarioAnswers(prevAnswers)
+        setScenarioIndex((i) => i - 1)
+      })
     }
   }
 
-  const handleNextSJT = () => {
-    if (!isSJTComplete) return
-    transition(() => setLayer1SubPhase('attribution'))
-  }
-
-  const handleNextAttribution = () => {
-    if (!isAttributionComplete) return
+  const handleNext = () => {
+    if (!isCurrentScenarioComplete) return
     const newAnswers = [...scenarioAnswers, currentAnswer]
 
     if (scenarioIndex < scenarios.length - 1) {
@@ -263,7 +275,6 @@ export default function DiagnosisPage() {
         setScenarioAnswers(newAnswers)
         setScenarioIndex((i) => i + 1)
         setCurrentAnswer({ sjtRatings: [0, 0, 0, 0], attributions: [0, 0, 0] })
-        setLayer1SubPhase('sjt')
       })
     } else {
       // Last scenario done — evaluate OS
@@ -330,8 +341,9 @@ export default function DiagnosisPage() {
     })
   }
 
+  // Progress: 1 unit per page (scenario pages + layer2 pages = 12 total)
   const currentProgress =
-    phase === 'layer1' ? scenarioIndex : scenarios.length
+    phase === 'layer1' ? scenarioIndex + 1 : scenarios.length + layer2Page + 1
 
   const scenario = scenarios[scenarioIndex]
 
@@ -357,7 +369,7 @@ export default function DiagnosisPage() {
             <button
               onClick={handleBack}
               disabled={
-                (phase === 'layer1' && layer1SubPhase === 'sjt' && scenarioIndex === 0) ||
+                (phase === 'layer1' && scenarioIndex === 0) ||
                 (phase === 'layer2' && layer2Page === 0)
               }
               className="mt-2 text-xs text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -374,8 +386,8 @@ export default function DiagnosisPage() {
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
           }`}
         >
-          {/* PART1 - SJTサブフェーズ */}
-          {phase === 'layer1' && layer1SubPhase === 'sjt' && (
+          {/* PART1 — 1シナリオ1ページ（SJT4択＋帰属3問を7項目シャッフル表示） */}
+          {phase === 'layer1' && (
             <div className="space-y-6">
               {/* Scenario card */}
               <div className="bg-white text-gray-800 rounded-2xl shadow-lg p-6">
@@ -390,73 +402,48 @@ export default function DiagnosisPage() {
                 </p>
               </div>
 
-              {/* SJT section — shuffled display order, stored by original label */}
-              <div className="bg-gray-800 rounded-2xl p-5 space-y-4">
+              {/* 7 shuffled items: 4 SJT (1-5) + 3 attribution (1-7) */}
+              <div className="bg-gray-800 rounded-2xl p-5 space-y-5">
                 <p className="text-sm font-semibold text-gray-200">
-                  あなたならどうしますか？各選択肢を評価してください
+                  この状況についての質問です。直感で答えてください。
                 </p>
-                <div className="flex justify-between text-xs text-gray-500 px-0.5">
-                  <span>← まったくしない</span>
-                  <span>必ずする →</span>
-                </div>
-                {currentShuffledOrder.map((originalIdx) => {
-                  const opt = scenario.sjtOptions[originalIdx]
-                  return (
-                    <div key={opt.label} className="space-y-2">
-                      <p className="text-sm text-gray-300">{opt.text}</p>
-                      <LikertRow5
-                        label={opt.label}
-                        value={currentAnswer.sjtRatings[originalIdx]}
-                        onChange={(v) => setSJTRating(originalIdx, v)}
-                      />
-                    </div>
-                  )
+                {shuffledItems7[scenarioIndex].map((item) => {
+                  if (item.type === 'sjt') {
+                    const opt = scenario.sjtOptions[item.originalIdx]
+                    return (
+                      <div key={`sjt-${item.originalIdx}`} className="space-y-2">
+                        <p className="text-sm text-gray-300">{opt.text}</p>
+                        <LikertRow5
+                          label={opt.label}
+                          value={currentAnswer.sjtRatings[item.originalIdx]}
+                          onChange={(v) => setSJTRating(item.originalIdx, v)}
+                          leftLabel="まったくしない"
+                          rightLabel="必ずする"
+                        />
+                      </div>
+                    )
+                  } else {
+                    const attr = scenario.attributions[item.qIdx]
+                    return (
+                      <div key={`attr-${item.qIdx}`} className="space-y-2">
+                        <p className="text-sm text-gray-300">{attr.question}</p>
+                        <LikertRow7
+                          leftLabel={attr.leftLabel}
+                          rightLabel={attr.rightLabel}
+                          value={currentAnswer.attributions[item.qIdx]}
+                          onChange={(v) => setAttribution(item.qIdx, v)}
+                        />
+                      </div>
+                    )
+                  }
                 })}
               </div>
 
               <button
-                onClick={handleNextSJT}
-                disabled={!isSJTComplete}
+                onClick={handleNext}
+                disabled={!isCurrentScenarioComplete}
                 className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                  isSJTComplete
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                次へ →
-              </button>
-            </div>
-          )}
-
-          {/* PART1 - 帰属評定サブフェーズ */}
-          {phase === 'layer1' && layer1SubPhase === 'attribution' && (
-            <div className="space-y-6">
-              {/* シナリオタイトルのみ（本文は非表示） */}
-              <p className="text-xs text-gray-500 text-center tracking-wide">
-                シナリオ {scenario.id}：{scenario.title}
-              </p>
-
-              {/* Attribution section */}
-              <div className="bg-gray-800 rounded-2xl p-5 space-y-5">
-                <p className="text-sm font-semibold text-gray-200">この出来事についての印象を教えてください</p>
-                {scenario.attributions.map((attr, i) => (
-                  <div key={i} className="space-y-2">
-                    <p className="text-sm text-gray-300">{attr.question}</p>
-                    <LikertRow7
-                      leftLabel={attr.leftLabel}
-                      rightLabel={attr.rightLabel}
-                      value={currentAnswer.attributions[i]}
-                      onChange={(v) => setAttribution(i, v)}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={handleNextAttribution}
-                disabled={!isAttributionComplete}
-                className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                  isAttributionComplete
+                  isCurrentScenarioComplete
                     ? 'bg-blue-600 hover:bg-blue-700 text-white'
                     : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                 }`}
