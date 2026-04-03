@@ -189,55 +189,55 @@ export default function TypesPage() {
           </p>
         </div>
 
-        {/* ── Legend (PC/mobile共通) ── */}
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50 space-y-2">
-          <h3 className="text-xs font-bold text-white mb-2">凡例</h3>
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-400">
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded-full bg-gray-400 inline-block" />
-              大きい円 = 達成動機 HIGH
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />
-              小さい円 = 達成動機 LOW
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded bg-gray-300 inline-block" />
-              明るい色 = 楽観性 HIGH
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded bg-gray-600 inline-block" />
-              深い色 = 楽観性 LOW
-            </span>
+        {/* ── マップの読み方（凡例 + 軸説明 統合） ── */}
+        <div className="bg-gray-800/60 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 max-w-3xl mx-auto">
+          <h3 className="text-lg font-bold text-white mb-4">マップの読み方</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* 左カラム: 軸の説明 */}
+            <div className="space-y-3">
+              <div>
+                <span className="text-blue-400 font-semibold">横軸 → 情緒安定性（B）</span>
+                <p className="text-gray-400 text-sm mt-1">
+                  右にいくほどストレス下でも冷静な判断を維持しやすい。
+                  左にいくほど感情の波が大きく、それを力に変える傾向。
+                </p>
+              </div>
+              <div>
+                <span className="text-blue-400 font-semibold">縦軸 ↑ 粘り強さ（A）</span>
+                <p className="text-gray-400 text-sm mt-1">
+                  上にいくほど長期的にコミットし続ける力が強い。
+                  下にいくほど柔軟に方向転換しやすい。
+                </p>
+              </div>
+              <p className="text-gray-500 text-xs italic">
+                Barrick &amp; Mount (1991) のメタ分析で職務遂行との相関が
+                最も高い2因子をマップの主軸としています。
+              </p>
+            </div>
+            {/* 右カラム: 4ゾーン */}
+            <div className="space-y-2">
+              <p className="text-gray-300 text-sm font-semibold mb-2">4つのゾーン</p>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500 shrink-0" />
+                <span className="text-gray-300 text-sm">実行者ゾーン（右上）— 安定 × 持続</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
+                <span className="text-gray-300 text-sm">挑戦者ゾーン（左上）— 感情を力に × 持続</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-gray-300 text-sm">安定者ゾーン（右下）— 安定 × 柔軟探索</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-rose-500 shrink-0" />
+                <span className="text-gray-300 text-sm">模索者ゾーン（左下）— 試行錯誤 × 柔軟探索</span>
+              </div>
+              <p className="text-gray-500 text-xs mt-3">
+                円をクリックするとタイプの詳細が見られます。
+              </p>
+            </div>
           </div>
-          <div className="pt-2 border-t border-gray-700/50 space-y-0.5 text-xs text-gray-500">
-            <p>横軸: 情緒安定性（B）— 左が低く、右が高い</p>
-            <p>縦軸: 粘り強さ（A）— 下が低く、上が高い</p>
-          </div>
-        </div>
-
-        {/* ── Axis explanation ── */}
-        <div className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 space-y-4">
-          <h2 className="text-sm font-bold text-white">2軸の意味</h2>
-          <div>
-            <p className="text-xs font-semibold text-amber-400 mb-1">縦軸：A — 粘り強さ（Grit）</p>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              目標に向かって継続的に努力できるか。高いほど長期的なコミットメントを維持しやすく、
-              低いほど柔軟な探索や新しいことへの適応が得意な傾向があります。
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-blue-400 mb-1">横軸：B — 情緒安定性（Emotional Stability）</p>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              ストレス下でも感情の波を小さく保てるか。高いほど困難な場面で冷静な判断を維持しやすく、
-              低いほど強い感情エネルギーや感受性を持つ傾向があります。
-            </p>
-          </div>
-          <p className="text-xs text-gray-500 border-t border-gray-700/50 pt-3 leading-relaxed">
-            Barrick &amp; Mount (1991) のメタ分析で、職務遂行との相関が最も高い2因子が
-            Conscientiousness（粘り強さ）と Emotional Stability（情緒安定性）であるため、
-            この2軸をマップの主軸としています。
-          </p>
         </div>
 
         {/* ── 16 type cards grouped by quadrant ── */}
