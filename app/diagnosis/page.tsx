@@ -341,6 +341,59 @@ export default function DiagnosisPage() {
     })
   }
 
+  // DEV ONLY: skip current scenario page (fill blanks with defaults and advance)
+  const handleDevSkipLayer1 = () => {
+    const filledAnswer: ScenarioAnswer = {
+      sjtRatings: currentAnswer.sjtRatings.map((v) => (v === 0 ? 3 : v)),
+      attributions: currentAnswer.attributions.map((v) => (v === 0 ? 4 : v)),
+    }
+    const newAnswers = [...scenarioAnswers, filledAnswer]
+
+    if (scenarioIndex < scenarios.length - 1) {
+      sessionStorage.setItem('scenarioAnswers', JSON.stringify(newAnswers))
+      sessionStorage.setItem('diagnosisPhase', 'layer1')
+      transition(() => {
+        setScenarioAnswers(newAnswers)
+        setScenarioIndex((i) => i + 1)
+        setCurrentAnswer({ sjtRatings: [0, 0, 0, 0], attributions: [0, 0, 0] })
+      })
+    } else {
+      const OS = calculateOS(newAnswers)
+      sessionStorage.setItem('scenarioAnswers', JSON.stringify(newAnswers))
+      if (OS < 35) {
+        sessionStorage.setItem('layer2Skipped', 'true')
+        sessionStorage.removeItem('diagnosisPhase')
+        router.push('/result')
+      } else {
+        sessionStorage.removeItem('layer2Skipped')
+        sessionStorage.setItem('diagnosisPhase', 'layer2')
+        transition(() => {
+          setScenarioAnswers(newAnswers)
+          setPhase('layer2')
+        })
+      }
+    }
+  }
+
+  // DEV ONLY: skip current layer2 page (fill all unset items with 3 and advance)
+  const handleDevSkipLayer2 = () => {
+    const filled: Layer2Answers = {
+      axisA: layer2Answers.axisA.map((v) => (v === 0 ? 3 : v)),
+      axisB: layer2Answers.axisB.map((v) => (v === 0 ? 3 : v)),
+      axisC: layer2Answers.axisC.map((v) => (v === 0 ? 3 : v)),
+      axisD: layer2Answers.axisD.map((v) => (v === 0 ? 3 : v)),
+    }
+    setLayer2Answers(filled)
+    sessionStorage.setItem('layer2Answers', JSON.stringify(filled))
+    if (layer2Page < 5) {
+      transition(() => setLayer2Page((p) => p + 1))
+    } else {
+      sessionStorage.removeItem('layer2Skipped')
+      sessionStorage.removeItem('diagnosisPhase')
+      router.push('/result')
+    }
+  }
+
   // Progress: 1 unit per page (scenario pages + layer2 pages = 12 total)
   const currentProgress =
     phase === 'layer1' ? scenarioIndex + 1 : scenarios.length + layer2Page + 1
@@ -451,6 +504,16 @@ export default function DiagnosisPage() {
                 {scenarioIndex < scenarios.length - 1 ? '次のシナリオへ →' : 'パート1完了 →'}
               </button>
             </div>
+          )}
+
+          {/* DEV ONLY: fixed skip button — removed at production build */}
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={phase === 'layer1' ? handleDevSkipLayer1 : handleDevSkipLayer2}
+              className="fixed bottom-6 right-4 z-50 bg-gray-900/80 hover:bg-gray-800/90 border border-gray-600/60 text-gray-400 hover:text-white text-xs font-mono px-3 py-1.5 rounded-lg backdrop-blur transition-colors duration-150 shadow-lg"
+            >
+              ⏭ DEV SKIP
+            </button>
           )}
 
           {phase === 'layer2' && (
