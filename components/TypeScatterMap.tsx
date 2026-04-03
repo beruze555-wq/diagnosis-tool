@@ -34,18 +34,23 @@ const TYPE_POSITIONS: Record<string, { left: number; top: number }> = {
   LLLL: { left: 22, top: 78 },
 }
 
-// Returns glowing orb style per quadrant + C/OS modifiers
+// Returns glowing orb style per quadrant + shape/size from OS/C
+// OS-H → rounded circle (borderRadius 50%), OS-L → rounded square (16px)
+// C-H → large (72px), C-L → small (48px)
 function getNodeStyle(key: string, isHovered: boolean): CSSProperties {
   const a = key[1]
   const b = key[2]
   const os = key[0]
   const c = key[3]
 
-  // C-H: strong glow, C-L: weaker glow
-  const glowBase = c === 'H' ? 24 : 14
-  const glowInner = c === 'H' ? 8 : 5
-  // OS-H: bright center (0.95), OS-L: dimmer center (0.7)
-  const centerAlpha = os === 'H' ? 0.95 : 0.7
+  // Unified glow intensity (C/OS differences now expressed via shape/size)
+  const glowBase = 20
+  const glowInner = 8
+
+  // C-H: large node, C-L: small node
+  const nodeSize = c === 'H' ? '72px' : '48px'
+  // OS-H: circle, OS-L: rounded square
+  const nodeRadius = os === 'H' ? '50%' : '16px'
 
   let gradient: string
   let shadowRgb: string
@@ -53,22 +58,22 @@ function getNodeStyle(key: string, isHovered: boolean): CSSProperties {
 
   if (a === 'H' && b === 'H') {
     // Blue: executor
-    gradient = `radial-gradient(circle at 35% 35%, rgba(147,197,253,${centerAlpha}), rgba(96,165,250,0.7), rgba(59,130,246,0.3))`
+    gradient = 'radial-gradient(circle at 35% 35%, rgba(147,197,253,0.9), rgba(96,165,250,0.7), rgba(59,130,246,0.3))'
     shadowRgb = '59,130,246'
     borderColor = 'rgba(147,197,253,0.4)'
   } else if (a === 'H' && b === 'L') {
     // Amber: challenger
-    gradient = `radial-gradient(circle at 35% 35%, rgba(252,211,77,${centerAlpha}), rgba(245,158,11,0.7), rgba(217,119,6,0.3))`
+    gradient = 'radial-gradient(circle at 35% 35%, rgba(252,211,77,0.9), rgba(245,158,11,0.7), rgba(217,119,6,0.3))'
     shadowRgb = '245,158,11'
     borderColor = 'rgba(252,211,77,0.4)'
   } else if (a === 'L' && b === 'H') {
     // Emerald: stable
-    gradient = `radial-gradient(circle at 35% 35%, rgba(110,231,183,${centerAlpha}), rgba(52,211,153,0.7), rgba(16,185,129,0.3))`
+    gradient = 'radial-gradient(circle at 35% 35%, rgba(110,231,183,0.9), rgba(52,211,153,0.7), rgba(16,185,129,0.3))'
     shadowRgb = '16,185,129'
     borderColor = 'rgba(110,231,183,0.4)'
   } else {
     // Rose: explorer
-    gradient = `radial-gradient(circle at 35% 35%, rgba(253,164,175,${centerAlpha}), rgba(251,113,133,0.7), rgba(244,63,94,0.3))`
+    gradient = 'radial-gradient(circle at 35% 35%, rgba(253,164,175,0.9), rgba(251,113,133,0.7), rgba(244,63,94,0.3))'
     shadowRgb = '244,63,94'
     borderColor = 'rgba(253,164,175,0.4)'
   }
@@ -80,6 +85,9 @@ function getNodeStyle(key: string, isHovered: boolean): CSSProperties {
   const a2 = isHovered ? 0.5 : 0.3
 
   return {
+    width: nodeSize,
+    height: nodeSize,
+    borderRadius: nodeRadius,
     background: gradient,
     boxShadow: `0 0 ${s1}px rgba(${shadowRgb},${a1}), 0 0 ${s2}px rgba(${shadowRgb},${a2})`,
     border: `1px solid ${borderColor}`,
@@ -128,17 +136,17 @@ export default function TypeScatterMap({ userTypeKey }: TypeScatterMapProps) {
         {/* Vertical line at exact 50% */}
         <div className="absolute left-1/2 top-0 bottom-0 border-l border-dashed border-gray-400 opacity-30" />
 
-        {/* Zone labels — centered in each quadrant */}
-        <div className="absolute top-[25%] left-[25%] -translate-x-1/2 -translate-y-1/2 text-amber-400 text-xs font-bold opacity-20 whitespace-nowrap">
+        {/* Zone labels — pinned to each quadrant corner to avoid overlapping nodes */}
+        <div className="absolute top-[4%] left-[4%] text-amber-400 text-sm font-semibold opacity-40 whitespace-nowrap">
           挑戦者ゾーン
         </div>
-        <div className="absolute top-[25%] left-[75%] -translate-x-1/2 -translate-y-1/2 text-blue-400 text-xs font-bold opacity-20 whitespace-nowrap">
+        <div className="absolute top-[4%] right-[4%] text-blue-400 text-sm font-semibold opacity-40 whitespace-nowrap text-right">
           実行者ゾーン
         </div>
-        <div className="absolute top-[75%] left-[25%] -translate-x-1/2 -translate-y-1/2 text-rose-400 text-xs font-bold opacity-20 whitespace-nowrap">
+        <div className="absolute bottom-[4%] left-[4%] text-rose-400 text-sm font-semibold opacity-40 whitespace-nowrap">
           模索者ゾーン
         </div>
-        <div className="absolute top-[75%] left-[75%] -translate-x-1/2 -translate-y-1/2 text-emerald-400 text-xs font-bold opacity-20 whitespace-nowrap">
+        <div className="absolute bottom-[4%] right-[4%] text-emerald-400 text-sm font-semibold opacity-40 whitespace-nowrap text-right">
           安定者ゾーン
         </div>
 
@@ -183,9 +191,9 @@ export default function TypeScatterMap({ userTypeKey }: TypeScatterMapProps) {
               onMouseLeave={() => setActiveKey(null)}
               onClick={() => setActiveKey(activeKey === key ? null : key)}
             >
-              {/* Glowing orb node */}
+              {/* Glowing orb node — size/shape from nodeStyle (width/height/borderRadius) */}
               <div
-                className={`w-[60px] h-[60px] rounded-full flex items-center justify-center text-white font-bold text-xs leading-none ${isUser ? 'ring-2 ring-white animate-pulse' : ''}`}
+                className={`flex items-center justify-center text-white font-bold text-xs leading-none ${isUser ? 'ring-2 ring-white animate-pulse' : ''}`}
                 style={{
                   ...nodeStyle,
                   textShadow: '0 1px 3px rgba(0,0,0,0.5)',

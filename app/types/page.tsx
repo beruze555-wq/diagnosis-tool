@@ -236,6 +236,25 @@ export default function TypesPage() {
               <p className="text-gray-500 text-xs mt-3">
                 円をクリックするとタイプの詳細が見られます。
               </p>
+              <p className="text-gray-300 text-sm font-semibold mt-4 mb-2">ノードの見方</p>
+              <div className="grid grid-cols-2 gap-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-gray-500 shrink-0" />
+                  <span>丸 = 楽観性 HIGH</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-xl bg-gray-500 shrink-0" />
+                  <span>角丸 = 楽観性 LOW</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-gray-500 shrink-0" />
+                  <span>大 = 達成動機 HIGH</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-gray-500 shrink-0" />
+                  <span>小 = 達成動機 LOW</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
