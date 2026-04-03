@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { PERSONALITY_TYPES, getEnvironmentFit } from '@/lib/scoring'
+import { PERSONALITY_TYPES, getEnvironmentFit, calculateOS, calculateAxisA, calculateAxisB, calculateAxisC, getPersonalityTypeKey } from '@/lib/scoring'
+import type { ScenarioAnswer, Layer2Answers } from '@/types'
+import TypeScatterMap from '@/components/TypeScatterMap'
 
 function axisCodeFromKey(key: string): string {
   return `OS-${key[0]} / A-${key[1]} / B-${key[2]} / C-${key[3]}`
@@ -20,6 +22,7 @@ const QUADRANTS = [
     headerColor: 'text-amber-400',
     dotColor: 'bg-amber-500',
     cardBorder: 'border-amber-700/40',
+    chipBg: 'bg-amber-900/50 text-amber-300',
     // A=H (key[1]=H), B=L (key[2]=L) → top-left in map
     keys: ['HHLH', 'HHLL', 'LHLH', 'LHLL'],
   },
@@ -32,6 +35,7 @@ const QUADRANTS = [
     headerColor: 'text-blue-400',
     dotColor: 'bg-blue-500',
     cardBorder: 'border-blue-700/40',
+    chipBg: 'bg-blue-900/50 text-blue-300',
     // A=H (key[1]=H), B=H (key[2]=H) → top-right in map
     keys: ['HHHH', 'HHHL', 'LHHH', 'LHHL'],
   },
@@ -44,6 +48,7 @@ const QUADRANTS = [
     headerColor: 'text-rose-400',
     dotColor: 'bg-rose-500',
     cardBorder: 'border-rose-700/40',
+    chipBg: 'bg-rose-900/50 text-rose-300',
     // A=L (key[1]=L), B=L (key[2]=L) → bottom-left in map
     keys: ['HLLH', 'HLLL', 'LLLH', 'LLLL'],
   },
@@ -56,6 +61,7 @@ const QUADRANTS = [
     headerColor: 'text-emerald-400',
     dotColor: 'bg-emerald-500',
     cardBorder: 'border-emerald-700/40',
+    chipBg: 'bg-emerald-900/50 text-emerald-300',
     // A=L (key[1]=L), B=H (key[2]=H) → bottom-right in map
     keys: ['HLHH', 'HLHL', 'LLHH', 'LLHL'],
   },
@@ -64,9 +70,50 @@ const QUADRANTS = [
 // Grid order: [top-left, top-right, bottom-left, bottom-right]
 const MAP_GRID = [QUADRANTS[0], QUADRANTS[1], QUADRANTS[2], QUADRANTS[3]]
 
+function parseLayer2Answers(raw: string): Layer2Answers | undefined {
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed) return undefined
+    if (parsed.axisA && Array.isArray(parsed.axisA)) return parsed as Layer2Answers
+    // Flat array format: [{id:"A1", axis:"A", value:4}, ...]
+    if (Array.isArray(parsed)) {
+      const result: Layer2Answers = { axisA: [], axisB: [], axisC: [], axisD: [] }
+      for (const item of parsed as { id: string; axis: string; value: number }[]) {
+        if (item.axis === 'A') result.axisA.push(item.value)
+        else if (item.axis === 'B') result.axisB.push(item.value)
+        else if (item.axis === 'C') result.axisC.push(item.value)
+        else if (item.axis === 'D') result.axisD.push(item.value)
+      }
+      return result
+    }
+    return undefined
+  } catch {
+    return undefined
+  }
+}
+
 export default function TypesPage() {
   const router = useRouter()
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const [userTypeKey, setUserTypeKey] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    try {
+      const scenarioRaw = sessionStorage.getItem('scenarioAnswers')
+      const layer2Raw = sessionStorage.getItem('layer2Answers')
+      if (!scenarioRaw || !layer2Raw) return
+      const scenarioAnswers: ScenarioAnswer[] = JSON.parse(scenarioRaw)
+      const layer2 = parseLayer2Answers(layer2Raw)
+      if (!layer2) return
+      const OS = calculateOS(scenarioAnswers)
+      const A = calculateAxisA(layer2.axisA)
+      const B = calculateAxisB(layer2.axisB)
+      const C = calculateAxisC(layer2.axisC)
+      setUserTypeKey(getPersonalityTypeKey(OS, A, B, C))
+    } catch {
+      // sessionStorage unavailable or parse error — no highlight
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-900 pb-20">
@@ -95,29 +142,41 @@ export default function TypesPage() {
           <p className="text-sm text-gray-400">メンタル構造の4象限と16の個性</p>
         </div>
 
-        {/* ── 4-quadrant map ── */}
-        <div>
-          {/* B-axis label (horizontal) */}
+        {/* ── PC: Scatter plot map (md以上) ── */}
+        <div className="hidden md:block">
+          <TypeScatterMap userTypeKey={userTypeKey} />
+        </div>
+
+        {/* ── Mobile: 4-quadrant card list (md未満) ── */}
+        <div className="md:hidden">
+          {/* B-axis label */}
           <div className="flex justify-between text-xs text-gray-500 mb-1 px-1">
             <span>← B LOW（感情の波）</span>
             <span>B HIGH（情緒安定）→</span>
           </div>
 
-          {/* 2×2 grid */}
+          {/* 2×2 grid of quadrant cards */}
           <div className="grid grid-cols-2 gap-2">
             {MAP_GRID.map((q) => (
               <div key={q.id} className={`rounded-xl p-3 border ${q.bgClass}`}>
-                <p className={`text-xs font-bold leading-tight ${q.headerColor}`}>{q.label}</p>
-                <p className="text-[10px] text-gray-500 mb-2 leading-tight">{q.subLabel}</p>
-                <div className="space-y-0.5">
+                <p className={`text-xs font-bold leading-tight mb-2 ${q.headerColor}`}>{q.label}</p>
+                {/* 2×2 chip grid */}
+                <div className="grid grid-cols-2 gap-1">
                   {q.keys.map((key) => {
                     const type = PERSONALITY_TYPES[key]
-                    return type ? (
-                      <p key={key} className="text-[11px] text-gray-300 leading-snug">
-                        {type.icon} {type.name}
-                        <span className="text-gray-600 text-[9px] ml-1">OS-{key[0]}/C-{key[3]}</span>
-                      </p>
-                    ) : null
+                    if (!type) return null
+                    const isUser = key === userTypeKey
+                    return (
+                      <a
+                        key={key}
+                        href="#personality-types"
+                        onClick={() => setExpandedKey(key)}
+                        className={`flex items-center gap-1 px-1.5 py-1 rounded-lg text-[10px] leading-tight ${q.chipBg} ${isUser ? 'ring-1 ring-white' : ''}`}
+                      >
+                        <span className="text-sm shrink-0">{type.icon}</span>
+                        <span className="font-medium truncate">{type.name}</span>
+                      </a>
+                    )
                   })}
                 </div>
               </div>
@@ -128,6 +187,33 @@ export default function TypesPage() {
           <p className="text-[10px] text-gray-600 mt-1 px-1">
             ↑ 上段：A HIGH（粘り強さ高）　下段：A LOW（柔軟探索）↓
           </p>
+        </div>
+
+        {/* ── Legend (PC/mobile共通) ── */}
+        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50 space-y-2">
+          <h3 className="text-xs font-bold text-white mb-2">凡例</h3>
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-gray-400 inline-block" />
+              大きい円 = 達成動機 HIGH
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" />
+              小さい円 = 達成動機 LOW
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-gray-300 inline-block" />
+              明るい色 = 楽観性 HIGH
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-gray-600 inline-block" />
+              深い色 = 楽観性 LOW
+            </span>
+          </div>
+          <div className="pt-2 border-t border-gray-700/50 space-y-0.5 text-xs text-gray-500">
+            <p>横軸: 情緒安定性（B）— 左が低く、右が高い</p>
+            <p>縦軸: 粘り強さ（A）— 下が低く、上が高い</p>
+          </div>
         </div>
 
         {/* ── Axis explanation ── */}
