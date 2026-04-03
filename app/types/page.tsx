@@ -199,18 +199,18 @@ export default function TypesPage() {
           <div className="space-y-4 mb-6">
             <div>
               <span className="text-blue-400 font-semibold">
-                横軸 → 情緒安定性（B）
-              </span>
-              <p className="text-gray-400 text-sm mt-1">
-                右にいくほどストレス下でも冷静な判断を維持しやすく、左にいくほど感情の波が大きく、それを力に変える傾向があります。
-              </p>
-            </div>
-            <div>
-              <span className="text-blue-400 font-semibold">
                 縦軸 ↑ 粘り強さ（A）
               </span>
               <p className="text-gray-400 text-sm mt-1">
                 上にいくほど長期的にコミットし続ける力が強く、下にいくほど柔軟に方向転換しやすい傾向があります。
+              </p>
+            </div>
+            <div>
+              <span className="text-blue-400 font-semibold">
+                横軸 → 情緒安定性（B）
+              </span>
+              <p className="text-gray-400 text-sm mt-1">
+                右にいくほどストレス下でも冷静な判断を維持しやすく、左にいくほど感情の波が大きく、それを力に変える傾向があります。
               </p>
             </div>
           </div>
