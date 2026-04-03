@@ -2,58 +2,67 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { PERSONALITY_TYPES, TAG_LABELS } from '@/lib/scoring'
-
-const TYPE_KEYS = [
-  'HHHH', 'HHHL', 'HHLH', 'HHLL',
-  'HLHH', 'HLHL', 'HLLH', 'HLLL',
-  'LHHH', 'LHHL', 'LHLH', 'LHLL',
-  'LLHH', 'LLHL', 'LLLH', 'LLLL',
-]
+import { PERSONALITY_TYPES, getEnvironmentFit } from '@/lib/scoring'
 
 function axisCodeFromKey(key: string): string {
   return `OS-${key[0]} / A-${key[1]} / B-${key[2]} / C-${key[3]}`
 }
 
-const ZONE_CATEGORIES = [
+// Key format: OS[0] A[1] B[2] C[3]
+// Quadrant is determined by A (key[1]) and B (key[2])
+const QUADRANTS = [
   {
-    color: 'green',
-    label: 'Green ゾーン',
-    bgClass: 'bg-green-500/10 border-green-700/30',
-    badgeClass: 'bg-green-500 text-white',
-    items: [
-      { id: 'G1', name: '全面突破型', desc: '全軸バランス型。どんな環境でも安定したパフォーマンス。' },
-      { id: 'G2', name: '楽観突出型', desc: '帰属スタイルが突出して高い。挑戦的環境での立て直しが早い。' },
-      { id: 'G3', name: '高達成動機型', desc: '達成意欲が極めて高い。挑戦的課題で最高の力を発揮。' },
-      { id: 'G4', name: '高安定・高持続型', desc: '粘り強さまたは情緒安定性が突出。チームのアンカー的存在。' },
-    ],
+    id: 'challenger',
+    label: '挑戦者ゾーン',
+    subLabel: '感情の波を力に変え、困難に立ち向かう',
+    position: 'A-H / B-L',
+    bgClass: 'bg-amber-950/40 border-amber-700/50',
+    headerColor: 'text-amber-400',
+    dotColor: 'bg-amber-500',
+    cardBorder: 'border-amber-700/40',
+    // A=H (key[1]=H), B=L (key[2]=L) → top-left in map
+    keys: ['HHLH', 'HHLL', 'LHLH', 'LHLL'],
   },
   {
-    color: 'yellow',
-    label: 'Yellow ゾーン',
-    bgClass: 'bg-yellow-500/10 border-yellow-700/30',
-    badgeClass: 'bg-yellow-500 text-black',
-    items: [
-      { id: 'Y1', name: '帰属揺らぎ型', desc: '帰属スタイルが境界域。環境と介入で楽観方向に伸びしろ大。' },
-      { id: 'Y2', name: '持続力伸びしろ型', desc: '意欲・安定は十分だが長期持続力に課題。メンタリング有効。' },
-      { id: 'Y3', name: '感情波型', desc: '粘り・意欲は高いが情緒の揺れがある。感情制御スキルで改善。' },
-      { id: 'Y4', name: '挑戦意欲伸びしろ型', desc: '粘り・安定は十分だが挑戦意欲が控えめ。段階的目標設定が有効。' },
-      { id: 'Y5', name: '境界域複合型', desc: '複数の軸が境界域。全体的な底上げが可能な状態。' },
-    ],
+    id: 'executor',
+    label: '実行者ゾーン',
+    subLabel: '安定 × 持続 — 多くの環境で力を発揮',
+    position: 'A-H / B-H',
+    bgClass: 'bg-blue-950/40 border-blue-700/50',
+    headerColor: 'text-blue-400',
+    dotColor: 'bg-blue-500',
+    cardBorder: 'border-blue-700/40',
+    // A=H (key[1]=H), B=H (key[2]=H) → top-right in map
+    keys: ['HHHH', 'HHHL', 'LHHH', 'LHHL'],
   },
   {
-    color: 'red',
-    label: 'Red ゾーン',
-    bgClass: 'bg-red-500/10 border-red-700/30',
-    badgeClass: 'bg-red-500 text-white',
-    items: [
-      { id: 'R1', name: '帰属課題型', desc: '帰属スタイルが悲観側。思考習慣の変容で改善可能。' },
-      { id: 'R2', name: '持続・安定課題型', desc: '粘り・情緒の両方に課題。心理的安全性の確保が最優先。' },
-      { id: 'R3', name: '二軸課題型', desc: '2軸に伸びしろ。段階的負荷設計と伴走者の存在が鍵。' },
-      { id: 'R4', name: '複合課題型', desc: '3軸すべてに伸びしろ。適切な環境で大きく変化する可能性。' },
-    ],
+    id: 'explorer',
+    label: '模索者ゾーン',
+    subLabel: '試行錯誤の中で、自分だけの道を見つける',
+    position: 'A-L / B-L',
+    bgClass: 'bg-rose-950/40 border-rose-700/50',
+    headerColor: 'text-rose-400',
+    dotColor: 'bg-rose-500',
+    cardBorder: 'border-rose-700/40',
+    // A=L (key[1]=L), B=L (key[2]=L) → bottom-left in map
+    keys: ['HLLH', 'HLLL', 'LLLH', 'LLLL'],
+  },
+  {
+    id: 'stable',
+    label: '安定者ゾーン',
+    subLabel: '心の安定を活かし、自分に合う場所で輝く',
+    position: 'A-L / B-H',
+    bgClass: 'bg-emerald-950/40 border-emerald-700/50',
+    headerColor: 'text-emerald-400',
+    dotColor: 'bg-emerald-500',
+    cardBorder: 'border-emerald-700/40',
+    // A=L (key[1]=L), B=H (key[2]=H) → bottom-right in map
+    keys: ['HLHH', 'HLHL', 'LLHH', 'LLHL'],
   },
 ]
+
+// Grid order: [top-left, top-right, bottom-left, bottom-right]
+const MAP_GRID = [QUADRANTS[0], QUADRANTS[1], QUADRANTS[2], QUADRANTS[3]]
 
 export default function TypesPage() {
   const router = useRouter()
@@ -61,12 +70,13 @@ export default function TypesPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 pb-20">
-      {/* Header */}
+
+      {/* Sticky header */}
       <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur px-4 py-3 border-b border-gray-800">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-500 tracking-wide">MIRROR</p>
-            <h1 className="text-lg font-bold text-white">16のメンタルタイプ</h1>
+            <h1 className="text-lg font-bold text-white">16タイプ マップ</h1>
           </div>
           <button
             onClick={() => router.back()}
@@ -77,51 +87,172 @@ export default function TypesPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-6 space-y-8">
+      <div className="max-w-2xl mx-auto px-4 pt-6 space-y-10">
 
-        {/* Type grid */}
-        <div id="personality-types">
-          <p className="text-xs text-gray-500 mb-4">
-            OS（帰属スタイル）×A（粘り強さ）×B（情緒安定性）×C（達成動機）の4軸 各H/Lで16タイプ
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {TYPE_KEYS.map((key) => {
-              const type = PERSONALITY_TYPES[key]
-              if (!type) return null
-              const isExpanded = expandedKey === key
-              return (
-                <div
-                  key={key}
-                  className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden cursor-pointer hover:border-gray-600/70 transition-colors"
-                  onClick={() => setExpandedKey(isExpanded ? null : key)}
-                >
-                  <div className={`h-1 bg-gradient-to-r ${type.themeFrom} ${type.themeTo}`} />
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{type.icon}</span>
-                        <div>
-                          <p className="text-sm font-bold text-white">{type.name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{axisCodeFromKey(key)}</p>
-                        </div>
-                      </div>
-                      <span className="text-gray-600 text-xs mt-1 shrink-0">{isExpanded ? '▲' : '▼'}</span>
-                    </div>
-                    {isExpanded && (
-                      <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-2">
-                        {type.paragraphs.map((p, i) => (
-                          <p key={i} className="text-xs text-gray-300 leading-relaxed">{p}</p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+        {/* Page title */}
+        <div className="text-center space-y-1">
+          <h2 className="text-xl font-bold text-white">MIRROR 16タイプ マップ</h2>
+          <p className="text-sm text-gray-400">メンタル構造の4象限と16の個性</p>
         </div>
 
-        {/* Tag labels section */}
+        {/* ── 4-quadrant map ── */}
+        <div>
+          {/* B-axis label (horizontal) */}
+          <div className="flex justify-between text-xs text-gray-500 mb-1 px-1">
+            <span>← B LOW（感情の波）</span>
+            <span>B HIGH（情緒安定）→</span>
+          </div>
+
+          {/* 2×2 grid */}
+          <div className="grid grid-cols-2 gap-2">
+            {MAP_GRID.map((q) => (
+              <div key={q.id} className={`rounded-xl p-3 border ${q.bgClass}`}>
+                <p className={`text-xs font-bold leading-tight ${q.headerColor}`}>{q.label}</p>
+                <p className="text-[10px] text-gray-500 mb-2 leading-tight">{q.subLabel}</p>
+                <div className="space-y-0.5">
+                  {q.keys.map((key) => {
+                    const type = PERSONALITY_TYPES[key]
+                    return type ? (
+                      <p key={key} className="text-[11px] text-gray-300 leading-snug">
+                        {type.icon} {type.name}
+                        <span className="text-gray-600 text-[9px] ml-1">OS-{key[0]}/C-{key[3]}</span>
+                      </p>
+                    ) : null
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* A-axis annotation */}
+          <p className="text-[10px] text-gray-600 mt-1 px-1">
+            ↑ 上段：A HIGH（粘り強さ高）　下段：A LOW（柔軟探索）↓
+          </p>
+        </div>
+
+        {/* ── Axis explanation ── */}
+        <div className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 space-y-4">
+          <h2 className="text-sm font-bold text-white">2軸の意味</h2>
+          <div>
+            <p className="text-xs font-semibold text-amber-400 mb-1">縦軸：A — 粘り強さ（Grit）</p>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              目標に向かって継続的に努力できるか。高いほど長期的なコミットメントを維持しやすく、
+              低いほど柔軟な探索や新しいことへの適応が得意な傾向があります。
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-blue-400 mb-1">横軸：B — 情緒安定性（Emotional Stability）</p>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              ストレス下でも感情の波を小さく保てるか。高いほど困難な場面で冷静な判断を維持しやすく、
+              低いほど強い感情エネルギーや感受性を持つ傾向があります。
+            </p>
+          </div>
+          <p className="text-xs text-gray-500 border-t border-gray-700/50 pt-3 leading-relaxed">
+            Barrick &amp; Mount (1991) のメタ分析で、職務遂行との相関が最も高い2因子が
+            Conscientiousness（粘り強さ）と Emotional Stability（情緒安定性）であるため、
+            この2軸をマップの主軸としています。
+          </p>
+        </div>
+
+        {/* ── 16 type cards grouped by quadrant ── */}
+        <div className="space-y-8" id="personality-types">
+          <h2 className="text-base font-bold text-white">16タイプ 詳細</h2>
+
+          {QUADRANTS.map((q) => (
+            <div key={q.id} className="space-y-3">
+              {/* Quadrant heading */}
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${q.dotColor}`} />
+                <h3 className={`text-sm font-bold ${q.headerColor}`}>{q.label}</h3>
+                <span className="text-xs text-gray-600">{q.position}</span>
+              </div>
+
+              {/* Type cards */}
+              {q.keys.map((key) => {
+                const type = PERSONALITY_TYPES[key]
+                const fit = getEnvironmentFit(key)
+                if (!type) return null
+                const isExpanded = expandedKey === key
+                return (
+                  <div
+                    key={key}
+                    className={`bg-gray-800/50 rounded-xl border ${q.cardBorder} overflow-hidden`}
+                  >
+                    <div className={`h-1 bg-gradient-to-r ${type.themeFrom} ${type.themeTo}`} />
+                    <div
+                      className="p-4 cursor-pointer"
+                      onClick={() => setExpandedKey(isExpanded ? null : key)}
+                    >
+                      {/* Card header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{type.icon}</span>
+                          <div>
+                            <p className="text-sm font-bold text-white">{type.name}</p>
+                            <p className="text-xs text-gray-500">{axisCodeFromKey(key)}</p>
+                          </div>
+                        </div>
+                        <span className="text-gray-600 text-xs mt-1 shrink-0">{isExpanded ? '▲' : '▼'}</span>
+                      </div>
+
+                      {/* Expanded content */}
+                      {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-3">
+
+                          {/* Personality paragraphs */}
+                          <div className="space-y-1.5">
+                            {type.paragraphs.map((p, i) => (
+                              <p key={i} className="text-xs text-gray-300 leading-relaxed">{p}</p>
+                            ))}
+                          </div>
+
+                          {/* Environment fit */}
+                          <div className="border-t border-gray-700/30 pt-3 space-y-2.5">
+                            <div>
+                              <p className="text-xs font-semibold text-orange-400 mb-1">⚡ 消耗しやすい環境</p>
+                              <ul className="space-y-0.5">
+                                {fit.drainEnvironments.map((item, i) => (
+                                  <li key={i} className="text-xs text-gray-400 flex gap-1.5">
+                                    <span className="text-orange-500 shrink-0 mt-0.5">•</span>
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-blue-400 mb-1">🤝 マネジメントヒント</p>
+                              <ul className="space-y-0.5">
+                                {fit.managementTips.map((item, i) => (
+                                  <li key={i} className="text-xs text-gray-400 flex gap-1.5">
+                                    <span className="text-blue-500 shrink-0 mt-0.5">•</span>
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-emerald-400 mb-1">🌱 成長アクション</p>
+                              <ul className="space-y-0.5">
+                                {fit.growthActions.map((item, i) => (
+                                  <li key={i} className="text-xs text-gray-400 flex gap-1.5">
+                                    <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* ── Behavior tags (preserved for #behavior-tags anchor) ── */}
         <div id="behavior-tags">
           <h2 className="text-base font-bold text-white mb-2">行動傾向タグ</h2>
           <p className="text-xs text-gray-500 mb-4">
@@ -147,50 +278,29 @@ export default function TypesPage() {
           </div>
         </div>
 
-        {/* Zone categories section */}
-        <div id="zones" className="space-y-4">
-          <h2 className="text-base font-bold text-white">ゾーン判定カテゴリ</h2>
-          <p className="text-xs text-gray-500">
-            OS・A・B・Cのスコアパターンから13のゾーンに分類されます。
-          </p>
-          {ZONE_CATEGORIES.map((cat) => (
-            <div key={cat.color} className={`rounded-2xl p-5 border ${cat.bgClass}`}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cat.badgeClass}`}>
-                  {cat.label}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {cat.items.map((item) => (
-                  <div key={item.id} className="flex gap-3">
-                    <span className="text-xs font-mono text-gray-400 w-8 shrink-0 mt-0.5">[{item.id}]</span>
-                    <div>
-                      <span className="text-sm font-medium text-white">{item.name}</span>
-                      <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+        {/* ── CTA ── */}
+        <div>
+          <a
+            href="/"
+            className="block w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors text-white font-semibold text-sm text-center"
+          >
+            自分のタイプを診断する →
+          </a>
         </div>
 
-        {/* Back to result */}
-        <button
-          onClick={() => router.back()}
-          className="w-full py-3 rounded-xl border border-gray-600 text-gray-400 hover:bg-gray-800 transition-colors text-sm"
-        >
-          診断結果に戻る
-        </button>
-
+        {/* Bottom links */}
         <div className="text-center space-y-3 pb-4">
           <a href="/about" className="text-xs text-gray-500 hover:text-gray-400 transition-colors block">
             この診断の学術的背景について
           </a>
-          <a href="/" className="text-xs text-blue-400 hover:text-blue-300 transition-colors block">
-            診断を受ける →
-          </a>
+          <button
+            onClick={() => router.back()}
+            className="text-xs text-gray-600 hover:text-gray-500 transition-colors"
+          >
+            ← 戻る
+          </button>
         </div>
+
       </div>
     </div>
   )
