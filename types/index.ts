@@ -21,14 +21,11 @@ export interface Layer2Answers {
   axisD: number[]
 }
 
-export type Zone = 'Green' | 'Yellow' | 'Red'
-
 export interface Scores {
   OS: number
   A: number
   B: number
   C: number
-  zone: Zone
 }
 
 export interface DeepAnalysis {

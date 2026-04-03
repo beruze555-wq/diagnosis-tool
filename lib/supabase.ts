@@ -17,7 +17,7 @@ export async function saveDiagnosisResult(data: {
   axisA: number
   axisB: number
   axisC: number
-  zone: string
+  zone?: string
   personalityType: string
   deepAnalysis?: DeepAnalysis
   riskIndicators?: RiskIndicators

@@ -176,7 +176,7 @@ function AnswerViewer({
   const [copied, setCopied] = useState(false)
 
   const allData = {
-    scores: { OS: scores.OS, 粘り強さ: scores.A, 情緒安定性: scores.B, 達成動機: scores.C, zone: scores.zone },
+    scores: { OS: scores.OS, 粘り強さ: scores.A, 情緒安定性: scores.B, 達成動機: scores.C },
     layer1: scenarioAnswers.map((ans, i) => ({
       scenarioId: i + 1,
       title: scenarios[i]?.title ?? `シナリオ${i + 1}`,
@@ -451,7 +451,7 @@ export default function ResultPage() {
       axisA: calculated.A,
       axisB: calculated.B,
       axisC: calculated.C,
-      zone: calculated.zone,
+      zone: '',
       personalityType: pType.name,
       deepAnalysis: da ?? undefined,
       riskIndicators: !skipped && layer2Answers
@@ -564,23 +564,11 @@ export default function ResultPage() {
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">あなたに合う環境</p>
 
             <div>
-              <p className="text-sm font-semibold text-green-400 mb-2">力が発揮できる環境</p>
-              <ul className="space-y-1">
-                {environmentFit.bestEnvironments.map((item, i) => (
-                  <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
-                    <span className="text-green-500 mt-0.5 shrink-0">✓</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-red-400 mb-2">消耗しやすい環境</p>
+              <p className="text-sm font-semibold text-orange-400 mb-2">⚡ エネルギーを消耗しやすい環境</p>
               <ul className="space-y-1">
                 {environmentFit.drainEnvironments.map((item, i) => (
                   <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
-                    <span className="text-red-500 mt-0.5 shrink-0">✕</span>
+                    <span className="text-orange-400 mt-0.5 shrink-0">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -588,11 +576,11 @@ export default function ResultPage() {
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-blue-400 mb-2">上司・メンターへのヒント</p>
+              <p className="text-sm font-semibold text-blue-400 mb-2">🤝 あなたを活かすマネジメント</p>
               <ul className="space-y-1">
                 {environmentFit.managementTips.map((item, i) => (
                   <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
-                    <span className="text-blue-400 mt-0.5 shrink-0">›</span>
+                    <span className="text-blue-400 mt-0.5 shrink-0">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -600,18 +588,16 @@ export default function ResultPage() {
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-amber-400 mb-2">今すぐできる成長アクション</p>
+              <p className="text-sm font-semibold text-emerald-400 mb-2">🌱 成長のためのアクション</p>
               <ul className="space-y-1">
                 {environmentFit.growthActions.map((item, i) => (
                   <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
-                    <span className="text-amber-400 mt-0.5 shrink-0">→</span>
+                    <span className="text-emerald-400 mt-0.5 shrink-0">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
-
-            <p className="text-xs text-gray-500 leading-relaxed border-t border-gray-700/50 pt-4">{environmentFit.scientificBasis}</p>
           </div>
         </div>
 
