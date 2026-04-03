@@ -442,6 +442,12 @@ export default function ResultPage() {
     setDeepAnalysis(da)
     setEnvironmentFit(getEnvironmentFit(typeKey))
 
+    const aH = calculated.A >= 50
+    const bH = calculated.B >= 50
+    const zone = !skipped && layer2Answers
+      ? (aH && bH ? '実行者ゾーン' : aH && !bH ? '挑戦者ゾーン' : !aH && bH ? '安定者ゾーン' : '模索者ゾーン')
+      : ''
+
     saveDiagnosisResult({
       age: userInfo.age,
       affiliation: userInfo.affiliation,
@@ -451,7 +457,8 @@ export default function ResultPage() {
       axisA: calculated.A,
       axisB: calculated.B,
       axisC: calculated.C,
-      zone: '',
+      zone,
+      zone_id: typeKey,
       personalityType: pType.name,
       deepAnalysis: da ?? undefined,
       riskIndicators: !skipped && layer2Answers
@@ -459,7 +466,7 @@ export default function ResultPage() {
         : undefined,
     })
       .then(() => setSaved(true))
-      .catch(() => setSaveError(true))
+      .catch((err) => { console.error('診断結果の保存に失敗しました:', err); setSaveError(true) })
   }, [router])
 
   if (!scores || !behaviorTendency || !rawAnswers || !environmentFit || !personalityType) {
@@ -694,7 +701,7 @@ export default function ResultPage() {
         {/* Save status */}
         <div className="text-center text-xs">
           {saved && <span className="text-green-500">✓ 回答が保存されました</span>}
-          {saveError && <span className="text-xs text-gray-600">※ データの保存はスキップされました</span>}
+          {saveError && <span className="text-xs text-red-400">診断結果の保存に失敗しました。結果は画面上で確認できます。</span>}
         </div>
 
         {/* Restart */}

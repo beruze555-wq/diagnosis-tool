@@ -60,10 +60,12 @@ export default function StartPage() {
     if (newErrors.age || newErrors.affiliation) return
 
     // 前回セッションの診断データをクリアしてから開始
+    sessionStorage.removeItem('userInfo')
     sessionStorage.removeItem('scenarioAnswers')
     sessionStorage.removeItem('layer2Answers')
     sessionStorage.removeItem('layer2Skipped')
     sessionStorage.removeItem('diagnosisPhase')
+    sessionStorage.removeItem('attributionAnswers')
     sessionStorage.setItem('userInfo', JSON.stringify({ age: ageNum, affiliation }))
     router.push('/diagnosis')
   }

@@ -18,6 +18,7 @@ export async function saveDiagnosisResult(data: {
   axisB: number
   axisC: number
   zone?: string
+  zone_id?: string
   personalityType: string
   deepAnalysis?: DeepAnalysis
   riskIndicators?: RiskIndicators
@@ -34,7 +35,8 @@ export async function saveDiagnosisResult(data: {
       axis_a_score: data.axisA,
       axis_b_score: data.axisB,
       axis_c_score: data.axisC,
-      zone: data.zone,
+      zone: data.zone ?? null,
+      zone_id: data.zone_id ?? null,
       personality_type: data.personalityType,
       deep_analysis: data.deepAnalysis ?? null,
       hardwork_resilience: data.riskIndicators?.hardworkResilience ?? null,
