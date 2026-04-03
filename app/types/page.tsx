@@ -12,20 +12,13 @@ function axisCodeFromKey(key: string): string {
 
 // Key format: OS[0] A[1] B[2] C[3]
 // Quadrant is determined by A (key[1]) and B (key[2])
+// Display order: ビジネス適性順 (Barrick & Mount 1991)
+//   1. executor  (A-H/B-H) 安定×持続、最も幅広い環境で力を発揮
+//   2. challenger (A-H/B-L) 粘り強さ高、感情面サポートで化ける
+//   3. stable    (A-L/B-H) 安定感あり、環境マッチが鍵
+//   4. explorer  (A-L/B-L) 成長途上、構造化された育成環境で伸びる
+// Within each quadrant: OS-H/C-H → OS-H/C-L → OS-L/C-H → OS-L/C-L
 const QUADRANTS = [
-  {
-    id: 'challenger',
-    label: '挑戦者ゾーン',
-    subLabel: '感情の波を力に変え、困難に立ち向かう',
-    position: 'A-H / B-L',
-    bgClass: 'bg-amber-950/40 border-amber-700/50',
-    headerColor: 'text-amber-400',
-    dotColor: 'bg-amber-500',
-    cardBorder: 'border-amber-700/40',
-    chipBg: 'bg-amber-900/50 text-amber-300',
-    // A=H (key[1]=H), B=L (key[2]=L) → top-left in map
-    keys: ['HHLH', 'HHLL', 'LHLH', 'LHLL'],
-  },
   {
     id: 'executor',
     label: '実行者ゾーン',
@@ -40,17 +33,17 @@ const QUADRANTS = [
     keys: ['HHHH', 'HHHL', 'LHHH', 'LHHL'],
   },
   {
-    id: 'explorer',
-    label: '模索者ゾーン',
-    subLabel: '試行錯誤の中で、自分だけの道を見つける',
-    position: 'A-L / B-L',
-    bgClass: 'bg-rose-950/40 border-rose-700/50',
-    headerColor: 'text-rose-400',
-    dotColor: 'bg-rose-500',
-    cardBorder: 'border-rose-700/40',
-    chipBg: 'bg-rose-900/50 text-rose-300',
-    // A=L (key[1]=L), B=L (key[2]=L) → bottom-left in map
-    keys: ['HLLH', 'HLLL', 'LLLH', 'LLLL'],
+    id: 'challenger',
+    label: '挑戦者ゾーン',
+    subLabel: '感情の波を力に変え、困難に立ち向かう',
+    position: 'A-H / B-L',
+    bgClass: 'bg-amber-950/40 border-amber-700/50',
+    headerColor: 'text-amber-400',
+    dotColor: 'bg-amber-500',
+    cardBorder: 'border-amber-700/40',
+    chipBg: 'bg-amber-900/50 text-amber-300',
+    // A=H (key[1]=H), B=L (key[2]=L) → top-left in map
+    keys: ['HHLH', 'HHLL', 'LHLH', 'LHLL'],
   },
   {
     id: 'stable',
@@ -65,10 +58,29 @@ const QUADRANTS = [
     // A=L (key[1]=L), B=H (key[2]=H) → bottom-right in map
     keys: ['HLHH', 'HLHL', 'LLHH', 'LLHL'],
   },
+  {
+    id: 'explorer',
+    label: '模索者ゾーン',
+    subLabel: '試行錯誤の中で、自分だけの道を見つける',
+    position: 'A-L / B-L',
+    bgClass: 'bg-rose-950/40 border-rose-700/50',
+    headerColor: 'text-rose-400',
+    dotColor: 'bg-rose-500',
+    cardBorder: 'border-rose-700/40',
+    chipBg: 'bg-rose-900/50 text-rose-300',
+    // A=L (key[1]=L), B=L (key[2]=L) → bottom-left in map
+    keys: ['HLLH', 'HLLL', 'LLLH', 'LLLL'],
+  },
 ]
 
-// Grid order: [top-left, top-right, bottom-left, bottom-right]
-const MAP_GRID = [QUADRANTS[0], QUADRANTS[1], QUADRANTS[2], QUADRANTS[3]]
+// Map grid order: [top-left, top-right, bottom-left, bottom-right]
+// (地図の物理位置に基づく。QUADRANTS の表示順とは独立)
+const MAP_GRID = [
+  QUADRANTS.find(q => q.id === 'challenger')!,  // top-left
+  QUADRANTS.find(q => q.id === 'executor')!,    // top-right
+  QUADRANTS.find(q => q.id === 'explorer')!,    // bottom-left
+  QUADRANTS.find(q => q.id === 'stable')!,      // bottom-right
+]
 
 function parseLayer2Answers(raw: string): Layer2Answers | undefined {
   try {
