@@ -13,25 +13,25 @@ function axisCodeFromKey(key: string): string {
 // A axis = key[1]: A-H → top half, A-L → bottom half
 const TYPE_POSITIONS: Record<string, { left: number; top: number }> = {
   // Right-top (B-H, A-H) - blue / executor
-  HHHH: { left: 78, top: 12 },
-  HHHL: { left: 78, top: 28 },
-  LHHH: { left: 62, top: 12 },
-  LHHL: { left: 62, top: 28 },
+  HHHH: { left: 80, top: 16 },  // 突破者型   OS-H / C-H
+  HHHL: { left: 80, top: 36 },  // 安定遂行型 OS-H / C-L
+  LHHH: { left: 62, top: 16 },  // 堅実努力型 OS-L / C-H
+  LHHL: { left: 62, top: 36 },  // 忍耐守備型 OS-L / C-L
   // Left-top (B-L, A-H) - amber / challenger
-  HHLH: { left: 38, top: 12 },
-  HHLL: { left: 38, top: 28 },
-  LHLH: { left: 22, top: 12 },
-  LHLL: { left: 22, top: 28 },
+  HHLH: { left: 38, top: 16 },  // 情熱猪突型 OS-H / C-H
+  HHLL: { left: 38, top: 36 },  // 楽観持久型 OS-H / C-L
+  LHLH: { left: 20, top: 16 },  // 闘志内燃型 OS-L / C-H
+  LHLL: { left: 20, top: 36 },  // 寡黙継続型 OS-L / C-L
   // Right-bottom (B-H, A-L) - emerald / stable
-  HLHH: { left: 78, top: 62 },
-  HLHL: { left: 78, top: 78 },
-  LLHH: { left: 62, top: 62 },
-  LLHL: { left: 62, top: 78 },
+  HLHH: { left: 80, top: 62 },  // 戦略挑戦型 OS-H / C-H
+  HLHL: { left: 80, top: 80 },  // 慎重楽観型 OS-H / C-L
+  LLHH: { left: 62, top: 62 },  // 冷静分析型 OS-L / C-H
+  LLHL: { left: 62, top: 80 },  // 受容安定型 OS-L / C-L
   // Left-bottom (B-L, A-L) - rose / explorer
-  HLLH: { left: 38, top: 62 },
-  HLLL: { left: 38, top: 78 },
-  LLLH: { left: 22, top: 62 },
-  LLLL: { left: 22, top: 78 },
+  HLLH: { left: 38, top: 62 },  // 直感突撃型 OS-H / C-H
+  HLLL: { left: 38, top: 80 },  // 楽天自由型 OS-H / C-L
+  LLLH: { left: 20, top: 62 },  // 野心原石型 OS-L / C-H
+  LLLL: { left: 20, top: 80 },  // 模索探求型 OS-L / C-L
 }
 
 // Returns glowing orb style per quadrant + shape/size from OS/C
@@ -119,7 +119,7 @@ export default function TypeScatterMap({ userTypeKey }: TypeScatterMapProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null)
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto aspect-square select-none">
+    <div className="relative w-full max-w-3xl mx-auto aspect-square select-none overflow-hidden">
 
       {/* Layer 1: Quadrant backgrounds */}
       <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">

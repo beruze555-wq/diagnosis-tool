@@ -190,73 +190,99 @@ export default function TypesPage() {
         </div>
 
         {/* ── マップの読み方（凡例 + 軸説明 統合） ── */}
-        <div className="bg-gray-800/60 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 max-w-3xl mx-auto">
-          <h3 className="text-lg font-bold text-white mb-4">マップの読み方</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* 左カラム: 軸の説明 */}
-            <div className="space-y-3">
-              <div>
-                <span className="text-blue-400 font-semibold">横軸 → 情緒安定性（B）</span>
-                <p className="text-gray-400 text-sm mt-1">
-                  右にいくほどストレス下でも冷静な判断を維持しやすい。
-                  左にいくほど感情の波が大きく、それを力に変える傾向。
-                </p>
-              </div>
-              <div>
-                <span className="text-blue-400 font-semibold">縦軸 ↑ 粘り強さ（A）</span>
-                <p className="text-gray-400 text-sm mt-1">
-                  上にいくほど長期的にコミットし続ける力が強い。
-                  下にいくほど柔軟に方向転換しやすい。
-                </p>
-              </div>
-              <p className="text-gray-500 text-xs italic">
-                Barrick &amp; Mount (1991) のメタ分析で職務遂行との相関が
-                最も高い2因子をマップの主軸としています。
+        <div className="bg-gray-800/60 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 max-w-3xl mx-auto mt-8">
+          <h3 className="text-lg font-bold text-white mb-5">
+            マップの読み方
+          </h3>
+
+          {/* 軸の説明 */}
+          <div className="space-y-4 mb-6">
+            <div>
+              <span className="text-blue-400 font-semibold">
+                横軸 → 情緒安定性（B）
+              </span>
+              <p className="text-gray-400 text-sm mt-1">
+                右にいくほどストレス下でも冷静な判断を維持しやすく、左にいくほど感情の波が大きく、それを力に変える傾向があります。
               </p>
             </div>
-            {/* 右カラム: 4ゾーン */}
-            <div className="space-y-2">
-              <p className="text-gray-300 text-sm font-semibold mb-2">4つのゾーン</p>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500 shrink-0" />
-                <span className="text-gray-300 text-sm">実行者ゾーン（右上）— 安定 × 持続</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
-                <span className="text-gray-300 text-sm">挑戦者ゾーン（左上）— 感情を力に × 持続</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
-                <span className="text-gray-300 text-sm">安定者ゾーン（右下）— 安定 × 柔軟探索</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-rose-500 shrink-0" />
-                <span className="text-gray-300 text-sm">模索者ゾーン（左下）— 試行錯誤 × 柔軟探索</span>
-              </div>
-              <p className="text-gray-500 text-xs mt-3">
-                円をクリックするとタイプの詳細が見られます。
+            <div>
+              <span className="text-blue-400 font-semibold">
+                縦軸 ↑ 粘り強さ（A）
+              </span>
+              <p className="text-gray-400 text-sm mt-1">
+                上にいくほど長期的にコミットし続ける力が強く、下にいくほど柔軟に方向転換しやすい傾向があります。
               </p>
-              <p className="text-gray-300 text-sm font-semibold mt-4 mb-2">ノードの見方</p>
-              <div className="grid grid-cols-2 gap-2 text-sm text-gray-400">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-gray-500 shrink-0" />
-                  <span>丸 = 楽観性 HIGH</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-xl bg-gray-500 shrink-0" />
-                  <span>角丸 = 楽観性 LOW</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gray-500 shrink-0" />
-                  <span>大 = 達成動機 HIGH</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-gray-500 shrink-0" />
-                  <span>小 = 達成動機 LOW</span>
-                </div>
-              </div>
             </div>
           </div>
+
+          {/* 区切り線 */}
+          <div className="border-t border-gray-700/50 my-5"></div>
+
+          {/* 4つのゾーン — 横に2列 */}
+          <p className="text-gray-300 text-sm font-semibold mb-3">
+            4つのゾーン
+          </p>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-6">
+            <div className="flex items-start gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500 mt-1 shrink-0"></div>
+              <span className="text-gray-300 text-sm">
+                実行者ゾーン（右上）<br/>
+                <span className="text-gray-500">安定 × 持続</span>
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-3 h-3 rounded-full bg-amber-500 mt-1 shrink-0"></div>
+              <span className="text-gray-300 text-sm">
+                挑戦者ゾーン（左上）<br/>
+                <span className="text-gray-500">感情を力に × 持続</span>
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-3 h-3 rounded-full bg-emerald-500 mt-1 shrink-0"></div>
+              <span className="text-gray-300 text-sm">
+                安定者ゾーン（右下）<br/>
+                <span className="text-gray-500">安定 × 柔軟探索</span>
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-3 h-3 rounded-full bg-rose-500 mt-1 shrink-0"></div>
+              <span className="text-gray-300 text-sm">
+                模索者ゾーン（左下）<br/>
+                <span className="text-gray-500">試行錯誤 × 柔軟探索</span>
+              </span>
+            </div>
+          </div>
+
+          {/* 区切り線 */}
+          <div className="border-t border-gray-700/50 my-5"></div>
+
+          {/* ノードの見方 — 横に2列 */}
+          <p className="text-gray-300 text-sm font-semibold mb-3">
+            ノードの見方
+          </p>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-gray-400 shrink-0"></div>
+              <span className="text-gray-400 text-sm">丸 = 楽観性 HIGH</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-xl bg-gray-400 shrink-0"></div>
+              <span className="text-gray-400 text-sm">角丸 = 楽観性 LOW</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-400 shrink-0"></div>
+              <span className="text-gray-400 text-sm">大きい = 達成動機 HIGH</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 rounded-full bg-gray-400 shrink-0"></div>
+              <span className="text-gray-400 text-sm">小さい = 達成動機 LOW</span>
+            </div>
+          </div>
+
+          {/* 学術的根拠 */}
+          <p className="text-gray-500 text-xs italic mt-5">
+            Barrick &amp; Mount (1991) のメタ分析で職務遂行との相関が最も高い2因子をマップの主軸としています。
+          </p>
         </div>
 
         {/* ── 16 type cards grouped by quadrant ── */}
