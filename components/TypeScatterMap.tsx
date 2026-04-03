@@ -119,7 +119,7 @@ export default function TypeScatterMap({ userTypeKey }: TypeScatterMapProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null)
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto aspect-square select-none overflow-hidden">
+    <div className="relative z-0 isolate w-full max-w-3xl mx-auto aspect-square select-none overflow-hidden">
 
       {/* Layer 1: Quadrant backgrounds */}
       <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
@@ -185,7 +185,7 @@ export default function TypeScatterMap({ userTypeKey }: TypeScatterMapProps) {
           return (
             <div
               key={key}
-              className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
+              className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer"
               style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
               onMouseEnter={() => setActiveKey(key)}
               onMouseLeave={() => setActiveKey(null)}

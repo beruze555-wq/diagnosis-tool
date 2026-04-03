@@ -119,7 +119,7 @@ export default function TypesPage() {
     <div className="min-h-screen bg-gray-900 pb-20">
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur px-4 py-3 border-b border-gray-800">
+      <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur px-4 py-3 border-b border-gray-800">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-500 tracking-wide">MIRROR</p>
