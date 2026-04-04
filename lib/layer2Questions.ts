@@ -257,6 +257,27 @@ export const layer2Sections: Layer2Section[] = [
         source: 'Implicit Theories (Dweck, 1999)',
         metric: 'growth-mindset',
       },
+      {
+        id: 'D7',
+        text: '困難な課題に直面しても、自分はやり遂げられると思う',
+        reversed: false,
+        source: 'NGSE Item2 (Chen, Gully & Eden, 2001)',
+        metric: 'self-efficacy',
+      },
+      {
+        id: 'D8',
+        text: '大きな壁がいくつあっても、乗り越えていけると思う',
+        reversed: false,
+        source: 'NGSE Item5 (Chen, Gully & Eden, 2001)',
+        metric: 'self-efficacy',
+      },
+      {
+        id: 'D9',
+        text: '厳しい状況に置かれても、自分はそれなりにうまくやれると思う',
+        reversed: false,
+        source: 'NGSE Item8 (Chen, Gully & Eden, 2001)',
+        metric: 'self-efficacy',
+      },
     ],
   },
 ]

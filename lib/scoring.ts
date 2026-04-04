@@ -485,8 +485,11 @@ export function calculateDeepAnalysis(
     return count
   }
 
-  // Self-efficacy: (D1raw + D2raw + A7raw) / 3 * 100/5
-  const selfEfficacy = Math.round(((axisD[0] + axisD[1] + axisA[6]) / 3) * (100 / 5))
+  // Self-efficacy: D1, D2, D7, D8, D9 の5項目平均 × 100/5
+  // Chen et al. (2001) NGSE α=.86 に基づき5項目化（A7除外）
+  const seIndexes = [0, 1, 6, 7, 8] // D1, D2, D7, D8, D9
+  const seSum = seIndexes.reduce((sum, idx) => sum + axisD[idx], 0)
+  const selfEfficacy = Math.round((seSum / 5) * (100 / 5))
 
   // Autonomous motivation: (D3raw + (6-D4raw)) / 2 * 100/5
   const autonomousMotivation = Math.round(((axisD[2] + (6 - axisD[3])) / 2) * (100 / 5))

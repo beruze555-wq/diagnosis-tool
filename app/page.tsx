@@ -88,7 +88,7 @@ export default function StartPage() {
       axisA: [4, 5, 5, 5, 4, 3, 5, 5, 5, 5],
       axisB: [1, 5, 1, 4, 5, 4, 1, 5, 1, 5],
       axisC: [3, 1, 5, 1, 5, 1, 5, 1, 3, 1],
-      axisD: [4, 5, 5, 1, 5, 2],
+      axisD: [4, 5, 5, 1, 5, 2, 5, 4, 4],
     }))
     router.push('/result')
   }

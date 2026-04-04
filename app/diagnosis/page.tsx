@@ -7,7 +7,7 @@ import { layer2Sections } from '@/lib/layer2Questions'
 import { calculateOS } from '@/lib/scoring'
 import { ScenarioAnswer, Layer2Answers } from '@/types'
 
-const TOTAL_STEPS = 12 // 6 scenarios + 6 layer2 pages
+const TOTAL_STEPS = 13 // 6 scenarios + 7 layer2 pages
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -145,7 +145,7 @@ export default function DiagnosisPage() {
     axisA: Array(10).fill(0),
     axisB: Array(10).fill(0),
     axisC: Array(10).fill(0),
-    axisD: Array(6).fill(0),
+    axisD: Array(9).fill(0),
   })
   const [layer2Page, setLayer2Page] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -299,12 +299,12 @@ export default function DiagnosisPage() {
 
   const handleLayer2Next = () => {
     if (!isCurrentPageComplete) return
-    if (layer2Page < 5) {
+    if (layer2Page < 6) {
       transition(() => {
         setLayer2Page((p) => p + 1)
       })
     } else {
-      // All 6 pages done
+      // All 7 pages done
       if (!isLayer2Complete) return
       sessionStorage.removeItem('layer2Skipped')
       sessionStorage.removeItem('diagnosisPhase')
@@ -387,7 +387,7 @@ export default function DiagnosisPage() {
     }
     setLayer2Answers(filled)
     sessionStorage.setItem('layer2Answers', JSON.stringify(filled))
-    if (layer2Page < 5) {
+    if (layer2Page < 6) {
       transition(() => setLayer2Page((p) => p + 1))
     } else {
       sessionStorage.removeItem('layer2Skipped')
@@ -540,7 +540,7 @@ export default function DiagnosisPage() {
                   <span>1 = まったく当てはまらない</span>
                   <span>5 = 非常に当てはまる</span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1">{layer2Page + 1} / 6 ページ</p>
+                <p className="text-xs text-gray-600 mt-1">{layer2Page + 1} / 7 ページ</p>
               </div>
 
               {/* Current page questions (6 per page) */}
