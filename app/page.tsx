@@ -67,7 +67,7 @@ export default function StartPage() {
     sessionStorage.removeItem('diagnosisPhase')
     sessionStorage.removeItem('attributionAnswers')
     sessionStorage.setItem('userInfo', JSON.stringify({ age: ageNum, affiliation }))
-    router.push('/diagnosis')
+    router.push(isDev ? '/diagnosis?dev=true' : '/diagnosis')
   }
 
   const handleMoritaData = () => {
@@ -238,8 +238,8 @@ export default function StartPage() {
         </div>
       )}
 
-      {/* セクション6: 森田データ自動入力（dev環境のみ常時表示） */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* セクション6: 森田データ自動入力（?dev=true のとき表示） */}
+      {isDev && (
         <div className="max-w-lg mx-auto px-4 pb-8">
           <button
             onClick={handleMoritaData}

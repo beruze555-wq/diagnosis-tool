@@ -506,8 +506,8 @@ export default function DiagnosisPage() {
             </div>
           )}
 
-          {/* DEV ONLY: fixed skip button — removed at production build */}
-          {process.env.NODE_ENV === 'development' && (
+          {/* DEV ONLY: fixed skip button — shown when ?dev=true */}
+          {isDev && (
             <button
               onClick={phase === 'layer1' ? handleDevSkipLayer1 : handleDevSkipLayer2}
               className="fixed bottom-6 right-4 z-50 bg-gray-900/80 hover:bg-gray-800/90 border border-gray-600/60 text-gray-400 hover:text-white text-xs font-mono px-3 py-1.5 rounded-lg backdrop-blur transition-colors duration-150 shadow-lg"
