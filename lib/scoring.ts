@@ -933,9 +933,9 @@ export interface RiskIndicators {
   adversityRiskNote: string
 }
 
-export function computeRiskIndicators(OS: number, A: number, B: number): RiskIndicators {
-  const hardworkResilience = Math.round((OS + A) / 2)
-  const commitSustainability = Math.round((A + B) / 2)
+export function computeRiskIndicators(OS: number, PE: number, B: number): RiskIndicators {
+  const hardworkResilience = Math.round((OS + PE) / 2)
+  const commitSustainability = Math.round((PE + B) / 2)
 
   let adversityRisk: 'low' | 'medium' | 'high'
   let adversityRiskNote: string

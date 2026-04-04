@@ -17,6 +17,7 @@ import {
   getAxisCDescription,
   getPersonalityType,
   getPersonalityTypeKey,
+  computeRiskIndicators,
   getSJTBehaviorTendency,
   calculateDeepAnalysis,
   getEnvironmentFit,
@@ -448,6 +449,8 @@ export default function ResultPage() {
       ? (aH && bH ? '実行者ゾーン' : aH && !bH ? '挑戦者ゾーン' : !aH && bH ? '安定者ゾーン' : '模索者ゾーン')
       : ''
 
+    const riskIndicators = computeRiskIndicators(calculated.OS, calculated.A, calculated.B)
+
     saveDiagnosisResult({
       age: userInfo.age,
       affiliation: userInfo.affiliation,
@@ -461,6 +464,7 @@ export default function ResultPage() {
       zone_id: typeKey,
       personalityType: pType.name,
       deepAnalysis: da ?? undefined,
+      riskIndicators,
     })
       .then(() => setSaved(true))
       .catch((err) => { console.error('診断結果の保存に失敗しました:', err); setSaveError(true) })

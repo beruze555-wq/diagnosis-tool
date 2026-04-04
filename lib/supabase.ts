@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { ScenarioAnswer, Layer2Answers } from '@/types'
-import { DeepAnalysis } from '@/lib/scoring'
+import { DeepAnalysis, RiskIndicators } from '@/lib/scoring'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -21,6 +21,7 @@ export async function saveDiagnosisResult(data: {
   zone_id?: string
   personalityType: string
   deepAnalysis?: DeepAnalysis
+  riskIndicators?: RiskIndicators
 }) {
   if (!supabase) return
 
@@ -38,6 +39,10 @@ export async function saveDiagnosisResult(data: {
       zone_id: data.zone_id ?? null,
       personality_type: data.personalityType,
       deep_analysis: data.deepAnalysis ?? null,
+      hardwork_resilience: data.riskIndicators?.hardworkResilience ?? null,
+      commit_sustainability: data.riskIndicators?.commitSustainability ?? null,
+      adversity_risk: data.riskIndicators?.adversityRisk ?? null,
+      adversity_risk_note: data.riskIndicators?.adversityRiskNote ?? null,
     },
   ])
 
