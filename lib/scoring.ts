@@ -6,25 +6,25 @@ export type { DeepAnalysis }
 // ─── Core score calculations ───────────────────────────────────────────────────
 
 export function calculateOS(scenarioAnswers: ScenarioAnswer[]): number {
-  const weights = [0.2, 0.4, 0.4] // Q1(内的⇔外的): 0.2, Q2(安定⇔不安定): 0.4, Q3(全般⇔限定): 0.4
-  let weightedSum = 0
-  let totalWeight = 0
-  for (const answer of scenarioAnswers) {
-    for (let q = 0; q < answer.attributions.length; q++) {
-      const inverted = 8 - answer.attributions[q]
-      weightedSum += inverted * weights[q]
-      totalWeight += weights[q]
-    }
-  }
-  const avg = weightedSum / totalWeight
+  const allAttributions = scenarioAnswers.flatMap((a) => a.attributions)
+  const inverted = allAttributions.map((v) => 8 - v)
+  const avg = inverted.reduce((sum, v) => sum + v, 0) / inverted.length
   return Math.round((avg * 100) / 7)
 }
 
 export function calculateAxisA(axisA: number[]): number {
-  const reversedIdx = [0, 2, 4, 7, 9] // A1,A3,A5,A8,A10 are reverse:true
-  const adjusted = axisA.map((v, i) => (reversedIdx.includes(i) ? 6 - v : v))
-  const sum = adjusted.reduce((a, b) => a + b, 0)
-  return Math.round((sum * 100) / 50)
+  // PE（Perseverance of Effort）5項目のみで算出
+  // Credé et al. (2017): PE(ρ=.28) は CI(ρ=.10) より成果予測力が高い
+  const peIndexes = [1, 3, 5, 6, 8] // A2, A4, A6, A7, A9（全て reversed=false）
+  const peSum = peIndexes.reduce((sum, idx) => sum + axisA[idx], 0)
+  return Math.round((peSum * 100) / 25)
+}
+
+export function calculateCI(axisA: number[]): number {
+  // CI（Consistency of Interests）5項目（全て reversed=true）
+  const ciIndexes = [0, 2, 4, 7, 9] // A1, A3, A5, A8, A10
+  const ciSum = ciIndexes.reduce((sum, idx) => sum + (6 - axisA[idx]), 0)
+  return Math.round((ciSum * 100) / 25)
 }
 
 export function calculateAxisB(axisB: number[]): number {
@@ -60,7 +60,7 @@ export function calculateScores(
 export function getOSDescription(score: number): string[] {
   if (score >= 80) {
     return [
-      '非常に楽観的な帰属スタイルを持っています。Seligman & Schulman (1986) の保険営業研究では、楽観的帰属スタイルの持ち主は悲観群より37%高い業績を上げました。（本スコアは安定性と全般性に重みを置いた加重平均で算出。Sweeney et al., 1986 のメタ分析で安定性と全般性が最も予測力が高いことに基づく）',
+      '非常に楽観的な帰属スタイルを持っています。Seligman & Schulman (1986) の保険営業研究では、楽観的帰属スタイルの持ち主は悲観群より37%高い業績を上げました。（本スコアは内的・安定性・全般性の3次元を等重みで合算。Sweeney et al., 1986 のメタ分析で3次元の効果量がほぼ同等であることに基づく）',
       'このスタイルは、困難な出来事に直面した際に「これは一時的なもの」「自分の全てではない」「外的要因も大きい」と捉える傾向を持ちます。結果として、挫折からの立ち直りが早く、継続的な行動を維持しやすいという特徴があります。',
       'ただしWeinstein (1980) が指摘する「非現実的楽観主義」のリスクにも注意が必要です。リスクの過小評価や、フィードバックを軽視する傾向につながる可能性があります。意図的に「悪いシナリオ」を検討する習慣を持つことで、楽観性のメリットを最大化できます。',
     ]
@@ -89,24 +89,24 @@ export function getOSDescription(score: number): string[] {
 export function getAxisADescription(score: number): string[] {
   if (score >= 80) {
     return [
-      '極めて高い粘り強さを持っています。Duckworth (2007) の研究では、Gritスコア上位群は長期的な目標達成率が有意に高いことが示されています。一度決めたことをやり遂げる力は大きな強みです。',
-      'ただし、一つのことへの強い固執は時に「損切り」が遅れるリスクもあります。状況が変わったときに柔軟に方向転換する判断力も併せ持つことで、粘り強さがより効果的に機能します。',
+      '極めて高い持続的努力（PE）の傾向を持っています。Credé et al. (2017) のメタ分析では、PE（ρ=.28）は成果予測力が高く、特に困難な状況でのやり遂げる力と強く関連します。一度決めたことをやり遂げる力は大きな強みです。',
+      'ただし、一つのことへの強い固執は時に「損切り」が遅れるリスクもあります。状況が変わったときに柔軟に方向転換する判断力も併せ持つことで、持続的努力がより効果的に機能します。',
     ]
   }
   if (score >= 60) {
     return [
-      '十分な粘り強さの基盤があります。Duckworth & Quinn (2009) によれば、このレンジのGritスコアは適応的な範囲にあり、環境次第でさらに伸びる余地があります。',
+      '十分な持続的努力（PE）の基盤があります。Credé et al. (2017) によれば、このレンジのPEスコアは適応的な範囲にあり、環境次第でさらに伸びる余地があります。',
       '長期的なプロジェクトにも一定の持続力を発揮できる状態です。興味のある領域での持続力は特に高く、環境や動機付けによってさらに強化される可能性があります。',
     ]
   }
   if (score >= 40) {
     return [
-      '粘り強さにはまだ伸びしろがあります。Jachimowicz et al. (2018) は、Gritは「情熱の調和」とセットで機能することを示しました。まず興味を持てる領域を見つけることが先決です。',
-      '短期目標を設定して達成する経験を繰り返すことで、持続力の基盤を育てることができます。小さな完了体験の積み重ねが、長期的な粘り強さを形成します (Duckworth, 2016)。',
+      '持続的努力（PE）にはまだ伸びしろがあります。Jachimowicz et al. (2018) は、努力の持続は「情熱の調和」とセットで機能することを示しました。まず興味を持てる領域を見つけることが先決です。',
+      '短期目標を設定して達成する経験を繰り返すことで、持続力の基盤を育てることができます。小さな完了体験の積み重ねが、長期的な持続的努力を形成します (Duckworth, 2016)。',
     ]
   }
   return [
-    '現時点では長期的な継続に課題を感じやすい傾向です。Duckworthの研究が示すように、Gritは後天的に伸ばせる特性です。',
+    '現時点では長期的な継続に課題を感じやすい傾向です。Credé et al. (2017) の研究が示すように、持続的努力（PE）は後天的に伸ばせる特性です。',
     '小さな目標を設定し、達成経験を積み重ねることが効果的です (Duckworth, 2016)。興味のある分野から始め、「やり遂げた」という感覚を積み上げることで、持続力は確実に向上します。',
   ]
 }
@@ -514,6 +514,8 @@ export function calculateDeepAnalysis(
     countHighRatedTag('team-oriented') * 15 + countHighRatedTag('help-seeking') * 10
   )
 
+  const consistencyOfInterest = calculateCI(axisA)
+
   return {
     selfEfficacy,
     autonomousMotivation,
@@ -521,6 +523,7 @@ export function calculateDeepAnalysis(
     learningAgility,
     crisisResponse,
     teamContribution,
+    consistencyOfInterest,
   }
 }
 
@@ -548,12 +551,12 @@ export function getAutonomousMotivationDescription(score: number): string {
 
 export function getGrowthMindsetDescription(score: number): string {
   if (score >= 80) {
-    return '強い成長マインドセットを持っています。能力は努力で変えられるという信念があり、困難を「学習機会」として捉える傾向があります (Dweck, 2006)。フィードバックを成長の糧にできる力は大きな強みです。'
+    return '強い成長マインドセットを持っています。能力は努力で変えられるという信念があり、困難を「学習機会」として捉える傾向があります (Dweck, 2006)。フィードバックを成長の糧にできる力は大きな強みです。（※ 大規模メタ分析で効果量は小さいとの報告あり: Sisk et al., 2018, r=.10。参考指標としてお読みください）'
   }
   if (score >= 50) {
-    return '中程度の成長マインドセットです。努力の価値は理解していますが、特定の領域では「才能の壁」を感じることがあるかもしれません。Blackwell et al. (2007) の研究では、成長マインドセットの介入が成績向上に直結することが示されています。'
+    return '中程度の成長マインドセットです。努力の価値は理解していますが、特定の領域では「才能の壁」を感じることがあるかもしれません。Blackwell et al. (2007) の研究では、成長マインドセットの介入が成績向上に直結することが示されています。（※ 大規模メタ分析で効果量は小さいとの報告あり: Sisk et al., 2018, r=.10。参考指標としてお読みください）'
   }
-  return '現時点では固定マインドセットの傾向が見られます。Dweck (2006) の研究では、この信念は教育的介入で変容可能であり、「まだできていないだけ（not yet）」というフレーミングが効果的です。'
+  return '現時点では固定マインドセットの傾向が見られます。Dweck (2006) の研究では、この信念は教育的介入で変容可能であり、「まだできていないだけ（not yet）」というフレーミングが効果的です。（※ 大規模メタ分析で効果量は小さいとの報告あり: Sisk et al., 2018, r=.10。参考指標としてお読みください）'
 }
 
 export function getLearningAgilityDescription(score: number): string {
@@ -574,6 +577,16 @@ export function getCrisisResponseDescription(score: number): string {
     return '危機対応力は中程度です。事前のシミュレーションと、感情制御スキルの練習で向上できます。'
   }
   return '突発的なトラブルへの対応に伸びしろがあります。まずルーティン業務での安定した成果を積み、徐々に変化のある環境に慣れていく段階的アプローチが有効です。'
+}
+
+export function getCIDescription(score: number): string {
+  if (score >= 70) {
+    return '一つの領域への関心を長期間持続する傾向が強いです。Jachimowicz et al. (2018) によれば、情熱の一貫性はPerseverance of Effortと組み合わさることで目標達成の強力な予測因子になります。'
+  }
+  if (score >= 40) {
+    return '興味の対象は時折変わりますが、中程度の一貫性があります。多様な経験を積む探索期にいる可能性があり、方向性が定まれば持続力に転換できます。'
+  }
+  return '興味の対象が変わりやすい傾向です。Duckworth & Quinn (2009) によれば、この特性自体は問題ではなく、自分が情熱を持てる領域をまだ探索している段階です。'
 }
 
 export function getTeamContributionDescription(score: number): string {

@@ -35,6 +35,7 @@ export interface DeepAnalysis {
   learningAgility: number
   crisisResponse: number
   teamContribution: number
+  consistencyOfInterest: number
 }
 
 export interface DiagnosisSession {

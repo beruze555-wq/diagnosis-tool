@@ -26,6 +26,7 @@ import {
   getGrowthMindsetDescription,
   getCrisisResponseDescription,
   getTeamContributionDescription,
+  getCIDescription,
   TAG_LABELS,
   EnvironmentFit,
 } from '@/lib/scoring'
@@ -368,6 +369,7 @@ export default function ResultPage() {
           learningAgility: 68,
           crisisResponse: 71,
           teamContribution: 65,
+          consistencyOfInterest: 58,
         })
       }
       const devScenarioAnswers: ScenarioAnswer[] = [
@@ -679,6 +681,12 @@ export default function ResultPage() {
                   label="チーム貢献力（Team Contribution）"
                   score={deepAnalysis.teamContribution}
                   description={getTeamContributionDescription(deepAnalysis.teamContribution)}
+                  isRef
+                />
+                <DeepMetricCard
+                  label="興味の一貫性（CI）"
+                  score={deepAnalysis.consistencyOfInterest}
+                  description={getCIDescription(deepAnalysis.consistencyOfInterest)}
                   isRef
                 />
               </div>
