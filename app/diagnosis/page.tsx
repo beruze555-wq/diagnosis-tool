@@ -151,19 +151,21 @@ export default function DiagnosisPage() {
   const [visible, setVisible] = useState(true)
   const [isDev, setIsDev] = useState(false)
 
-  // Per-scenario: 7 items (4 SJT + 3 attribution) in random order, fixed at mount
+  // Per-scenario: SJT4問をシャッフル→帰属3問をシャッフル→結合（ブロック順は固定）
   const [shuffledItems7] = useState<ShuffledItem[][]>(() =>
     scenarios.map(() => {
-      const items: ShuffledItem[] = [
+      const sjtBlock: ShuffledItem[] = shuffleArray([
         { type: 'sjt', originalIdx: 0 },
         { type: 'sjt', originalIdx: 1 },
         { type: 'sjt', originalIdx: 2 },
         { type: 'sjt', originalIdx: 3 },
+      ])
+      const attrBlock: ShuffledItem[] = shuffleArray([
         { type: 'attribution', qIdx: 0 },
         { type: 'attribution', qIdx: 1 },
         { type: 'attribution', qIdx: 2 },
-      ]
-      return shuffleArray(items)
+      ])
+      return [...sjtBlock, ...attrBlock]
     })
   )
 
@@ -455,37 +457,47 @@ export default function DiagnosisPage() {
                 </p>
               </div>
 
-              {/* 7 shuffled items: 4 SJT (1-5) + 3 attribution (1-7) */}
+              {/* 2ブロック構成: SJT4問（内部シャッフル）→ 帰属3問（内部シャッフル） */}
               <div className="bg-gray-800 rounded-2xl p-5 space-y-5">
-                <p className="text-sm font-semibold text-gray-200">
-                  この状況についての質問です。直感で答えてください。
-                </p>
-                {shuffledItems7[scenarioIndex].map((item) => {
+                {shuffledItems7[scenarioIndex].map((item, index) => {
                   if (item.type === 'sjt') {
                     const opt = scenario.sjtOptions[item.originalIdx]
                     return (
-                      <div key={`sjt-${item.originalIdx}`} className="space-y-2">
-                        <p className="text-sm text-gray-300">{opt.text}</p>
-                        <LikertRow5
-                          label={opt.label}
-                          value={currentAnswer.sjtRatings[item.originalIdx]}
-                          onChange={(v) => setSJTRating(item.originalIdx, v)}
-                          leftLabel="まったくしない"
-                          rightLabel="必ずする"
-                        />
+                      <div key={`sjt-${item.originalIdx}`}>
+                        {index === 0 && (
+                          <p className="text-sm text-gray-400 mb-3">この状況で、あなたならどうしますか？</p>
+                        )}
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-300">{opt.text}</p>
+                          <LikertRow5
+                            label={opt.label}
+                            value={currentAnswer.sjtRatings[item.originalIdx]}
+                            onChange={(v) => setSJTRating(item.originalIdx, v)}
+                            leftLabel="まったくしない"
+                            rightLabel="必ずする"
+                          />
+                        </div>
                       </div>
                     )
                   } else {
                     const attr = scenario.attributions[item.qIdx]
                     return (
-                      <div key={`attr-${item.qIdx}`} className="space-y-2">
-                        <p className="text-sm text-gray-300">{attr.question}</p>
-                        <LikertRow7
-                          leftLabel={attr.leftLabel}
-                          rightLabel={attr.rightLabel}
-                          value={currentAnswer.attributions[item.qIdx]}
-                          onChange={(v) => setAttribution(item.qIdx, v)}
-                        />
+                      <div key={`attr-${item.qIdx}`}>
+                        {index === 4 && (
+                          <>
+                            <div className="border-t border-dashed border-gray-600 my-6"></div>
+                            <p className="text-sm text-gray-400 mb-3">ここからは、この出来事をどう捉えたかについての質問です</p>
+                          </>
+                        )}
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-300">{attr.question}</p>
+                          <LikertRow7
+                            leftLabel={attr.leftLabel}
+                            rightLabel={attr.rightLabel}
+                            value={currentAnswer.attributions[item.qIdx]}
+                            onChange={(v) => setAttribution(item.qIdx, v)}
+                          />
+                        </div>
                       </div>
                     )
                   }
