@@ -6,9 +6,17 @@ export type { DeepAnalysis }
 // ─── Core score calculations ───────────────────────────────────────────────────
 
 export function calculateOS(scenarioAnswers: ScenarioAnswer[]): number {
-  const allAttributions = scenarioAnswers.flatMap((a) => a.attributions)
-  const inverted = allAttributions.map((v) => 8 - v)
-  const avg = inverted.reduce((sum, v) => sum + v, 0) / inverted.length
+  const weights = [0.2, 0.4, 0.4] // Q1(内的⇔外的): 0.2, Q2(安定⇔不安定): 0.4, Q3(全般⇔限定): 0.4
+  let weightedSum = 0
+  let totalWeight = 0
+  for (const answer of scenarioAnswers) {
+    for (let q = 0; q < answer.attributions.length; q++) {
+      const inverted = 8 - answer.attributions[q]
+      weightedSum += inverted * weights[q]
+      totalWeight += weights[q]
+    }
+  }
+  const avg = weightedSum / totalWeight
   return Math.round((avg * 100) / 7)
 }
 
@@ -52,7 +60,7 @@ export function calculateScores(
 export function getOSDescription(score: number): string[] {
   if (score >= 80) {
     return [
-      '非常に楽観的な帰属スタイルを持っています。Seligman & Schulman (1986) の保険営業研究では、楽観的帰属スタイルの持ち主は悲観群より37%高い業績を上げました。',
+      '非常に楽観的な帰属スタイルを持っています。Seligman & Schulman (1986) の保険営業研究では、楽観的帰属スタイルの持ち主は悲観群より37%高い業績を上げました。（本スコアは安定性と全般性に重みを置いた加重平均で算出。Sweeney et al., 1986 のメタ分析で安定性と全般性が最も予測力が高いことに基づく）',
       'このスタイルは、困難な出来事に直面した際に「これは一時的なもの」「自分の全てではない」「外的要因も大きい」と捉える傾向を持ちます。結果として、挫折からの立ち直りが早く、継続的な行動を維持しやすいという特徴があります。',
       'ただしWeinstein (1980) が指摘する「非現実的楽観主義」のリスクにも注意が必要です。リスクの過小評価や、フィードバックを軽視する傾向につながる可能性があります。意図的に「悪いシナリオ」を検討する習慣を持つことで、楽観性のメリットを最大化できます。',
     ]

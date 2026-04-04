@@ -34,7 +34,7 @@ export const scenarios: Scenario[] = [
         rightLabel: 'とてもそう思う',
       },
       {
-        question: '今あなたが思い浮かべたその原因は、営業に限らず自分の生活全般に影響すると思う',
+        question: '今あなたが思い浮かべたその原因は、営業に限らず他のことにも当てはまると思う',
         leftLabel: '全くそう思わない',
         rightLabel: 'とてもそう思う',
       },
@@ -64,7 +64,7 @@ export const scenarios: Scenario[] = [
         rightLabel: 'とてもそう思う',
       },
       {
-        question: '今あなたが思い浮かべたその原因は、企画に限らず自分の生活全般に影響すると思う',
+        question: '今あなたが思い浮かべたその原因は、企画に限らず他のことにも当てはまると思う',
         leftLabel: '全くそう思わない',
         rightLabel: 'とてもそう思う',
       },
@@ -94,7 +94,7 @@ export const scenarios: Scenario[] = [
         rightLabel: 'とてもそう思う',
       },
       {
-        question: '今あなたが思い浮かべたその原因は、試合に限らず自分の生活全般に影響すると思う',
+        question: '今あなたが思い浮かべたその原因は、試合に限らず他のことにも当てはまると思う',
         leftLabel: '全くそう思わない',
         rightLabel: 'とてもそう思う',
       },
@@ -124,7 +124,7 @@ export const scenarios: Scenario[] = [
         rightLabel: 'とてもそう思う',
       },
       {
-        question: '今あなたが思い浮かべたその原因は、この職場に限らず自分の生活全般に影響すると思う',
+        question: '今あなたが思い浮かべたその原因は、この職場に限らず他のことにも当てはまると思う',
         leftLabel: '全くそう思わない',
         rightLabel: 'とてもそう思う',
       },
@@ -154,7 +154,7 @@ export const scenarios: Scenario[] = [
         rightLabel: 'とてもそう思う',
       },
       {
-        question: '今あなたが思い浮かべたその原因は、この案件に限らず自分の生活全般に影響すると思う',
+        question: '今あなたが思い浮かべたその原因は、この案件に限らず他のことにも当てはまると思う',
         leftLabel: '全くそう思わない',
         rightLabel: 'とてもそう思う',
       },
@@ -184,7 +184,7 @@ export const scenarios: Scenario[] = [
         rightLabel: 'とてもそう思う',
       },
       {
-        question: '今あなたが思い浮かべたその原因は、このインターンに限らず自分の生活全般に影響すると思う',
+        question: '今あなたが思い浮かべたその原因は、このインターンに限らず他のことにも当てはまると思う',
         leftLabel: '全くそう思わない',
         rightLabel: 'とてもそう思う',
       },

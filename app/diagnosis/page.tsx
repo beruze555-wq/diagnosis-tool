@@ -487,6 +487,7 @@ export default function DiagnosisPage() {
                           <>
                             <div className="border-t border-dashed border-gray-600 my-6"></div>
                             <p className="text-sm text-gray-400 mb-3">ここからは、この出来事をどう捉えたかについての質問です</p>
+                            <p className="text-sm text-gray-300 italic mb-3">💭 この出来事が起きた原因を1つ思い浮かべてください。</p>
                           </>
                         )}
                         <div className="space-y-2">
