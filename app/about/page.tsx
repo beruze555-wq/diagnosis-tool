@@ -179,6 +179,67 @@ export default function AboutPage() {
           ))}
         </div>
 
+        {/* 採用担当者・経営者の方へ */}
+        <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+          <div className="p-6 space-y-5">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">採用担当者・経営者の方へ</p>
+            <h2 className="text-base font-bold text-white">この診断結果の読み方</h2>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              MIRORの4軸は「逆境下での持続力」を構成する要素です。採用やチーム編成において、以下の視点で活用できます。
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-blue-400 mb-2">配置の目安</p>
+                <div className="space-y-3">
+                  <div className="bg-gray-900/60 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-emerald-400 mb-1">新規事業・スタートアップに配置したい場合</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      → SE（自己効力感）と OS（楽観的帰属）を見てください。「自分にはできる」と信じ、逆境を一時的と捉えられる人材が、不確実性の高い環境で力を発揮します。
+                    </p>
+                  </div>
+                  <div className="bg-gray-900/60 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-blue-400 mb-1">既存事業の安定運用に配置したい場合</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      → PE（粘り強さ）と ES（情緒安定性）を見てください。粘り強く続け、感情的に安定している人材が、長期的なオペレーションを支えます。
+                    </p>
+                  </div>
+                  <div className="bg-gray-900/60 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-purple-400 mb-1">マネージャー・リーダー候補</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      → 4軸すべてが中〜高（目安：各60以上）であることが望ましいですが、「全部高い＝最強」ではありません（下記参照）。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-950/30 border border-amber-700/40 rounded-xl p-4">
+                <p className="text-sm font-semibold text-amber-400 mb-2">「全部高い」は万能ではない</p>
+                <p className="text-xs text-gray-300 leading-relaxed">
+                  4軸が全て高い人材（将軍タイプ）は、裁量権があり挑戦的な環境で最大の力を発揮します。しかし、マイクロマネジメントが強い環境や、指示待ちを求められるポジションでは、かえって消耗し、離職リスクが高まります。「優秀な人材」と「自社に合う人材」は異なります。スコアの高さではなく、ポジションとの適合性で判断してください。
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-gray-300 mb-2">4軸の相互関係</p>
+                <ul className="space-y-2">
+                  {[
+                    'SE（自己効力感）が高くてもOS（楽観的帰属）が低い人は、「やれるはずなのにうまくいかない」と感じやすく、フラストレーションが溜まりやすい。',
+                    'PE（粘り強さ）が高くてもES（情緒安定性）が低い人は、歯を食いしばって続けるが心身の消耗が激しい。燃え尽き防止のサポートが必要。',
+                    'OS（楽観的帰属）が高くてもSE（自己効力感）が低い人は、「なんとかなる」と思っているが「自分がなんとかする」とは思えない。受動的な楽観に陥りやすい。',
+                  ].map((text, i) => (
+                    <li key={i} className="flex gap-2 text-xs text-gray-400 leading-relaxed">
+                      <span className="text-gray-600 shrink-0 mt-0.5">•</span>
+                      <span>{text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Deep Analysis */}
         <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-4">
           <div className="flex items-center gap-2">
@@ -262,67 +323,6 @@ export default function AboutPage() {
               <li key={i} className="text-xs text-gray-500 leading-relaxed">— {ref}</li>
             ))}
           </ul>
-        </div>
-
-        {/* 採用担当者・経営者の方へ */}
-        <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
-          <div className="p-6 space-y-5">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">採用担当者・経営者の方へ</p>
-            <h2 className="text-base font-bold text-white">この診断結果の読み方</h2>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              MIRORの4軸は「逆境下での持続力」を構成する要素です。採用やチーム編成において、以下の視点で活用できます。
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-semibold text-blue-400 mb-2">配置の目安</p>
-                <div className="space-y-3">
-                  <div className="bg-gray-900/60 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-emerald-400 mb-1">新規事業・スタートアップに配置したい場合</p>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      → SE（自己効力感）と OS（楽観的帰属）を見てください。「自分にはできる」と信じ、逆境を一時的と捉えられる人材が、不確実性の高い環境で力を発揮します。
-                    </p>
-                  </div>
-                  <div className="bg-gray-900/60 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-blue-400 mb-1">既存事業の安定運用に配置したい場合</p>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      → PE（粘り強さ）と ES（情緒安定性）を見てください。粘り強く続け、感情的に安定している人材が、長期的なオペレーションを支えます。
-                    </p>
-                  </div>
-                  <div className="bg-gray-900/60 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-purple-400 mb-1">マネージャー・リーダー候補</p>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      → 4軸すべてが中〜高（目安：各60以上）であることが望ましいですが、「全部高い＝最強」ではありません（下記参照）。
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-amber-950/30 border border-amber-700/40 rounded-xl p-4">
-                <p className="text-sm font-semibold text-amber-400 mb-2">「全部高い」は万能ではない</p>
-                <p className="text-xs text-gray-300 leading-relaxed">
-                  4軸が全て高い人材（将軍タイプ）は、裁量権があり挑戦的な環境で最大の力を発揮します。しかし、マイクロマネジメントが強い環境や、指示待ちを求められるポジションでは、かえって消耗し、離職リスクが高まります。「優秀な人材」と「自社に合う人材」は異なります。スコアの高さではなく、ポジションとの適合性で判断してください。
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-gray-300 mb-2">4軸の相互関係</p>
-                <ul className="space-y-2">
-                  {[
-                    'SE（自己効力感）が高くてもOS（楽観的帰属）が低い人は、「やれるはずなのにうまくいかない」と感じやすく、フラストレーションが溜まりやすい。',
-                    'PE（粘り強さ）が高くてもES（情緒安定性）が低い人は、歯を食いしばって続けるが心身の消耗が激しい。燃え尽き防止のサポートが必要。',
-                    'OS（楽観的帰属）が高くてもSE（自己効力感）が低い人は、「なんとかなる」と思っているが「自分がなんとかする」とは思えない。受動的な楽観に陥りやすい。',
-                  ].map((text, i) => (
-                    <li key={i} className="flex gap-2 text-xs text-gray-400 leading-relaxed">
-                      <span className="text-gray-600 shrink-0 mt-0.5">•</span>
-                      <span>{text}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* CTA */}
