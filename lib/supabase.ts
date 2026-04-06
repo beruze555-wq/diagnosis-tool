@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { ScenarioAnswer } from '@/types'
-import { DeepAnalysis, RiskIndicators } from '@/lib/scoring'
+import { DeepAnalysis } from '@/lib/scoring'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -8,6 +8,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 export const supabase =
   supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
 
+// 実テーブルのカラム構成に合わせた型
 export async function saveDiagnosisResult(data: {
   age: number
   affiliation: string
@@ -17,40 +18,43 @@ export async function saveDiagnosisResult(data: {
   seScore: number
   peScore: number
   esScore: number
-  ciScore?: number
-  amScore?: number
-  typeCode: string
+  typeCode: string        // zone_id (例: HLLH)
+  zoneName: string        // zone  (例: 安定者ゾーン)
+  personalityTypeName: string // personality_type (例: 潜在力の守備型)
   deepAnalysis?: DeepAnalysis
-  riskIndicators?: RiskIndicators
+  adversityRiskNote?: string
 }) {
-  if (!supabase) {
-    throw new Error('Supabase client is not initialized. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.')
+  const commitSustainability = (data.osScore + data.esScore) / 2
+
+  const payload = {
+    age: data.age,
+    affiliation: data.affiliation,
+    layer1_answers: data.scenarioAnswers,
+    layer2_answers: data.layer2Answers ?? null,
+    os_score: data.osScore,
+    axis_a_score: data.seScore,   // SE
+    axis_b_score: data.peScore,   // PE
+    axis_c_score: data.esScore,   // ES
+    zone: data.zoneName,
+    zone_id: data.typeCode,
+    personality_type: data.personalityTypeName,
+    deep_analysis: data.deepAnalysis ?? null,
+    hardwork_resilience: (data.seScore + data.peScore) / 2,
+    commit_sustainability: commitSustainability,
+    adversity_risk: 100 - commitSustainability,
+    adversity_risk_note: data.adversityRiskNote ?? null,
   }
 
-  const { error } = await supabase.from('diagnosis_results').insert([
-    {
-      age: data.age,
-      affiliation: data.affiliation,
-      layer1_answers: data.scenarioAnswers,
-      layer2_answers: data.layer2Answers ?? null,
-      os_score: data.osScore,
-      se_score: data.seScore,
-      pe_score: data.peScore,
-      es_score: data.esScore,
-      ci_score: data.ciScore ?? null,
-      am_score: data.amScore ?? null,
-      type_code: data.typeCode,
-      deep_analysis: data.deepAnalysis ?? null,
-      hardwork_resilience: data.riskIndicators?.hardworkResilience ?? null,
-      adversity_processing: data.riskIndicators?.adversityProcessing ?? null,
-      overall_persistence: data.riskIndicators?.overallPersistence ?? null,
-      adversity_risk: data.riskIndicators?.adversityRisk ?? null,
-      adversity_risk_note: data.riskIndicators?.adversityRiskNote ?? null,
-    },
-  ])
+  const res = await fetch('/api/save-diagnosis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
 
-  if (error) {
-    console.error('Supabase save error:', error)
-    throw error
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}))
+    const message = errBody.error ?? `HTTP ${res.status}`
+    console.error('[saveDiagnosisResult] error:', errBody)
+    throw new Error(message)
   }
 }

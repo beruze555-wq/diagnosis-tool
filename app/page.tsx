@@ -153,13 +153,6 @@ export default function StartPage() {
       <section className="max-w-lg mx-auto px-4 pb-6">
         <div className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-6">
 
-          {/* 信頼性バッジ */}
-          <div className="flex justify-center gap-4 text-xs text-gray-500 mb-6">
-            <span>📊 NGSE・Grit-S・ASQ・BFI-2-J</span>
-            <span>⏱️ 約10〜13分</span>
-            <span>🔬 52問</span>
-          </div>
-
           {/* 年齢 */}
           <label className="block text-sm text-gray-400 mb-1">年齢</label>
           <input

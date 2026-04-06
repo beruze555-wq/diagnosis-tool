@@ -483,3 +483,16 @@ export function computeRiskIndicators(
 
   return { hardworkResilience, adversityProcessing, overallPersistence, adversityRisk, adversityRiskNote }
 }
+
+/**
+ * ゾーン名を type key (例: HLLH) から返す
+ * ゾーンは PE (key[1]) と ES (key[3]) で決まる
+ */
+export function getZoneName(key: string): string {
+  const pe = key[1] // H or L
+  const es = key[3] // H or L
+  if (pe === 'H' && es === 'H') return '実行者ゾーン'
+  if (pe === 'H' && es === 'L') return '挑戦者ゾーン'
+  if (pe === 'L' && es === 'H') return '安定者ゾーン'
+  return '模索者ゾーン'
+}

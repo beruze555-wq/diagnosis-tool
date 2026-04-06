@@ -18,6 +18,7 @@ import {
   getCIDescription,
   getAMDescription,
   getPersonalityTypeKey,
+  getZoneName,
   PERSONALITY_TYPES,
   computeRiskIndicators,
   calculateDeepAnalysis,
@@ -253,6 +254,48 @@ function AnswerViewer({
   )
 }
 
+// ─── References marquee ──────────────────────────────────────────────────────
+
+const REFERENCES = [
+  { scale: 'NGSE',    cite: 'Chen, Gully & Eden (2001)',          journal: 'Organizational Research Methods' },
+  { scale: 'Grit-S',  cite: 'Duckworth & Quinn (2009)',           journal: 'Journal of Personality Assessment' },
+  { scale: 'ASQ',     cite: 'Seligman et al. (1979)',             journal: 'Journal of Abnormal Psychology' },
+  { scale: 'BFI-2-J', cite: 'Soto & John (2017)',                 journal: 'Journal of Personality & Social Psychology' },
+  { scale: 'SDT',     cite: 'Deci & Ryan (2000)',                  journal: 'Psychological Inquiry' },
+  { scale: 'RSQ',     cite: 'Downey & Feldman (1996)',             journal: 'Journal of Personality & Social Psychology' },
+  { scale: 'Meta',    cite: 'Sweeney, Anderson & Bailey (1986)',   journal: 'JPSP — Attribution & Depression' },
+  { scale: 'Meta',    cite: 'Stajkovic & Luthans (1998)',          journal: 'Psychological Bulletin — SE & Performance' },
+  { scale: 'Meta',    cite: 'Credé, Tynan & Harms (2017)',         journal: 'Journal of Personality & Social Psychology' },
+  { scale: 'Meta',    cite: 'Eschleman et al. (2010)',             journal: 'Journal of Occupational Psychology' },
+  { scale: 'Meta',    cite: 'Barrick & Mount (1991)',              journal: 'Personnel Psychology — Big Five & Job' },
+]
+
+function ReferencesMarquee() {
+  const items = [...REFERENCES, ...REFERENCES] // 2倍複製してシームレスループ
+  return (
+    <div className="py-4">
+      <p className="text-center text-xs text-gray-600 mb-3 tracking-widest uppercase">References</p>
+      <div className="overflow-hidden relative">
+        {/* フェードエッジ */}
+        <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-gray-900 to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-gray-900 to-transparent z-10 pointer-events-none" />
+        <div className="marquee-track gap-3">
+          {items.map((ref, i) => (
+            <div
+              key={i}
+              className="shrink-0 bg-gray-800/50 border border-gray-700/40 rounded-xl px-4 py-3 mx-1.5 min-w-[220px]"
+            >
+              <span className="block text-xs font-mono text-blue-400/80 mb-1">{ref.scale}</span>
+              <span className="block text-xs text-gray-300 leading-snug font-medium">{ref.cite}</span>
+              <span className="block text-xs text-gray-500 leading-snug mt-0.5">{ref.journal}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 type Scores = { SE: number; PE: number; OS: number; ES: number; CI: number; AM: number }
@@ -287,17 +330,19 @@ export default function ResultPage() {
     if (devMode && devScoresRaw) {
       const devScores = JSON.parse(devScoresRaw) as { OS: number; SE: number; PE: number; ES: number }
       const devLayer2Raw = sessionStorage.getItem('layer2Answers')
+      // SE×8, PE×5, CI×5, ES×10, AM×6
+      const DEV_LAYER2 = [4,5,5,4,4,4,4,5, 5,5,4,5,5, 4,5,4,5,4, 1,5,1,4,4,5,1,5,2,4, 5,5,3,1,5,2]
       const devLayer2: number[] = devLayer2Raw
         ? JSON.parse(devLayer2Raw)
-        : Array(34).fill(3)
+        : DEV_LAYER2
 
       const fullScores: Scores = {
-        OS: devScores.OS ?? 72,
-        SE: devScores.SE ?? 68,
-        PE: devScores.PE ?? 55,
-        ES: devScores.ES ?? 81,
-        CI: 0,
-        AM: 0,
+        OS: devScores.OS ?? 29,
+        SE: devScores.SE ?? 88,
+        PE: devScores.PE ?? 96,
+        ES: devScores.ES ?? 88,
+        CI: 32,
+        AM: 57,
       }
       const key = getPersonalityTypeKey(fullScores.SE, fullScores.PE, fullScores.OS, fullScores.ES)
       setScores(fullScores)
@@ -306,12 +351,12 @@ export default function ResultPage() {
       setEnvironmentFit(getEnvironmentFit(key))
       setDeepAnalysis(calculateDeepAnalysis(devLayer2))
       const devScenarioAnswers: ScenarioAnswer[] = [
-        { scenarioId: 1, attributions: [2, 2, 3] },
-        { scenarioId: 2, attributions: [3, 2, 2] },
-        { scenarioId: 3, attributions: [2, 3, 2] },
-        { scenarioId: 4, attributions: [3, 2, 3] },
-        { scenarioId: 5, attributions: [2, 2, 2] },
-        { scenarioId: 6, attributions: [3, 2, 2] },
+        { scenarioId: 1, attributions: [7, 7, 7] },
+        { scenarioId: 2, attributions: [7, 3, 5] },
+        { scenarioId: 3, attributions: [4, 7, 7] },
+        { scenarioId: 4, attributions: [7, 6, 1] },
+        { scenarioId: 5, attributions: [6, 7, 6] },
+        { scenarioId: 6, attributions: [7, 7, 7] },
       ]
       setRawAnswers({ scenarioAnswers: devScenarioAnswers, layer2Answers: devLayer2 })
       setSaved(true)
@@ -346,6 +391,7 @@ export default function ResultPage() {
     setDeepAnalysis(da)
 
     const riskIndicators = computeRiskIndicators(calculated.SE, calculated.PE, calculated.OS, calculated.ES)
+    const pt = PERSONALITY_TYPES[key] ?? PERSONALITY_TYPES.LLLL
 
     saveDiagnosisResult({
       age: userInfo.age,
@@ -356,11 +402,11 @@ export default function ResultPage() {
       seScore: calculated.SE,
       peScore: calculated.PE,
       esScore: calculated.ES,
-      ciScore: calculated.CI,
-      amScore: calculated.AM,
       typeCode: key,
+      zoneName: getZoneName(key),
+      personalityTypeName: pt.name,
       deepAnalysis: da ?? undefined,
-      riskIndicators,
+      adversityRiskNote: riskIndicators.adversityRiskNote,
     })
       .then(() => setSaved(true))
       .catch((err) => { console.error('診断結果の保存に失敗しました:', err); setSaveError(true) })
@@ -562,6 +608,9 @@ export default function ResultPage() {
         >
           もう一度診断する
         </button>
+
+        {/* 参考文献マーキー */}
+        <ReferencesMarquee />
 
         <div className="text-center pb-4">
           <a href="/about" className="text-xs text-gray-500 hover:text-gray-400 transition-colors">
