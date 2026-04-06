@@ -352,6 +352,12 @@ export default function ResultPage() {
     const riskIndicators = computeRiskIndicators(calculated.SE, calculated.PE, calculated.OS, calculated.ES)
     const pt = PERSONALITY_TYPES[key] ?? PERSONALITY_TYPES.LLLL
 
+    // 同一セッションで既に保存済みなら再保存しない（ページリロード対策）
+    if (sessionStorage.getItem('resultSaved') === 'true') {
+      setSaved(true)
+      return
+    }
+
     saveDiagnosisResult({
       age: userInfo.age,
       affiliation: userInfo.affiliation,
@@ -367,7 +373,7 @@ export default function ResultPage() {
       deepAnalysis: da ?? undefined,
       adversityRiskNote: riskIndicators.adversityRiskNote,
     })
-      .then(() => setSaved(true))
+      .then(() => { sessionStorage.setItem('resultSaved', 'true'); setSaved(true) })
       .catch((err) => { console.error('診断結果の保存に失敗しました:', err); setSaveError(true) })
   }, [router])
 
