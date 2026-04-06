@@ -512,10 +512,28 @@ export default function ResultPage() {
         <ChainFlow os={scores.OS} es={scores.ES} se={scores.SE} pe={scores.PE} />
 
         <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg">
-          <ResponsiveContainer width="100%" height={280}>
-            <RadarChart data={chartData}>
+          <ResponsiveContainer width="100%" height={300}>
+            <RadarChart data={chartData} margin={{ top: 28, right: 28, bottom: 28, left: 28 }}>
               <PolarGrid stroke="#374151" />
-              <PolarAngleAxis dataKey="axis" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+              <PolarAngleAxis
+                dataKey="axis"
+                tick={(props: any) => {
+                  const { x, y, payload } = props
+                  const ta = props.textAnchor as 'start' | 'middle' | 'end' | 'inherit' | undefined
+                  const item = chartData.find(d => d.axis === payload.value)
+                  const score = item?.value ?? 0
+                  return (
+                    <g>
+                      <text x={x} y={y - 5} textAnchor={ta} fill="#9ca3af" fontSize={10}>
+                        {payload.value}
+                      </text>
+                      <text x={x} y={y + 11} textAnchor={ta} fill="#60a5fa" fontSize={14} fontWeight="bold">
+                        {score}
+                      </text>
+                    </g>
+                  )
+                }}
+              />
               <Radar
                 name="score"
                 dataKey="value"
