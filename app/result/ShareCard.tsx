@@ -24,40 +24,39 @@ export default function ShareCard({ typeName, tagline, scores }: ShareCardProps)
     { axis: '情緒安定性', value: scores.ES },
   ];
 
+  const captureDataUrl = async (): Promise<string> => {
+    const { toPng } = await import('html-to-image');
+    return toPng(cardRef.current!, {
+      pixelRatio: 2,
+      backgroundColor: '#0a0a0a',
+    });
+  };
+
   const handleDownload = async () => {
     if (!cardRef.current) return;
-    const html2canvas = (await import('html2canvas')).default;
-    const canvas = await html2canvas(cardRef.current, {
-      backgroundColor: '#0a0a0a',
-      scale: 2,
-    });
+    const dataUrl = await captureDataUrl();
     const link = document.createElement('a');
     link.download = `MIRROR-${typeName}.png`;
-    link.href = canvas.toDataURL();
+    link.href = dataUrl;
     link.click();
   };
 
   const handleShare = async () => {
     if (!cardRef.current) return;
-    const html2canvas = (await import('html2canvas')).default;
-    const canvas = await html2canvas(cardRef.current, {
-      backgroundColor: '#0a0a0a',
-      scale: 2,
-    });
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      if (navigator.share) {
-        const file = new File([blob], `MIRROR-${typeName}.png`, { type: 'image/png' });
-        await navigator.share({
-          title: `MIRROR診断結果: ${typeName}`,
-          text: `${tagline} #MIRROR診断`,
-          files: [file],
-        }).catch(() => {});
-      } else {
-        const text = encodeURIComponent(`私のメンタルタイプは「${typeName}」\n${tagline}\n#MIRROR診断`);
-        window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
-      }
-    });
+    const dataUrl = await captureDataUrl();
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    if (navigator.share) {
+      const file = new File([blob], `MIRROR-${typeName}.png`, { type: 'image/png' });
+      await navigator.share({
+        title: `MIRROR診断結果: ${typeName}`,
+        text: `${tagline} #MIRROR診断`,
+        files: [file],
+      }).catch(() => {});
+    } else {
+      const text = encodeURIComponent(`私のメンタルタイプは「${typeName}」\n${tagline}\n#MIRROR診断`);
+      window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+    }
   };
 
   return (
