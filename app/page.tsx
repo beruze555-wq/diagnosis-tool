@@ -77,25 +77,25 @@ export default function StartPage() {
     sessionStorage.removeItem('diagnosisPhase')
     sessionStorage.setItem('userInfo', JSON.stringify({ age: 21, affiliation: '大学3〜4年生' }))
     sessionStorage.setItem('scenarioAnswers', JSON.stringify([
-      // 楽観的帰属（低値=外的・一時的・限定的）→ OS高め
-      { scenarioId: 1, attributions: [2, 2, 3] },
-      { scenarioId: 2, attributions: [3, 2, 2] },
-      { scenarioId: 3, attributions: [2, 3, 2] },
-      { scenarioId: 4, attributions: [3, 2, 3] },
-      { scenarioId: 5, attributions: [2, 2, 2] },
-      { scenarioId: 6, attributions: [3, 3, 2] },
+      // 旧実データの帰属値（悲観的傾向あり）→ OS低め
+      { scenarioId: 1, attributions: [7, 7, 7] },
+      { scenarioId: 2, attributions: [7, 3, 5] },
+      { scenarioId: 3, attributions: [4, 7, 7] },
+      { scenarioId: 4, attributions: [7, 6, 1] },
+      { scenarioId: 5, attributions: [6, 7, 6] },
+      { scenarioId: 6, attributions: [7, 7, 7] },
     ]))
     sessionStorage.setItem('layer2Answers', JSON.stringify([
-      // SE(8): 高め
+      // SE(8): 旧データに未存在のため維持
       4, 5, 5, 4, 4, 4, 4, 5,
-      // PE(5): 高め
-      5, 5, 5, 4, 5,
-      // CI(5): 低め（興味が変わりやすい）
-      4, 5, 4, 4, 4,
-      // ES(10): 高め（B1-B10と同じ値）
-      5, 1, 5, 1, 5, 5, 1, 5, 1, 5,
-      // AM(6): 中程度
-      4, 3, 4, 4, 3, 4,
+      // PE(5): 旧A2,A4,A6,A7,A9
+      5, 5, 4, 5, 5,
+      // CI(5): 旧A1,A3,A5,A8,A10
+      4, 5, 4, 5, 4,
+      // ES(10): 旧B1-B10
+      1, 5, 1, 4, 4, 5, 1, 5, 2, 4,
+      // AM(6): 旧D1-D6
+      5, 5, 3, 1, 5, 2,
     ]))
     router.push('/result')
   }
