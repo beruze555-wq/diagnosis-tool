@@ -15,22 +15,22 @@ const AFFILIATION_OPTIONS = [
 ]
 
 const PERSONALITY_TYPES_PREVIEW = [
-  { name: "突破者型", icon: "⚡", themeFrom: "from-yellow-500/20", themeTo: "to-orange-500/20" },
-  { name: "安定遂行型", icon: "🛡️", themeFrom: "from-blue-400/20", themeTo: "to-blue-600/20" },
-  { name: "情熱猪突型", icon: "🔥", themeFrom: "from-red-500/20", themeTo: "to-orange-500/20" },
-  { name: "楽観持久型", icon: "🌊", themeFrom: "from-cyan-400/20", themeTo: "to-blue-500/20" },
-  { name: "戦略挑戦型", icon: "🎯", themeFrom: "from-purple-500/20", themeTo: "to-pink-500/20" },
-  { name: "慎重楽観型", icon: "🌤️", themeFrom: "from-amber-300/20", themeTo: "to-yellow-500/20" },
-  { name: "直感突撃型", icon: "🚀", themeFrom: "from-rose-500/20", themeTo: "to-red-600/20" },
-  { name: "楽天自由型", icon: "🎈", themeFrom: "from-pink-300/20", themeTo: "to-rose-400/20" },
-  { name: "堅実努力型", icon: "💎", themeFrom: "from-emerald-500/20", themeTo: "to-teal-600/20" },
-  { name: "忍耐守備型", icon: "🏔️", themeFrom: "from-stone-400/20", themeTo: "to-gray-600/20" },
-  { name: "闘志内燃型", icon: "🌋", themeFrom: "from-orange-600/20", themeTo: "to-red-700/20" },
-  { name: "寡黙継続型", icon: "🐢", themeFrom: "from-green-600/20", themeTo: "to-emerald-800/20" },
-  { name: "冷静分析型", icon: "🔬", themeFrom: "from-indigo-400/20", themeTo: "to-violet-600/20" },
-  { name: "受容安定型", icon: "🌿", themeFrom: "from-lime-400/20", themeTo: "to-green-500/20" },
-  { name: "野心原石型", icon: "💡", themeFrom: "from-amber-500/20", themeTo: "to-orange-600/20" },
-  { name: "模索探求型", icon: "🧭", themeFrom: "from-slate-400/20", themeTo: "to-gray-500/20" },
+  { name: "不屈の実行者", icon: "💪", themeFrom: "from-yellow-500/20", themeTo: "to-orange-500/20" },
+  { name: "情熱の突破者", icon: "🔥", themeFrom: "from-red-500/20", themeTo: "to-orange-500/20" },
+  { name: "冷静な自信家", icon: "🎯", themeFrom: "from-blue-500/20", themeTo: "to-indigo-500/20" },
+  { name: "実力ある不安定型", icon: "⚡", themeFrom: "from-amber-400/20", themeTo: "to-yellow-600/20" },
+  { name: "慎重な楽観主義者", icon: "🌤️", themeFrom: "from-cyan-400/20", themeTo: "to-blue-500/20" },
+  { name: "直感の挑戦者", icon: "🚀", themeFrom: "from-rose-500/20", themeTo: "to-red-600/20" },
+  { name: "潜在力の守備型", icon: "🛡️", themeFrom: "from-stone-400/20", themeTo: "to-gray-600/20" },
+  { name: "自信だけが頼り型", icon: "💡", themeFrom: "from-amber-500/20", themeTo: "to-orange-600/20" },
+  { name: "堅実な努力家", icon: "💎", themeFrom: "from-emerald-500/20", themeTo: "to-teal-600/20" },
+  { name: "努力する繊細型", icon: "🌸", themeFrom: "from-pink-400/20", themeTo: "to-rose-500/20" },
+  { name: "安定した慎重派", icon: "🏔️", themeFrom: "from-slate-400/20", themeTo: "to-gray-500/20" },
+  { name: "孤軍奮闘型", icon: "🌋", themeFrom: "from-orange-600/20", themeTo: "to-red-700/20" },
+  { name: "楽観的な安定型", icon: "🌊", themeFrom: "from-cyan-400/20", themeTo: "to-blue-400/20" },
+  { name: "楽観的だが不安定型", icon: "🌿", themeFrom: "from-lime-400/20", themeTo: "to-green-500/20" },
+  { name: "静かな耐久型", icon: "🐢", themeFrom: "from-green-600/20", themeTo: "to-emerald-800/20" },
+  { name: "発展途上型", icon: "🧭", themeFrom: "from-slate-400/20", themeTo: "to-gray-500/20" },
 ]
 
 export default function StartPage() {
@@ -77,19 +77,25 @@ export default function StartPage() {
     sessionStorage.removeItem('diagnosisPhase')
     sessionStorage.setItem('userInfo', JSON.stringify({ age: 21, affiliation: '大学3〜4年生' }))
     sessionStorage.setItem('scenarioAnswers', JSON.stringify([
-      { sjtRatings: [5, 5, 2, 1], attributions: [4, 5, 7] },
-      { sjtRatings: [5, 4, 1, 2], attributions: [4, 4, 4] },
-      { sjtRatings: [4, 5, 1, 1], attributions: [5, 5, 7] },
-      { sjtRatings: [5, 5, 1, 5], attributions: [1, 6, 3] },
-      { sjtRatings: [4, 3, 4, 3], attributions: [5, 5, 5] },
-      { sjtRatings: [5, 5, 1, 5], attributions: [3, 5, 7] },
+      { scenarioId: 1, attributions: [4, 5, 7] },
+      { scenarioId: 2, attributions: [4, 4, 4] },
+      { scenarioId: 3, attributions: [5, 5, 7] },
+      { scenarioId: 4, attributions: [1, 6, 3] },
+      { scenarioId: 5, attributions: [5, 5, 5] },
+      { scenarioId: 6, attributions: [3, 5, 7] },
     ]))
-    sessionStorage.setItem('layer2Answers', JSON.stringify({
-      axisA: [4, 5, 5, 5, 4, 3, 5, 5, 5, 5],
-      axisB: [1, 5, 1, 4, 5, 4, 1, 5, 1, 5],
-      axisC: [3, 1, 5, 1, 5, 1, 5, 1, 3, 1],
-      axisD: [4, 5, 5, 1, 5, 2, 5, 4, 4],
-    }))
+    sessionStorage.setItem('layer2Answers', JSON.stringify([
+      // SE(8): 高め
+      4, 5, 5, 4, 4, 4, 4, 5,
+      // PE(5): 高め
+      5, 5, 5, 4, 5,
+      // CI(5): 低め（興味が変わりやすい）
+      4, 5, 4, 4, 4,
+      // ES(10): 高め（B1-B10と同じ値）
+      5, 1, 5, 1, 5, 5, 1, 5, 1, 5,
+      // AM(6): 中程度
+      4, 3, 4, 4, 3, 4,
+    ]))
     router.push('/result')
   }
 
@@ -99,16 +105,11 @@ export default function StartPage() {
     sessionStorage.setItem('devMode', 'true')
     sessionStorage.setItem(
       'devScores',
-      JSON.stringify({ OS: 72, A: 68, B: 55, C: 81, zone: 'Yellow' })
+      JSON.stringify({ OS: 72, SE: 68, PE: 55, ES: 81 })
     )
     sessionStorage.setItem(
       'layer2Answers',
-      JSON.stringify({
-        axisA: [2, 4, 2, 4, 2, 4, 4, 2, 4, 2],
-        axisB: [3, 4, 3, 3, 4, 4, 3, 4, 3, 4],
-        axisC: [4, 2, 4, 2, 4, 2, 4, 2, 4, 2],
-        axisD: [4, 4, 4, 2, 4, 2],
-      })
+      JSON.stringify(Array(34).fill(3))
     )
     router.push('/result')
   }
@@ -153,9 +154,9 @@ export default function StartPage() {
 
           {/* 信頼性バッジ */}
           <div className="flex justify-center gap-4 text-xs text-gray-500 mb-6">
-            <span>📊 7つの学術理論</span>
-            <span>⏱️ 約10分</span>
-            <span>🔬 42問</span>
+            <span>📊 NGSE・Grit-S・ASQ・BFI-2-J</span>
+            <span>⏱️ 約10〜13分</span>
+            <span>🔬 52問</span>
           </div>
 
           {/* 年齢 */}

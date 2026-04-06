@@ -1,46 +1,28 @@
-export interface SJTOption {
-  label: string
-  text: string
-  tags: string[]
-}
-
 export interface UserInfo {
   age: number
   affiliation: string
 }
 
 export interface ScenarioAnswer {
-  sjtRatings: number[] // [A, B, C, D] each 1-5
-  attributions: number[] // [Q1, Q2, Q3] each 1-7
+  scenarioId: number
+  attributions: number[] // [Q1, Q2, Q3]
 }
 
-export interface Layer2Answers {
-  axisA: number[]
-  axisB: number[]
-  axisC: number[]
-  axisD: number[]
-}
-
-export interface Scores {
+export interface DiagnosisScores {
+  SE: number
+  PE: number
   OS: number
-  A: number
-  B: number
-  C: number
+  ES: number
 }
 
 export interface DeepAnalysis {
-  selfEfficacy: number
   autonomousMotivation: number
-  growthMindset: number
-  learningAgility: number
-  crisisResponse: number
-  teamContribution: number
   consistencyOfInterest: number
 }
 
 export interface DiagnosisSession {
   userInfo: UserInfo
   scenarioAnswers: ScenarioAnswer[]
-  layer2Answers?: Layer2Answers
-  scores: Scores
+  layer2Answers?: number[]
+  scores: DiagnosisScores
 }

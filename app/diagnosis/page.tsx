@@ -3,19 +3,24 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { scenarios } from '@/lib/scenarios'
-import { layer2Sections } from '@/lib/layer2Questions'
+import { layer2Questions } from '@/lib/layer2Questions'
 import { calculateOS } from '@/lib/scoring'
-import { ScenarioAnswer, Layer2Answers } from '@/types'
+import { ScenarioAnswer } from '@/types'
 
-const TOTAL_STEPS = 13 // 6 scenarios + 7 layer2 pages
+const QUESTIONS_PER_PAGE = 6
+const TOTAL_LAYER2_QUESTIONS = 34
+const TOTAL_LAYER2_PAGES = Math.ceil(TOTAL_LAYER2_QUESTIONS / QUESTIONS_PER_PAGE) // 6
+const TOTAL_STEPS = scenarios.length + TOTAL_LAYER2_PAGES // 12
 
-function shuffleArray<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
+function findFirstIncompletePage(answers: number[]): number {
+  for (let page = 0; page < TOTAL_LAYER2_PAGES; page++) {
+    const start = page * QUESTIONS_PER_PAGE
+    const end = Math.min(start + QUESTIONS_PER_PAGE, TOTAL_LAYER2_QUESTIONS)
+    for (let i = start; i < end; i++) {
+      if ((answers[i] ?? 0) === 0) return page
+    }
   }
-  return a
+  return TOTAL_LAYER2_PAGES - 1
 }
 
 function ProgressBar({ current, total }: { current: number; total: number }) {
@@ -106,82 +111,19 @@ function LikertRow7({
   )
 }
 
-// Per-scenario 7-item shuffle type (4 SJT + 3 attribution)
-type ShuffledItem =
-  | { type: 'sjt'; originalIdx: number }
-  | { type: 'attribution'; qIdx: number }
-
-// Flat layer2 question item with axis + position index
-interface FlatL2Item {
-  axis: 'A' | 'B' | 'C' | 'D'
-  idx: number
-  id: string
-  text: string
-  reversed: boolean
-}
-
-// Find the first page (0-5) in the given order that has unanswered questions
-function findFirstIncompletePage(items: FlatL2Item[], answers: Layer2Answers): number {
-  for (let page = 0; page < 6; page++) {
-    const pageItems = items.slice(page * 6, (page + 1) * 6)
-    const complete = pageItems.every(
-      (item) => answers[`axis${item.axis}` as keyof Layer2Answers][item.idx] > 0
-    )
-    if (!complete) return page
-  }
-  return 5
-}
-
 export default function DiagnosisPage() {
   const router = useRouter()
   const [phase, setPhase] = useState<'layer1' | 'layer2'>('layer1')
   const [scenarioIndex, setScenarioIndex] = useState(0)
   const [scenarioAnswers, setScenarioAnswers] = useState<ScenarioAnswer[]>([])
   const [currentAnswer, setCurrentAnswer] = useState<ScenarioAnswer>({
-    sjtRatings: [0, 0, 0, 0],
+    scenarioId: 1,
     attributions: [0, 0, 0],
   })
-  const [layer2Answers, setLayer2Answers] = useState<Layer2Answers>({
-    axisA: Array(10).fill(0),
-    axisB: Array(10).fill(0),
-    axisC: Array(10).fill(0),
-    axisD: Array(9).fill(0),
-  })
+  const [layer2Answers, setLayer2Answers] = useState<number[]>(Array(TOTAL_LAYER2_QUESTIONS).fill(0))
   const [layer2Page, setLayer2Page] = useState(0)
   const [visible, setVisible] = useState(true)
   const [isDev, setIsDev] = useState(false)
-
-  // Per-scenario: SJT4問をシャッフル→帰属3問をシャッフル→結合（ブロック順は固定）
-  const [shuffledItems7] = useState<ShuffledItem[][]>(() =>
-    scenarios.map(() => {
-      const sjtBlock: ShuffledItem[] = shuffleArray([
-        { type: 'sjt', originalIdx: 0 },
-        { type: 'sjt', originalIdx: 1 },
-        { type: 'sjt', originalIdx: 2 },
-        { type: 'sjt', originalIdx: 3 },
-      ])
-      const attrBlock: ShuffledItem[] = shuffleArray([
-        { type: 'attribution', qIdx: 0 },
-        { type: 'attribution', qIdx: 1 },
-        { type: 'attribution', qIdx: 2 },
-      ])
-      return [...sjtBlock, ...attrBlock]
-    })
-  )
-
-  // One-time randomized flat Layer2 question list (all 4 sections, 36 items total)
-  const [randomizedLayer2] = useState<FlatL2Item[]>(() => {
-    const all: FlatL2Item[] = layer2Sections.flatMap((s) =>
-      s.questions.map((q, idx) => ({
-        axis: s.axis as 'A' | 'B' | 'C' | 'D',
-        idx,
-        id: q.id,
-        text: q.text,
-        reversed: q.reversed,
-      }))
-    )
-    return shuffleArray(all)
-  })
 
   // Initialize: redirect if no userInfo, otherwise restore any saved progress
   useEffect(() => {
@@ -197,47 +139,45 @@ export default function DiagnosisPage() {
     const savedPhase = sessionStorage.getItem('diagnosisPhase')
 
     if (savedScenarioAnswers && savedLayer2Answers) {
-      // PART2 途中 or PART2開始直後 — answers by axis/idx so order-independent
-      const restoredL2 = JSON.parse(savedLayer2Answers) as Layer2Answers
-      const firstPage = findFirstIncompletePage(randomizedLayer2, restoredL2)
-      setScenarioAnswers(JSON.parse(savedScenarioAnswers))
-      setLayer2Answers(restoredL2)
-      setLayer2Page(firstPage)
-      setPhase('layer2')
+      const parsedL2 = JSON.parse(savedLayer2Answers)
+      // Handle flat number[] format only
+      if (Array.isArray(parsedL2) && typeof parsedL2[0] === 'number') {
+        const firstPage = findFirstIncompletePage(parsedL2)
+        setScenarioAnswers(JSON.parse(savedScenarioAnswers))
+        setLayer2Answers(parsedL2)
+        setLayer2Page(firstPage)
+        setPhase('layer2')
+      }
     } else if (savedScenarioAnswers) {
       const restored: ScenarioAnswer[] = JSON.parse(savedScenarioAnswers)
       if (restored.length === scenarios.length && savedPhase !== 'layer1') {
-        // PART1完了済み・PART2未着手
         setScenarioAnswers(restored)
         setPhase('layer2')
       } else if (restored.length > 0 && restored.length < scenarios.length) {
-        // PART1 途中
         setScenarioAnswers(restored)
         setScenarioIndex(restored.length)
+        setCurrentAnswer({ scenarioId: restored.length + 1, attributions: [0, 0, 0] })
       }
     }
-  }, [router, randomizedLayer2])
+  }, [router])
 
-  const isCurrentScenarioComplete =
-    currentAnswer.sjtRatings.every((v) => v > 0) &&
-    currentAnswer.attributions.every((v) => v > 0)
+  const isCurrentScenarioComplete = currentAnswer.attributions.every((v) => v > 0)
 
-  const isLayer2Complete =
-    layer2Answers.axisA.every((v) => v > 0) &&
-    layer2Answers.axisB.every((v) => v > 0) &&
-    layer2Answers.axisC.every((v) => v > 0) &&
-    layer2Answers.axisD.every((v) => v > 0)
-
-  // Current page items (6 per page)
-  const currentPageItems = useMemo(
-    () => randomizedLayer2.slice(layer2Page * 6, (layer2Page + 1) * 6),
-    [randomizedLayer2, layer2Page]
+  // Current page questions
+  const currentPageStartIdx = layer2Page * QUESTIONS_PER_PAGE
+  const currentPageQuestions = useMemo(
+    () => layer2Questions.slice(
+      currentPageStartIdx,
+      Math.min(currentPageStartIdx + QUESTIONS_PER_PAGE, TOTAL_LAYER2_QUESTIONS)
+    ),
+    [currentPageStartIdx]
   )
 
-  const isCurrentPageComplete = currentPageItems.every((item) => {
-    const key = `axis${item.axis}` as keyof Layer2Answers
-    return layer2Answers[key][item.idx] > 0
-  })
+  const isCurrentPageComplete = currentPageQuestions.every(
+    (_, i) => (layer2Answers[currentPageStartIdx + i] ?? 0) > 0
+  )
+
+  const isLayer2Complete = layer2Answers.every((v) => v > 0)
 
   const transition = useCallback((cb: () => void) => {
     setVisible(false)
@@ -253,7 +193,6 @@ export default function DiagnosisPage() {
       if (layer2Page > 0) {
         transition(() => setLayer2Page((p) => p - 1))
       }
-      // layer2Page === 0: PART1には戻れない
     } else if (scenarioIndex > 0) {
       const prevAnswer = scenarioAnswers[scenarioIndex - 1]
       const prevAnswers = scenarioAnswers.slice(0, -1)
@@ -270,16 +209,14 @@ export default function DiagnosisPage() {
     const newAnswers = [...scenarioAnswers, currentAnswer]
 
     if (scenarioIndex < scenarios.length - 1) {
-      // Save partial PART1 progress for resume
       sessionStorage.setItem('scenarioAnswers', JSON.stringify(newAnswers))
       sessionStorage.setItem('diagnosisPhase', 'layer1')
       transition(() => {
         setScenarioAnswers(newAnswers)
         setScenarioIndex((i) => i + 1)
-        setCurrentAnswer({ sjtRatings: [0, 0, 0, 0], attributions: [0, 0, 0] })
+        setCurrentAnswer({ scenarioId: scenarioIndex + 2, attributions: [0, 0, 0] })
       })
     } else {
-      // Last scenario done — evaluate OS
       const OS = calculateOS(newAnswers)
       sessionStorage.setItem('scenarioAnswers', JSON.stringify(newAnswers))
       if (OS < 35) {
@@ -299,27 +236,15 @@ export default function DiagnosisPage() {
 
   const handleLayer2Next = () => {
     if (!isCurrentPageComplete) return
-    if (layer2Page < 6) {
-      transition(() => {
-        setLayer2Page((p) => p + 1)
-      })
+    if (layer2Page < TOTAL_LAYER2_PAGES - 1) {
+      transition(() => setLayer2Page((p) => p + 1))
     } else {
-      // All 7 pages done
       if (!isLayer2Complete) return
       sessionStorage.removeItem('layer2Skipped')
       sessionStorage.removeItem('diagnosisPhase')
       sessionStorage.setItem('layer2Answers', JSON.stringify(layer2Answers))
       router.push('/result')
     }
-  }
-
-  // Store rating at the original option index (not display index)
-  const setSJTRating = (originalIdx: number, value: number) => {
-    setCurrentAnswer((prev) => {
-      const ratings = [...prev.sjtRatings]
-      ratings[originalIdx] = value
-      return { ...prev, sjtRatings: ratings }
-    })
   }
 
   const setAttribution = (qIdx: number, value: number) => {
@@ -330,23 +255,20 @@ export default function DiagnosisPage() {
     })
   }
 
-  const setLayer2Answer = (axis: 'A' | 'B' | 'C' | 'D', idx: number, value: number) => {
+  const setLayer2Answer = (globalIdx: number, value: number) => {
     setLayer2Answers((prev) => {
-      const key = `axis${axis}` as keyof Layer2Answers
-      const arr = [...prev[key]]
-      arr[idx] = value
-      const next = { ...prev, [key]: arr }
-      // Save partial PART2 progress for resume
+      const next = [...prev]
+      next[globalIdx] = value
       sessionStorage.setItem('layer2Answers', JSON.stringify(next))
       sessionStorage.setItem('diagnosisPhase', 'layer2')
       return next
     })
   }
 
-  // DEV ONLY: skip current scenario page (fill blanks with defaults and advance)
+  // DEV ONLY: skip current scenario page
   const handleDevSkipLayer1 = () => {
     const filledAnswer: ScenarioAnswer = {
-      sjtRatings: currentAnswer.sjtRatings.map((v) => (v === 0 ? 3 : v)),
+      scenarioId: scenarioIndex + 1,
       attributions: currentAnswer.attributions.map((v) => (v === 0 ? 4 : v)),
     }
     const newAnswers = [...scenarioAnswers, filledAnswer]
@@ -357,7 +279,7 @@ export default function DiagnosisPage() {
       transition(() => {
         setScenarioAnswers(newAnswers)
         setScenarioIndex((i) => i + 1)
-        setCurrentAnswer({ sjtRatings: [0, 0, 0, 0], attributions: [0, 0, 0] })
+        setCurrentAnswer({ scenarioId: scenarioIndex + 2, attributions: [0, 0, 0] })
       })
     } else {
       const OS = calculateOS(newAnswers)
@@ -377,17 +299,12 @@ export default function DiagnosisPage() {
     }
   }
 
-  // DEV ONLY: skip current layer2 page (fill all unset items with 3 and advance)
+  // DEV ONLY: skip current layer2 page
   const handleDevSkipLayer2 = () => {
-    const filled: Layer2Answers = {
-      axisA: layer2Answers.axisA.map((v) => (v === 0 ? 3 : v)),
-      axisB: layer2Answers.axisB.map((v) => (v === 0 ? 3 : v)),
-      axisC: layer2Answers.axisC.map((v) => (v === 0 ? 3 : v)),
-      axisD: layer2Answers.axisD.map((v) => (v === 0 ? 3 : v)),
-    }
+    const filled = layer2Answers.map((v) => (v === 0 ? 3 : v))
     setLayer2Answers(filled)
     sessionStorage.setItem('layer2Answers', JSON.stringify(filled))
-    if (layer2Page < 6) {
+    if (layer2Page < TOTAL_LAYER2_PAGES - 1) {
       transition(() => setLayer2Page((p) => p + 1))
     } else {
       sessionStorage.removeItem('layer2Skipped')
@@ -396,7 +313,6 @@ export default function DiagnosisPage() {
     }
   }
 
-  // Progress: 1 unit per page (scenario pages + layer2 pages = 12 total)
   const currentProgress =
     phase === 'layer1' ? scenarioIndex + 1 : scenarios.length + layer2Page + 1
 
@@ -415,7 +331,7 @@ export default function DiagnosisPage() {
             <span>
               {phase === 'layer1'
                 ? `シナリオ ${scenarioIndex + 1} / ${scenarios.length}`
-                : `パート2  ${layer2Page + 1} / 6 ページ`}
+                : `パート2  ${layer2Page + 1} / ${TOTAL_LAYER2_PAGES} ページ`}
             </span>
             <span>{Math.round((currentProgress / TOTAL_STEPS) * 100)}%</span>
           </div>
@@ -441,7 +357,7 @@ export default function DiagnosisPage() {
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
           }`}
         >
-          {/* PART1 — 1シナリオ1ページ（SJT4択＋帰属3問を7項目シャッフル表示） */}
+          {/* PART1 — 1シナリオ1ページ（帰属3問） */}
           {phase === 'layer1' && (
             <div className="space-y-6">
               {/* Scenario card */}
@@ -457,52 +373,20 @@ export default function DiagnosisPage() {
                 </p>
               </div>
 
-              {/* 2ブロック構成: SJT4問（内部シャッフル）→ 帰属3問（内部シャッフル） */}
+              {/* 帰属3問 */}
               <div className="bg-gray-800 rounded-2xl p-5 space-y-5">
-                {shuffledItems7[scenarioIndex].map((item, index) => {
-                  if (item.type === 'sjt') {
-                    const opt = scenario.sjtOptions[item.originalIdx]
-                    return (
-                      <div key={`sjt-${item.originalIdx}`}>
-                        {index === 0 && (
-                          <p className="text-sm text-gray-400 mb-3">この状況で、あなたならどうしますか？</p>
-                        )}
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-300">{opt.text}</p>
-                          <LikertRow5
-                            label={opt.label}
-                            value={currentAnswer.sjtRatings[item.originalIdx]}
-                            onChange={(v) => setSJTRating(item.originalIdx, v)}
-                            leftLabel="まったくしない"
-                            rightLabel="必ずする"
-                          />
-                        </div>
-                      </div>
-                    )
-                  } else {
-                    const attr = scenario.attributions[item.qIdx]
-                    return (
-                      <div key={`attr-${item.qIdx}`}>
-                        {index === 4 && (
-                          <>
-                            <div className="border-t border-dashed border-gray-600 my-6"></div>
-                            <p className="text-sm text-gray-400 mb-3">ここからは、この出来事をどう捉えたかについての質問です</p>
-                            <p className="text-sm text-gray-300 italic mb-3">💭 この出来事が起きた原因を1つ思い浮かべてください。</p>
-                          </>
-                        )}
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-300">{attr.question}</p>
-                          <LikertRow7
-                            leftLabel={attr.leftLabel}
-                            rightLabel={attr.rightLabel}
-                            value={currentAnswer.attributions[item.qIdx]}
-                            onChange={(v) => setAttribution(item.qIdx, v)}
-                          />
-                        </div>
-                      </div>
-                    )
-                  }
-                })}
+                <p className="text-sm text-gray-400">この出来事が起きた原因を1つ思い浮かべてください。</p>
+                {scenario.attributions.map((attr, qIdx) => (
+                  <div key={qIdx} className="space-y-2">
+                    <p className="text-sm text-gray-300">{attr.question}</p>
+                    <LikertRow7
+                      leftLabel={attr.leftLabel}
+                      rightLabel={attr.rightLabel}
+                      value={currentAnswer.attributions[qIdx]}
+                      onChange={(v) => setAttribution(qIdx, v)}
+                    />
+                  </div>
+                ))}
               </div>
 
               <button
@@ -519,7 +403,7 @@ export default function DiagnosisPage() {
             </div>
           )}
 
-          {/* DEV ONLY: fixed skip button — shown when ?dev=true */}
+          {/* DEV ONLY: fixed skip button */}
           {isDev && (
             <button
               onClick={phase === 'layer1' ? handleDevSkipLayer1 : handleDevSkipLayer2}
@@ -540,23 +424,22 @@ export default function DiagnosisPage() {
                   <span>1 = まったく当てはまらない</span>
                   <span>5 = 非常に当てはまる</span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1">{layer2Page + 1} / 7 ページ</p>
+                <p className="text-xs text-gray-600 mt-1">{layer2Page + 1} / {TOTAL_LAYER2_PAGES} ページ</p>
               </div>
 
-              {/* Current page questions (6 per page) */}
               <div className="bg-gray-800 rounded-2xl p-5 space-y-4">
-                {currentPageItems.map((item, displayIdx) => {
-                  const key = `axis${item.axis}` as keyof Layer2Answers
+                {currentPageQuestions.map((q, displayIdx) => {
+                  const globalIdx = currentPageStartIdx + displayIdx
                   return (
-                    <div key={item.id} className="space-y-2">
+                    <div key={q.id} className="space-y-2">
                       <p className="text-sm text-gray-300">
-                        <span className="text-gray-600 mr-1.5 text-xs">{layer2Page * 6 + displayIdx + 1}.</span>
-                        {item.text}
+                        <span className="text-gray-600 mr-1.5 text-xs">{globalIdx + 1}.</span>
+                        {q.text}
                       </p>
                       <LikertRow5
-                        label={item.id}
-                        value={layer2Answers[key][item.idx]}
-                        onChange={(v) => setLayer2Answer(item.axis, item.idx, v)}
+                        label={q.id}
+                        value={layer2Answers[globalIdx] ?? 0}
+                        onChange={(v) => setLayer2Answer(globalIdx, v)}
                       />
                     </div>
                   )
@@ -572,7 +455,7 @@ export default function DiagnosisPage() {
                     : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {layer2Page < 5 ? '次へ →' : '結果を見る →'}
+                {layer2Page < TOTAL_LAYER2_PAGES - 1 ? '次へ →' : '結果を見る →'}
               </button>
             </div>
           )}

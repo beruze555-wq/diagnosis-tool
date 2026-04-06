@@ -12,29 +12,23 @@ import {
 import {
   calculateScores,
   getOSDescription,
-  getAxisADescription,
-  getAxisBDescription,
-  getAxisCDescription,
-  getPersonalityType,
+  getSEDescription,
+  getPEDescription,
+  getESDescription,
+  getCIDescription,
+  getAMDescription,
   getPersonalityTypeKey,
+  PERSONALITY_TYPES,
   computeRiskIndicators,
-  getSJTBehaviorTendency,
   calculateDeepAnalysis,
   getEnvironmentFit,
-  getLearningAgilityDescription,
-  getSelfEfficacyDescription,
-  getAutonomousMotivationDescription,
-  getGrowthMindsetDescription,
-  getCrisisResponseDescription,
-  getTeamContributionDescription,
-  getCIDescription,
-  TAG_LABELS,
   EnvironmentFit,
 } from '@/lib/scoring'
 import { saveDiagnosisResult } from '@/lib/supabase'
-import { ScenarioAnswer, Layer2Answers, Scores, DeepAnalysis } from '@/types'
+import { ScenarioAnswer, DeepAnalysis } from '@/types'
 import { scenarios } from '@/lib/scenarios'
-import { layer2Sections } from '@/lib/layer2Questions'
+import { layer2Questions } from '@/lib/layer2Questions'
+import ChainFlow from './ChainFlow'
 
 // ─── Color helpers ─────────────────────────────────────────────────────────────
 
@@ -65,19 +59,16 @@ function ColorProgressBar({ score }: { score: number }) {
   return (
     <div className="mt-2 mb-1">
       <div className="relative flex items-center" style={{ height: '20px' }}>
-        {/* 4-color range bar */}
         <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-3 rounded-full overflow-hidden flex">
           {segments.map(s => (
             <div key={s.key} className={s.bg} style={{ width: s.width }} />
           ))}
         </div>
-        {/* Position marker */}
         <div
           className="absolute w-0.5 h-5 bg-white rounded-full shadow-md"
           style={{ left: `${score}%`, transform: 'translateX(-50%)' }}
         />
       </div>
-      {/* Segment labels */}
       <div className="relative mt-1" style={{ height: '16px' }}>
         {segments.map(s => (
           <span
@@ -98,12 +89,12 @@ function ColorProgressBar({ score }: { score: number }) {
 function ScoreSection({
   label,
   score,
-  paragraphs,
+  description,
   skipped,
 }: {
   label: string
   score: number
-  paragraphs: string[]
+  description: string
   skipped?: boolean
 }) {
   return (
@@ -117,9 +108,7 @@ function ScoreSection({
       </div>
       {!skipped && <ColorProgressBar score={score} />}
       {!skipped
-        ? paragraphs.map((p, i) => (
-            <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
-          ))
+        ? <p className="text-sm text-gray-300 leading-relaxed">{description}</p>
         : <p className="text-sm text-gray-500">未評価（パート1の結果によりスキップ）</p>
       }
     </div>
@@ -132,28 +121,19 @@ function DeepMetricCard({
   label,
   score,
   description,
-  isRef,
 }: {
   label: string
   score: number
   description: string
-  isRef?: boolean
 }) {
   return (
     <div className="bg-gray-800/60 rounded-xl p-4 space-y-2">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm font-medium text-gray-300">{label}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {isRef && (
-            <span className="text-xs text-gray-500">（行動パターンから推定）</span>
-          )}
-          <span className={`text-base font-bold ${scoreTextColor(score)}`}>
-            {score}
-            <span className="text-xs text-gray-400 font-normal"> / 100</span>
-          </span>
-        </div>
+        <span className="text-sm font-medium text-gray-300">{label}</span>
+        <span className={`text-base font-bold ${scoreTextColor(score)}`}>
+          {score}
+          <span className="text-xs text-gray-400 font-normal"> / 100</span>
+        </span>
       </div>
       <ColorProgressBar score={score} />
       <p className="text-xs text-gray-400 leading-relaxed">{description}</p>
@@ -169,36 +149,27 @@ function AnswerViewer({
   scores,
 }: {
   scenarioAnswers: ScenarioAnswer[]
-  layer2Answers?: Layer2Answers
-  scores: Scores
+  layer2Answers?: number[]
+  scores: { OS: number; SE: number; PE: number; ES: number; CI: number; AM: number }
 }) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const allData = {
-    scores: { OS: scores.OS, 粘り強さ: scores.A, 情緒安定性: scores.B, 達成動機: scores.C },
+    scores: { SE: scores.SE, PE: scores.PE, OS: scores.OS, ES: scores.ES, CI: scores.CI, AM: scores.AM },
     layer1: scenarioAnswers.map((ans, i) => ({
       scenarioId: i + 1,
       title: scenarios[i]?.title ?? `シナリオ${i + 1}`,
-      sjtRatings: scenarios[i]?.sjtOptions.map((opt, j) => ({
-        label: opt.label,
-        text: opt.text,
-        tags: opt.tags,
-        rating: ans.sjtRatings[j],
-      })) ?? ans.sjtRatings,
       attributions: ans.attributions,
     })),
-    layer2: layer2Sections.flatMap((s) =>
-      s.questions.map((q, idx) => ({
-        id: q.id,
-        axis: s.axis,
-        text: q.text,
-        source: q.source,
-        value: layer2Answers
-          ? (layer2Answers[`axis${s.axis}` as keyof Layer2Answers][idx] ?? 0)
-          : 0,
-      }))
-    ),
+    layer2: layer2Answers
+      ? layer2Questions.map((q, idx) => ({
+          id: q.id,
+          text: q.text,
+          source: q.source,
+          value: layer2Answers[idx] ?? 0,
+        }))
+      : [],
   }
 
   const handleCopy = () => {
@@ -220,12 +191,14 @@ function AnswerViewer({
         <div className="border-t border-gray-700 p-6 space-y-5">
           <div>
             <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">スコア</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-3 gap-2 text-sm">
               {[
-                { label: '楽観性', val: scores.OS },
-                { label: '粘り強さ', val: scores.A },
-                { label: '情緒安定性', val: scores.B },
-                { label: '達成動機', val: scores.C },
+                { label: 'SE', val: scores.SE },
+                { label: 'PE', val: scores.PE },
+                { label: 'OS', val: scores.OS },
+                { label: 'ES', val: scores.ES },
+                { label: 'CI', val: scores.CI },
+                { label: 'AM', val: scores.AM },
               ].map(({ label, val }) => (
                 <div key={label} className="bg-gray-900 rounded-lg p-2.5 flex justify-between">
                   <span className="text-gray-500">{label}</span>
@@ -241,19 +214,6 @@ function AnswerViewer({
                 {scenarioAnswers.map((ans, i) => (
                   <div key={i} className="bg-gray-900 rounded-lg p-3 text-xs space-y-1">
                     <p className="font-semibold text-gray-200">シナリオ{i + 1}：{scenarios[i]?.title}</p>
-                    <p className="text-gray-500">SJT (A/B/C/D)：{ans.sjtRatings.join(' / ')}</p>
-                    <div className="flex flex-wrap gap-1 mt-0.5">
-                      {scenarios[i]?.sjtOptions.flatMap((opt, j) =>
-                        (opt.tags ?? []).map((tag) => (
-                          <span
-                            key={`${j}-${tag}`}
-                            className="bg-gray-700/50 text-gray-300 text-xs px-2 py-0.5 rounded-full inline-block"
-                          >
-                            {TAG_LABELS[tag] ?? tag}
-                          </span>
-                        ))
-                      )}
-                    </div>
                     <p className="text-gray-500">帰属評定 (Q1/Q2/Q3)：{ans.attributions.join(' / ')}</p>
                   </div>
                 ))}
@@ -266,21 +226,16 @@ function AnswerViewer({
             <div>
               <h3 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Part 2 回答</h3>
               <div className="space-y-1">
-                {layer2Sections.flatMap((s) =>
-                  s.questions.map((q, idx) => {
-                    const val = layer2Answers[`axis${s.axis}` as keyof Layer2Answers][idx]
-                    return (
-                      <div key={q.id} className="flex items-start gap-2 text-xs bg-gray-900 rounded p-2">
-                        <span className="text-blue-400 font-mono w-6 shrink-0">{q.id}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-gray-400 leading-relaxed">{q.text}</p>
-                          <p className="text-gray-600 mt-0.5">{q.source}</p>
-                        </div>
-                        <span className="text-white font-bold shrink-0">{val}</span>
-                      </div>
-                    )
-                  })
-                )}
+                {layer2Questions.map((q, idx) => (
+                  <div key={q.id} className="flex items-start gap-2 text-xs bg-gray-900 rounded p-2">
+                    <span className="text-blue-400 font-mono w-8 shrink-0">{q.id}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-400 leading-relaxed">{q.text}</p>
+                      <p className="text-gray-600 mt-0.5">{q.source}</p>
+                    </div>
+                    <span className="text-white font-bold shrink-0">{layer2Answers[idx] ?? 0}</span>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -300,22 +255,13 @@ function AnswerViewer({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+type Scores = { SE: number; PE: number; OS: number; ES: number; CI: number; AM: number }
+
 export default function ResultPage() {
   const router = useRouter()
   const [scores, setScores] = useState<Scores | null>(null)
-  const [personalityType, setPersonalityType] = useState<{
-    name: string
-    icon: string
-    themeFrom: string
-    themeTo: string
-    paragraphs: string[]
-  } | null>(null)
-  const [behaviorTendency, setBehaviorTendency] = useState<{
-    label: string
-    topTags: [string, string]
-    tagCounts: Record<string, number>
-    description: string
-  } | null>(null)
+  const [personalityType, setPersonalityType] = useState<typeof PERSONALITY_TYPES[string] | null>(null)
+  const [typeKey, setTypeKey] = useState<string>('LLLL')
   const [deepAnalysis, setDeepAnalysis] = useState<DeepAnalysis | null>(null)
   const [environmentFit, setEnvironmentFit] = useState<EnvironmentFit | null>(null)
   const [layer2Skipped, setLayer2Skipped] = useState(false)
@@ -323,7 +269,7 @@ export default function ResultPage() {
   const [saveError, setSaveError] = useState(false)
   const [rawAnswers, setRawAnswers] = useState<{
     scenarioAnswers: ScenarioAnswer[]
-    layer2Answers?: Layer2Answers
+    layer2Answers?: number[]
   } | null>(null)
 
   useEffect(() => {
@@ -339,47 +285,33 @@ export default function ResultPage() {
     const devMode = sessionStorage.getItem('devMode') === 'true'
     const devScoresRaw = sessionStorage.getItem('devScores')
     if (devMode && devScoresRaw) {
-      const devScores = JSON.parse(devScoresRaw) as Scores
+      const devScores = JSON.parse(devScoresRaw) as { OS: number; SE: number; PE: number; ES: number }
       const devLayer2Raw = sessionStorage.getItem('layer2Answers')
-      const devLayer2: Layer2Answers | undefined = devLayer2Raw ? JSON.parse(devLayer2Raw) : undefined
-      setScores(devScores)
-      setEnvironmentFit(getEnvironmentFit(getPersonalityTypeKey(devScores.OS, devScores.A, devScores.B, devScores.C)))
-      setPersonalityType(getPersonalityType(devScores.OS, devScores.A, devScores.B, devScores.C))
-      setBehaviorTendency({
-        label: '主体的行動×分析的思考型',
-        topTags: ['proactive', 'analytical'],
-        tagCounts: {
-          proactive: 18,
-          analytical: 15,
-          'feedback-seeking': 10,
-          'team-oriented': 5,
-          'emotion-regulation': 8,
-          'help-seeking': 3,
-          avoidant: 4,
-          rigid: 6,
-        },
-        description: '（開発モード：ダミーデータ）',
-      })
-      if (devLayer2) {
-        setDeepAnalysis(calculateDeepAnalysis([], devLayer2))
-      } else {
-        setDeepAnalysis({
-          selfEfficacy: 73,
-          autonomousMotivation: 75,
-          growthMindset: 82,
-          learningAgility: 68,
-          crisisResponse: 71,
-          teamContribution: 65,
-          consistencyOfInterest: 58,
-        })
+      const devLayer2: number[] = devLayer2Raw
+        ? JSON.parse(devLayer2Raw)
+        : Array(34).fill(3)
+
+      const fullScores: Scores = {
+        OS: devScores.OS ?? 72,
+        SE: devScores.SE ?? 68,
+        PE: devScores.PE ?? 55,
+        ES: devScores.ES ?? 81,
+        CI: 0,
+        AM: 0,
       }
+      const key = getPersonalityTypeKey(fullScores.SE, fullScores.PE, fullScores.OS, fullScores.ES)
+      setScores(fullScores)
+      setTypeKey(key)
+      setPersonalityType(PERSONALITY_TYPES[key] ?? PERSONALITY_TYPES.LLLL)
+      setEnvironmentFit(getEnvironmentFit(key))
+      setDeepAnalysis(calculateDeepAnalysis(devLayer2))
       const devScenarioAnswers: ScenarioAnswer[] = [
-        { sjtRatings: [5, 4, 3, 1], attributions: [2, 2, 3] }, // S1: 30件全滅
-        { sjtRatings: [5, 4, 1, 2], attributions: [3, 2, 2] }, // S2: 企画全面却下
-        { sjtRatings: [4, 5, 1, 3], attributions: [2, 3, 2] }, // S3: 試合でミス
-        { sjtRatings: [5, 3, 1, 4], attributions: [3, 2, 3] }, // S4: 仲間の離脱
-        { sjtRatings: [5, 4, 1, 3], attributions: [2, 2, 2] }, // S5: 3ヶ月が白紙
-        { sjtRatings: [5, 4, 1, 3], attributions: [3, 2, 2] }, // S6: 置いていかれる
+        { scenarioId: 1, attributions: [2, 2, 3] },
+        { scenarioId: 2, attributions: [3, 2, 2] },
+        { scenarioId: 3, attributions: [2, 3, 2] },
+        { scenarioId: 4, attributions: [3, 2, 3] },
+        { scenarioId: 5, attributions: [2, 2, 2] },
+        { scenarioId: 6, attributions: [3, 2, 2] },
       ]
       setRawAnswers({ scenarioAnswers: devScenarioAnswers, layer2Answers: devLayer2 })
       setSaved(true)
@@ -391,65 +323,29 @@ export default function ResultPage() {
     const layer2Raw = sessionStorage.getItem('layer2Answers')
     const skipped = sessionStorage.getItem('layer2Skipped') === 'true' && !layer2Raw
 
-    // Normalize layer2 data: handle both {axisA:[...], ...} and flat [{id, axis, value}...] formats
-    function parseLayer2Answers(raw: string): Layer2Answers | undefined {
-      const parsed = JSON.parse(raw)
-      if (!parsed) return undefined
-      // Already in correct format
-      if (parsed.axisA && Array.isArray(parsed.axisA)) return parsed as Layer2Answers
-      // Flat array format: [{id:"A1", axis:"A", value:4}, ...]
-      if (Array.isArray(parsed)) {
-        const result: Layer2Answers = { axisA: [], axisB: [], axisC: [], axisD: [] }
-        const axisCounts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 }
-        const sorted = [...parsed].sort((a, b) => {
-          const numA = parseInt(a.id?.slice(1) ?? '0')
-          const numB = parseInt(b.id?.slice(1) ?? '0')
-          return numA - numB
-        })
-        for (const item of sorted) {
-          const axis = item.axis as 'A' | 'B' | 'C' | 'D'
-          if (!axis || !result[`axis${axis}` as keyof Layer2Answers]) continue
-          const key = `axis${axis}` as keyof Layer2Answers
-          result[key].push(item.value)
-          axisCounts[axis]++
-        }
-        return result
+    let layer2Answers: number[] | undefined
+    if (layer2Raw) {
+      const parsed = JSON.parse(layer2Raw)
+      if (Array.isArray(parsed) && typeof parsed[0] === 'number') {
+        layer2Answers = parsed
       }
-      return undefined
     }
-
-    const layer2Answers: Layer2Answers | undefined = layer2Raw ? parseLayer2Answers(layer2Raw) : undefined
 
     setLayer2Skipped(skipped)
     setRawAnswers({ scenarioAnswers, layer2Answers })
 
-    const calculated = calculateScores(scenarioAnswers, layer2Answers)
+    const calculated = calculateScores(scenarioAnswers, layer2Answers ?? [])
     setScores(calculated)
-    setBehaviorTendency(getSJTBehaviorTendency(scenarioAnswers))
 
-    let pType = getPersonalityType(0, 0, 0, 0)
-    let da: DeepAnalysis | null = null
-    let typeKey = 'LLLL'
+    const key = getPersonalityTypeKey(calculated.SE, calculated.PE, calculated.OS, calculated.ES)
+    setTypeKey(key)
+    setPersonalityType(PERSONALITY_TYPES[key] ?? PERSONALITY_TYPES.LLLL)
+    setEnvironmentFit(getEnvironmentFit(key))
 
-    if (!skipped && layer2Answers) {
-      pType = getPersonalityType(calculated.OS, calculated.A, calculated.B, calculated.C)
-      da = calculateDeepAnalysis(scenarioAnswers, layer2Answers)
-      typeKey = getPersonalityTypeKey(calculated.OS, calculated.A, calculated.B, calculated.C)
-    } else {
-      typeKey = getPersonalityTypeKey(calculated.OS, 0, 0, 0)
-    }
-
-    setPersonalityType(pType)
+    const da = (!skipped && layer2Answers) ? calculateDeepAnalysis(layer2Answers) : null
     setDeepAnalysis(da)
-    setEnvironmentFit(getEnvironmentFit(typeKey))
 
-    const aH = calculated.A >= 50
-    const bH = calculated.B >= 50
-    const zone = !skipped && layer2Answers
-      ? (aH && bH ? '実行者ゾーン' : aH && !bH ? '挑戦者ゾーン' : !aH && bH ? '安定者ゾーン' : '模索者ゾーン')
-      : ''
-
-    const riskIndicators = computeRiskIndicators(calculated.OS, calculated.A, calculated.B)
+    const riskIndicators = computeRiskIndicators(calculated.SE, calculated.PE, calculated.OS, calculated.ES)
 
     saveDiagnosisResult({
       age: userInfo.age,
@@ -457,12 +353,12 @@ export default function ResultPage() {
       scenarioAnswers,
       layer2Answers,
       osScore: calculated.OS,
-      axisA: calculated.A,
-      axisB: calculated.B,
-      axisC: calculated.C,
-      zone,
-      zone_id: typeKey,
-      personalityType: pType.name,
+      seScore: calculated.SE,
+      peScore: calculated.PE,
+      esScore: calculated.ES,
+      ciScore: calculated.CI,
+      amScore: calculated.AM,
+      typeCode: key,
       deepAnalysis: da ?? undefined,
       riskIndicators,
     })
@@ -470,7 +366,7 @@ export default function ResultPage() {
       .catch((err) => { console.error('診断結果の保存に失敗しました:', err); setSaveError(true) })
   }, [router])
 
-  if (!scores || !behaviorTendency || !rawAnswers || !environmentFit || !personalityType) {
+  if (!scores || !rawAnswers || !environmentFit || !personalityType) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-gray-400">結果を計算中...</div>
@@ -479,18 +375,13 @@ export default function ResultPage() {
   }
 
   const chartData = [
-    { axis: '楽観性', value: scores.OS },
-    { axis: '粘り強さ', value: scores.A },
-    { axis: '情緒安定性', value: scores.B },
-    { axis: '達成動機', value: scores.C },
+    { axis: '自己効力感', value: scores.SE },
+    { axis: '持続的努力', value: scores.PE },
+    { axis: '逆境解釈力', value: scores.OS },
+    { axis: '情緒安定性', value: scores.ES },
   ]
 
-  const axisCode = `楽観-${scores.OS >= 60 ? 'H' : 'L'} / A-${scores.A >= 60 ? 'H' : 'L'} / B-${scores.B >= 60 ? 'H' : 'L'} / C-${scores.C >= 60 ? 'H' : 'L'}`
-
-  // Tag badges: show non-zero tags sorted by count
-  const tagEntries = Object.entries(behaviorTendency.tagCounts)
-    .filter(([, v]) => v > 0)
-    .sort((a, b) => b[1] - a[1])
+  const axisCode = `SE-${scores.SE >= 60 ? 'H' : 'L'} / PE-${scores.PE >= 60 ? 'H' : 'L'} / OS-${scores.OS >= 60 ? 'H' : 'L'} / ES-${scores.ES >= 60 ? 'H' : 'L'}`
 
   return (
     <div className="min-h-screen bg-gray-900 pb-20">
@@ -504,19 +395,29 @@ export default function ResultPage() {
 
         {/* ① Personality type card */}
         <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
-          <div className={`h-2 bg-gradient-to-r ${personalityType.themeFrom} ${personalityType.themeTo}`} />
+          <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-500" />
           <div className="p-6 space-y-3">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">パーソナリティタイプ</p>
-            <div className="flex items-center gap-3">
-              <span className="text-4xl">{personalityType.icon}</span>
+            <div>
+              <h2 className="text-2xl font-bold text-white">{personalityType.name}</h2>
+              <p className="text-sm text-gray-400 mt-0.5">{personalityType.subtitle}</p>
+              <p className="text-xs text-gray-600 mt-0.5">{axisCode}</p>
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed">{personalityType.description}</p>
+            <div className="space-y-2 pt-1">
               <div>
-                <h2 className="text-2xl font-bold text-white">{personalityType.name}</h2>
-                <p className="text-xs text-gray-500 mt-0.5">{axisCode}</p>
+                <p className="text-xs font-medium text-emerald-400 mb-0.5">強み</p>
+                <p className="text-sm text-gray-300">{personalityType.strengths}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-orange-400 mb-0.5">注意点</p>
+                <p className="text-sm text-gray-300">{personalityType.weaknesses}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-blue-400 mb-0.5">アドバイス</p>
+                <p className="text-sm text-gray-300">{personalityType.advice}</p>
               </div>
             </div>
-            {personalityType.paragraphs.map((p, i) => (
-              <p key={i} className="text-sm text-gray-300 leading-relaxed">{p}</p>
-            ))}
             <button
               onClick={() => router.push('/types')}
               className="text-xs text-blue-400 hover:text-blue-300 transition-colors mt-1"
@@ -526,7 +427,10 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* ② Radar chart */}
+        {/* ② Chain Flow */}
+        <ChainFlow os={scores.OS} es={scores.ES} se={scores.SE} pe={scores.PE} />
+
+        {/* ③ Radar chart */}
         <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg">
           <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={chartData}>
@@ -544,27 +448,6 @@ export default function ResultPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* ③ Behavior tendency card */}
-        <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-3">
-          <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider">行動傾向</p>
-          <p className="text-xl font-bold text-white">{behaviorTendency.label}</p>
-          <div className="flex flex-wrap gap-1.5">
-            {tagEntries.map(([tag, count]) => (
-              <span
-                key={tag}
-                className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full"
-              >
-                {TAG_LABELS[tag] ?? tag}
-                <span className="text-gray-500 ml-1">{count}</span>
-              </span>
-            ))}
-          </div>
-          <p className="text-sm text-gray-300 leading-relaxed">{behaviorTendency.description}</p>
-          <a href="/types#behavior-tags" className="text-xs text-blue-400 hover:text-blue-300 transition-colors mt-1 inline-block">
-            全ての行動傾向タグを見る →
-          </a>
-        </div>
-
         {/* ④ Environment fit card */}
         <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
           <div className="h-2 bg-blue-500" />
@@ -572,9 +455,21 @@ export default function ResultPage() {
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">あなたに合う環境</p>
 
             <div>
+              <p className="text-sm font-semibold text-emerald-400 mb-2">✨ 力を発揮できる環境</p>
+              <ul className="space-y-1">
+                {environmentFit.idealEnvironment.map((item, i) => (
+                  <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
+                    <span className="text-emerald-400 mt-0.5 shrink-0">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
               <p className="text-sm font-semibold text-orange-400 mb-2">⚡ エネルギーを消耗しやすい環境</p>
               <ul className="space-y-1">
-                {environmentFit.drainEnvironments.map((item, i) => (
+                {environmentFit.stressors.map((item, i) => (
                   <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
                     <span className="text-orange-400 mt-0.5 shrink-0">•</span>
                     <span>{item}</span>
@@ -584,23 +479,11 @@ export default function ResultPage() {
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-blue-400 mb-2">🤝 あなたを活かすマネジメント</p>
+              <p className="text-sm font-semibold text-blue-400 mb-2">🌱 成長のためのアクション</p>
               <ul className="space-y-1">
-                {environmentFit.managementTips.map((item, i) => (
+                {environmentFit.copingStrategies.map((item, i) => (
                   <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
                     <span className="text-blue-400 mt-0.5 shrink-0">•</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-emerald-400 mb-2">🌱 成長のためのアクション</p>
-              <ul className="space-y-1">
-                {environmentFit.growthActions.map((item, i) => (
-                  <li key={i} className="text-sm text-gray-300 leading-relaxed flex gap-2">
-                    <span className="text-emerald-400 mt-0.5 shrink-0">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -609,32 +492,29 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* ⑤ Axis score cards */}
+        {/* ⑤ Axis score cards: SE → PE → OS → ES */}
         <div className="space-y-4">
           <ScoreSection
-            label="楽観性（ものごとの捉え方）"
+            label="自己効力感（Self-Efficacy）"
+            score={scores.SE}
+            description={getSEDescription(scores.SE)}
+            skipped={layer2Skipped}
+          />
+          <ScoreSection
+            label="持続的努力（Perseverance of Effort）"
+            score={scores.PE}
+            description={getPEDescription(scores.PE)}
+            skipped={layer2Skipped}
+          />
+          <ScoreSection
+            label="逆境解釈力（Explanatory Style）"
             score={scores.OS}
-            paragraphs={[
-              '嫌なことが起きたとき、それを一時的・限定的と捉えるか、永続的・全般的と捉えるかの傾向です。',
-              ...getOSDescription(scores.OS),
-            ]}
+            description={getOSDescription(scores.OS)}
           />
           <ScoreSection
-            label="粘り強さ（Grit）"
-            score={scores.A}
-            paragraphs={getAxisADescription(scores.A)}
-            skipped={layer2Skipped}
-          />
-          <ScoreSection
-            label="情緒安定性"
-            score={scores.B}
-            paragraphs={getAxisBDescription(scores.B)}
-            skipped={layer2Skipped}
-          />
-          <ScoreSection
-            label="達成動機"
-            score={scores.C}
-            paragraphs={getAxisCDescription(scores.C)}
+            label="情緒安定性（Emotional Stability）"
+            score={scores.ES}
+            description={getESDescription(scores.ES)}
             skipped={layer2Skipped}
           />
         </div>
@@ -643,58 +523,22 @@ export default function ResultPage() {
         {deepAnalysis && (
           <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-white">メンタルコア指標</h2>
+              <h2 className="text-base font-bold text-white">補助指標</h2>
               <span className="text-xs text-gray-500 bg-gray-900 px-2 py-0.5 rounded-full">リサーチベース</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
-              自己評価の回答パターンから算出した心理的資本の中核指標です。
+              自己評価の回答パターンから算出した補助的な心理指標です。
             </p>
             <DeepMetricCard
-              label="自己効力感（Self-Efficacy）"
-              score={deepAnalysis.selfEfficacy}
-              description={getSelfEfficacyDescription(deepAnalysis.selfEfficacy)}
-            />
-            <DeepMetricCard
-              label="自律的動機（Autonomous Motivation）"
+              label="自律的動機づけ（Autonomous Motivation）"
+              description={getAMDescription(deepAnalysis.autonomousMotivation)}
               score={deepAnalysis.autonomousMotivation}
-              description={getAutonomousMotivationDescription(deepAnalysis.autonomousMotivation)}
             />
             <DeepMetricCard
-              label="成長マインドセット（Growth Mindset）"
-              score={deepAnalysis.growthMindset}
-              description={getGrowthMindsetDescription(deepAnalysis.growthMindset)}
+              label="興味の一貫性（Consistency of Interests）"
+              description={getCIDescription(deepAnalysis.consistencyOfInterest)}
+              score={deepAnalysis.consistencyOfInterest}
             />
-
-            <div className="pt-2 border-t border-gray-700/50">
-              <p className="text-xs font-semibold text-gray-400 mb-3">行動傾向指標</p>
-              <p className="text-xs text-gray-500 mb-3">シナリオでのあなたの行動選択から推定した値です。自己評価スコアとは別の角度からの指標になります。</p>
-              <div className="space-y-3">
-                <DeepMetricCard
-                  label="学習敏捷性（Learning Agility）"
-                  score={deepAnalysis.learningAgility}
-                  description={getLearningAgilityDescription(deepAnalysis.learningAgility)}
-                  isRef
-                />
-                <DeepMetricCard
-                  label="危機対応力（Crisis Response）"
-                  score={deepAnalysis.crisisResponse}
-                  description={getCrisisResponseDescription(deepAnalysis.crisisResponse)}
-                  isRef
-                />
-                <DeepMetricCard
-                  label="チーム貢献力（Team Contribution）"
-                  score={deepAnalysis.teamContribution}
-                  description={getTeamContributionDescription(deepAnalysis.teamContribution)}
-                  isRef
-                />
-                <DeepMetricCard
-                  label="興味の一貫性（CI）"
-                  score={deepAnalysis.consistencyOfInterest}
-                  description={getCIDescription(deepAnalysis.consistencyOfInterest)}
-                  isRef
-                />
-              </div>
-            </div>
           </div>
         )}
 
