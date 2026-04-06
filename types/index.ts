@@ -13,6 +13,8 @@ export interface DiagnosisScores {
   PE: number
   OS: number
   ES: number
+  CI: number
+  AM: number
 }
 
 export interface DeepAnalysis {

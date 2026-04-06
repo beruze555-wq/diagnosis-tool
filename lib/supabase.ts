@@ -23,7 +23,9 @@ export async function saveDiagnosisResult(data: {
   deepAnalysis?: DeepAnalysis
   riskIndicators?: RiskIndicators
 }) {
-  if (!supabase) return
+  if (!supabase) {
+    throw new Error('Supabase client is not initialized. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.')
+  }
 
   const { error } = await supabase.from('diagnosis_results').insert([
     {
