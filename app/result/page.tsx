@@ -271,23 +271,35 @@ const REFERENCES = [
 ]
 
 function ReferencesMarquee() {
-  const items = [...REFERENCES, ...REFERENCES] // 2倍複製してシームレスループ
+  const items = [...REFERENCES, ...REFERENCES]
   return (
     <div className="py-4">
+      <style>{`
+        @keyframes marquee-scroll {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        .ref-track {
+          display: flex;
+          width: max-content;
+          animation: marquee-scroll 40s linear infinite;
+        }
+        .ref-track:hover { animation-play-state: paused; }
+      `}</style>
       <p className="text-center text-xs text-gray-600 mb-3 tracking-widest uppercase">References</p>
       <div className="overflow-hidden relative">
-        {/* フェードエッジ */}
-        <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-gray-900 to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-gray-900 to-transparent z-10 pointer-events-none" />
-        <div className="marquee-track gap-3">
+        <div className="absolute inset-y-0 left-0 w-10 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, #111827, transparent)' }} />
+        <div className="absolute inset-y-0 right-0 w-10 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, #111827, transparent)' }} />
+        <div className="ref-track">
           {items.map((ref, i) => (
             <div
               key={i}
-              className="shrink-0 bg-gray-800/50 border border-gray-700/40 rounded-xl px-4 py-3 mx-1.5 min-w-[220px]"
+              className="shrink-0 border rounded-xl px-4 py-3 mx-1.5"
+              style={{ minWidth: '220px', background: 'rgba(31,41,55,0.5)', borderColor: 'rgba(55,65,81,0.4)' }}
             >
-              <span className="block text-xs font-mono text-blue-400/80 mb-1">{ref.scale}</span>
-              <span className="block text-xs text-gray-300 leading-snug font-medium">{ref.cite}</span>
-              <span className="block text-xs text-gray-500 leading-snug mt-0.5">{ref.journal}</span>
+              <span className="block text-xs font-mono mb-1" style={{ color: 'rgba(96,165,250,0.8)' }}>{ref.scale}</span>
+              <span className="block text-xs leading-snug font-medium text-gray-300">{ref.cite}</span>
+              <span className="block text-xs leading-snug mt-0.5 text-gray-500">{ref.journal}</span>
             </div>
           ))}
         </div>
