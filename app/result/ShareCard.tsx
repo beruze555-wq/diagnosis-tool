@@ -27,7 +27,7 @@ export default function ShareCard({ typeName, tagline, scores }: ShareCardProps)
   const captureDataUrl = async (): Promise<string> => {
     const { toPng } = await import('html-to-image');
     return toPng(cardRef.current!, {
-      pixelRatio: 2,
+      pixelRatio: 1,
       backgroundColor: '#0a0a0a',
     });
   };
