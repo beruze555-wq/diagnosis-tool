@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import ReferencesMarquee from '@/components/ReferencesMarquee'
 
 const AFFILIATION_OPTIONS = [
   '大学1〜2年生',
@@ -217,6 +218,9 @@ export default function StartPage() {
           </button>
         </div>
       </section>
+
+      {/* 参考文献マーキー */}
+      <ReferencesMarquee />
 
       {/* セクション4: フッター */}
       <p className="text-center text-xs text-gray-600 mt-2 mb-3">結果はあなた自身のために使われます。</p>
