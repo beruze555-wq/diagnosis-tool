@@ -77,7 +77,7 @@ export default function StartPage() {
     sessionStorage.removeItem('devScores')
     sessionStorage.removeItem('layer2Skipped')
     sessionStorage.removeItem('diagnosisPhase')
-    sessionStorage.removeItem('resultSaved')
+    sessionStorage.setItem('resultSaved', 'true')  // dev: DB保存をスキップ
     sessionStorage.setItem('userInfo', JSON.stringify({ age: 21, affiliation: '大学3〜4年生' }))
     sessionStorage.setItem('scenarioAnswers', JSON.stringify([
       // 旧実データの帰属値（悲観的傾向あり）→ OS低め
