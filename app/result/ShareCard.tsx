@@ -1,5 +1,12 @@
 'use client';
 import { useRef } from 'react';
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  Radar,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface ShareCardProps {
   typeName: string;
@@ -9,6 +16,13 @@ interface ShareCardProps {
 
 export default function ShareCard({ typeName, tagline, scores }: ShareCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+
+  const radarData = [
+    { axis: '自己効力感', value: scores.SE },
+    { axis: '持続的努力', value: scores.PE },
+    { axis: '逆境解釈力', value: scores.OS },
+    { axis: '情緒安定性', value: scores.ES },
+  ];
 
   const handleDownload = async () => {
     if (!cardRef.current) return;
@@ -46,51 +60,61 @@ export default function ShareCard({ typeName, tagline, scores }: ShareCardProps)
     });
   };
 
-  const scoreItems = [
-    { label: 'SE', value: scores.SE, color: '#3b82f6' },
-    { label: 'PE', value: scores.PE, color: '#8b5cf6' },
-    { label: 'OS', value: scores.OS, color: '#f59e0b' },
-    { label: 'ES', value: scores.ES, color: '#10b981' },
-  ];
-
   return (
     <div className="mt-2">
       {/* シェアカード本体 */}
       <div
         ref={cardRef}
-        className="relative w-full max-w-md mx-auto p-8 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }}
+        className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)',
+          padding: '24px',
+        }}
       >
         {/* ロゴ */}
-        <div className="text-center mb-2">
-          <span className="text-xs tracking-widest text-gray-500 uppercase">MIRROR Mental Diagnosis</span>
+        <div className="text-center mb-0.5">
+          <span className="text-xl font-bold tracking-[0.2em] text-white">MIROR</span>
         </div>
 
-        {/* タイプ名 */}
-        <div className="text-center mb-4">
-          <h2 className="text-5xl font-bold text-white mb-2">{typeName}</h2>
-          <p className="text-sm text-gray-400 italic">{tagline}</p>
+        {/* サブタイトル */}
+        <div className="text-center mb-5">
+          <span className="text-[10px] text-gray-400 leading-relaxed">
+            6つのメタ分析と10万人超の研究データが映す、あなたの「折れない力」
+          </span>
         </div>
 
-        {/* スコアバー */}
-        <div className="space-y-3 mt-6">
-          {scoreItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-3">
-              <span className="text-xs font-mono text-gray-400 w-6">{item.label}</span>
-              <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${item.value}%`, backgroundColor: item.color }}
+        {/* メインコンテンツ: 左にタイプ名+タグライン、右にレーダー */}
+        <div className="flex items-center gap-3">
+          {/* 左: タイプ名 + タグライン（左寄せ） */}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-4xl font-bold text-white leading-tight">{typeName}</h2>
+            <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">{tagline}</p>
+          </div>
+
+          {/* 右: レーダーチャート */}
+          <div style={{ width: 160, height: 160, flexShrink: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={radarData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                <PolarGrid stroke="#374151" />
+                <PolarAngleAxis
+                  dataKey="axis"
+                  tick={{ fill: '#6b7280', fontSize: 8 }}
                 />
-              </div>
-              <span className="text-xs font-mono text-gray-400 w-8 text-right">{item.value}</span>
-            </div>
-          ))}
+                <Radar
+                  dataKey="value"
+                  stroke="#3b82f6"
+                  fill="#3b82f6"
+                  fillOpacity={0.3}
+                  strokeWidth={1.5}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* URL */}
-        <div className="text-center mt-6">
-          <span className="text-[10px] text-gray-600">diagnosis-tool-ori6.vercel.app</span>
+        {/* URL（右寄せ・余白に合わせて下配置） */}
+        <div className="text-right mt-4">
+          <span className="text-[9px] text-gray-600">diagnosis-tool-ori6.vercel.app</span>
         </div>
       </div>
 
