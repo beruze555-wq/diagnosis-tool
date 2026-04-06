@@ -7,7 +7,7 @@ import type { ScenarioAnswer } from '@/types'
 import TypeScatterMap from '@/components/TypeScatterMap'
 
 function axisCodeFromKey(key: string): string {
-  return `SE-${key[0]} / PE-${key[1]} / OS-${key[2]} / ES-${key[3]}`
+  return `SE:${key[0]} / PE:${key[1]} / OS:${key[2]} / ES:${key[3]}`
 }
 
 // Quadrant is determined by PE (key[1]) and ES (key[3])
@@ -250,16 +250,34 @@ export default function TypesPage() {
 
                           <div className="space-y-2">
                             <div>
-                              <p className="text-xs font-semibold text-emerald-400 mb-1">強み</p>
-                              <p className="text-xs text-gray-300 leading-relaxed">{type.strengths}</p>
+                              <p className="text-xs font-semibold text-emerald-400 mb-1">✦ 強み</p>
+                              <ul className="space-y-0.5">
+                                {type.strengths.map((s, si) => (
+                                  <li key={si} className="text-xs text-gray-300 flex gap-1.5">
+                                    <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
+                                    <span>{s}</span>
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                             <div>
-                              <p className="text-xs font-semibold text-orange-400 mb-1">注意点</p>
-                              <p className="text-xs text-gray-300 leading-relaxed">{type.weaknesses}</p>
+                              <p className="text-xs font-semibold text-orange-400 mb-1">⚠ 盲点</p>
+                              <ul className="space-y-0.5">
+                                {type.blindSpots.map((b, bi) => (
+                                  <li key={bi} className="text-xs text-gray-300 flex gap-1.5">
+                                    <span className="text-orange-500 shrink-0 mt-0.5">•</span>
+                                    <span>{b}</span>
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                             <div>
-                              <p className="text-xs font-semibold text-blue-400 mb-1">アドバイス</p>
-                              <p className="text-xs text-gray-300 leading-relaxed">{type.advice}</p>
+                              <p className="text-xs font-semibold text-red-400 mb-1">逆境時の行動パターン</p>
+                              <p className="text-xs text-gray-300 leading-relaxed">{type.underPressure}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-blue-400 mb-1">成長のヒント</p>
+                              <p className="text-xs text-gray-300 leading-relaxed">{type.growthTip}</p>
                             </div>
                           </div>
 

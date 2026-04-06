@@ -31,6 +31,7 @@ import { ScenarioAnswer, DeepAnalysis } from '@/types'
 import { scenarios } from '@/lib/scenarios'
 import { layer2Questions } from '@/lib/layer2Questions'
 import ChainFlow from './ChainFlow'
+import ShareCard from './ShareCard'
 
 // ─── Color helpers ─────────────────────────────────────────────────────────────
 
@@ -255,6 +256,49 @@ function AnswerViewer({
   )
 }
 
+// ─── Scenario Accordion ───────────────────────────────────────────────────────
+
+function ScenarioAccordion({ scenarios: sc }: { scenarios: { startup: string; teamLead: string; longProject: string } }) {
+  const [openKey, setOpenKey] = useState<string | null>(null)
+  const items = [
+    { key: 'startup',     icon: '🚀', label: 'スタートアップ初期', sub: '資金が底をつきかけた時',      content: sc.startup },
+    { key: 'teamLead',    icon: '👥', label: 'チームリーダー',      sub: 'メンバーが次々と辞めていく時', content: sc.teamLead },
+    { key: 'longProject', icon: '📊', label: '長期プロジェクト',    sub: '成果が見えない半年間',        content: sc.longProject },
+  ]
+  return (
+    <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
+      <div className="p-6 pb-3">
+        <h2 className="text-base font-bold text-white">あなたが直面する3つの場面</h2>
+        <p className="text-xs text-gray-500 mt-1">タップして展開</p>
+      </div>
+      <div className="divide-y divide-gray-700/50">
+        {items.map(item => (
+          <div key={item.key}>
+            <button
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-800/80 transition-colors"
+              onClick={() => setOpenKey(openKey === item.key ? null : item.key)}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">{item.icon}</span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-200">{item.label}</p>
+                  <p className="text-xs text-gray-500">{item.sub}</p>
+                </div>
+              </div>
+              <span className="text-gray-600 text-xs shrink-0">{openKey === item.key ? '▲' : '▼'}</span>
+            </button>
+            {openKey === item.key && (
+              <div className="px-6 pb-5">
+                <p className="text-sm text-gray-300 leading-relaxed">{item.content}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 type Scores = { SE: number; PE: number; OS: number; ES: number; CI: number; AM: number }
@@ -392,7 +436,7 @@ export default function ResultPage() {
     { axis: '情緒安定性', value: scores.ES },
   ]
 
-  const axisCode = `SE-${scores.SE >= 60 ? 'H' : 'L'} / PE-${scores.PE >= 60 ? 'H' : 'L'} / OS-${scores.OS >= 60 ? 'H' : 'L'} / ES-${scores.ES >= 60 ? 'H' : 'L'}`
+  const axisCode = `SE:${scores.SE >= 60 ? 'H' : 'L'} / PE:${scores.PE >= 60 ? 'H' : 'L'} / OS:${scores.OS >= 60 ? 'H' : 'L'} / ES:${scores.ES >= 60 ? 'H' : 'L'}`
 
   return (
     <div className="min-h-screen bg-gray-900 pb-20">
@@ -404,29 +448,48 @@ export default function ResultPage() {
           <h1 className="text-2xl font-bold text-white">あなたの診断結果</h1>
         </div>
 
-        {/* ① Personality type card */}
+        {/* 第1層: タイプアイデンティティ */}
         <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-500" />
-          <div className="p-6 space-y-3">
+          <div className="p-6 space-y-4">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">パーソナリティタイプ</p>
             <div>
-              <h2 className="text-2xl font-bold text-white">{personalityType.name}</h2>
-              <p className="text-sm text-gray-400 mt-0.5">{personalityType.subtitle}</p>
+              <h2 className="text-4xl font-bold text-white">{personalityType.name}</h2>
+              <p className="text-sm text-gray-300 mt-1.5 italic">{personalityType.tagline}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{personalityType.subtitle}</p>
               <p className="text-xs text-gray-600 mt-0.5">{axisCode}</p>
             </div>
-            <p className="text-sm text-gray-300 leading-relaxed">{personalityType.description}</p>
-            <div className="space-y-2 pt-1">
+            <p className="text-sm text-gray-300 leading-relaxed">{personalityType.story}</p>
+            <div className="space-y-3 pt-1">
               <div>
-                <p className="text-xs font-medium text-emerald-400 mb-0.5">強み</p>
-                <p className="text-sm text-gray-300">{personalityType.strengths}</p>
+                <p className="text-xs font-medium text-emerald-400 mb-1">✦ 強み</p>
+                <ul className="space-y-1">
+                  {personalityType.strengths.map((s, i) => (
+                    <li key={i} className="text-sm text-gray-300 flex gap-2">
+                      <span className="text-emerald-400 shrink-0 mt-0.5">•</span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div>
-                <p className="text-xs font-medium text-orange-400 mb-0.5">注意点</p>
-                <p className="text-sm text-gray-300">{personalityType.weaknesses}</p>
+                <p className="text-xs font-medium text-orange-400 mb-1">⚠ 盲点</p>
+                <ul className="space-y-1">
+                  {personalityType.blindSpots.map((b, i) => (
+                    <li key={i} className="text-sm text-gray-300 flex gap-2">
+                      <span className="text-orange-400 shrink-0 mt-0.5">•</span>
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div>
-                <p className="text-xs font-medium text-blue-400 mb-0.5">アドバイス</p>
-                <p className="text-sm text-gray-300">{personalityType.advice}</p>
+                <p className="text-xs font-medium text-red-400 mb-1">逆境時の行動パターン</p>
+                <p className="text-sm text-gray-300 leading-relaxed">{personalityType.underPressure}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-blue-400 mb-1">成長のヒント</p>
+                <p className="text-sm text-gray-300 leading-relaxed">{personalityType.growthTip}</p>
               </div>
             </div>
             <button
@@ -438,10 +501,16 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* ② Chain Flow */}
+        {/* ShareCard */}
+        <ShareCard
+          typeName={personalityType.name}
+          tagline={personalityType.tagline}
+          scores={{ SE: scores.SE, PE: scores.PE, OS: scores.OS, ES: scores.ES }}
+        />
+
+        {/* 第2層: スコア分析 */}
         <ChainFlow os={scores.OS} es={scores.ES} se={scores.SE} pe={scores.PE} />
 
-        {/* ③ Radar chart */}
         <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg">
           <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={chartData}>
@@ -459,7 +528,58 @@ export default function ResultPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* ④ Environment fit card */}
+        <div className="space-y-4">
+          <ScoreSection
+            label="自己効力感（Self-Efficacy）"
+            score={scores.SE}
+            description={getSEDescription(scores.SE)}
+            skipped={layer2Skipped}
+          />
+          <ScoreSection
+            label="持続的努力（Perseverance of Effort）"
+            score={scores.PE}
+            description={getPEDescription(scores.PE)}
+            skipped={layer2Skipped}
+          />
+          <ScoreSection
+            label="逆境解釈力（Explanatory Style）"
+            score={scores.OS}
+            description={getOSDescription(scores.OS)}
+          />
+          <ScoreSection
+            label="情緒安定性（Emotional Stability）"
+            score={scores.ES}
+            description={getESDescription(scores.ES)}
+            skipped={layer2Skipped}
+          />
+        </div>
+
+        {deepAnalysis && (
+          <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-white">補助指標</h2>
+              <span className="text-xs text-gray-500 bg-gray-900 px-2 py-0.5 rounded-full">リサーチベース</span>
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              自己評価の回答パターンから算出した補助的な心理指標です。
+            </p>
+            <DeepMetricCard
+              label="自律的動機づけ（Autonomous Motivation）"
+              description={getAMDescription(deepAnalysis.autonomousMotivation)}
+              score={deepAnalysis.autonomousMotivation}
+            />
+            <DeepMetricCard
+              label="興味の一貫性（Consistency of Interests）"
+              description={getCIDescription(deepAnalysis.consistencyOfInterest)}
+              score={deepAnalysis.consistencyOfInterest}
+            />
+          </div>
+        )}
+
+        {/* 第3層: 状況シミュレーション */}
+        <ScenarioAccordion scenarios={personalityType.scenarios} />
+
+        {/* 第4層: 環境適性 */}
         <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 shadow-lg overflow-hidden">
           <div className="h-2 bg-blue-500" />
           <div className="p-6 space-y-5">
@@ -503,57 +623,7 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* ⑤ Axis score cards: SE → PE → OS → ES */}
-        <div className="space-y-4">
-          <ScoreSection
-            label="自己効力感（Self-Efficacy）"
-            score={scores.SE}
-            description={getSEDescription(scores.SE)}
-            skipped={layer2Skipped}
-          />
-          <ScoreSection
-            label="持続的努力（Perseverance of Effort）"
-            score={scores.PE}
-            description={getPEDescription(scores.PE)}
-            skipped={layer2Skipped}
-          />
-          <ScoreSection
-            label="逆境解釈力（Explanatory Style）"
-            score={scores.OS}
-            description={getOSDescription(scores.OS)}
-          />
-          <ScoreSection
-            label="情緒安定性（Emotional Stability）"
-            score={scores.ES}
-            description={getESDescription(scores.ES)}
-            skipped={layer2Skipped}
-          />
-        </div>
-
-        {/* ⑥ Deep analysis section */}
-        {deepAnalysis && (
-          <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 shadow-lg space-y-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-white">補助指標</h2>
-              <span className="text-xs text-gray-500 bg-gray-900 px-2 py-0.5 rounded-full">リサーチベース</span>
-            </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              自己評価の回答パターンから算出した補助的な心理指標です。
-            </p>
-            <DeepMetricCard
-              label="自律的動機づけ（Autonomous Motivation）"
-              description={getAMDescription(deepAnalysis.autonomousMotivation)}
-              score={deepAnalysis.autonomousMotivation}
-            />
-            <DeepMetricCard
-              label="興味の一貫性（Consistency of Interests）"
-              description={getCIDescription(deepAnalysis.consistencyOfInterest)}
-              score={deepAnalysis.consistencyOfInterest}
-            />
-          </div>
-        )}
-
-        {/* ⑦ Answer viewer */}
+        {/* 回答データ */}
         <AnswerViewer
           scenarioAnswers={rawAnswers.scenarioAnswers}
           layer2Answers={rawAnswers.layer2Answers}
