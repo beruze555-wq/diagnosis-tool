@@ -77,12 +77,13 @@ export default function StartPage() {
     sessionStorage.removeItem('diagnosisPhase')
     sessionStorage.setItem('userInfo', JSON.stringify({ age: 21, affiliation: '大学3〜4年生' }))
     sessionStorage.setItem('scenarioAnswers', JSON.stringify([
-      { scenarioId: 1, attributions: [4, 5, 7] },
-      { scenarioId: 2, attributions: [4, 4, 4] },
-      { scenarioId: 3, attributions: [5, 5, 7] },
-      { scenarioId: 4, attributions: [1, 6, 3] },
-      { scenarioId: 5, attributions: [5, 5, 5] },
-      { scenarioId: 6, attributions: [3, 5, 7] },
+      // 楽観的帰属（低値=外的・一時的・限定的）→ OS高め
+      { scenarioId: 1, attributions: [2, 2, 3] },
+      { scenarioId: 2, attributions: [3, 2, 2] },
+      { scenarioId: 3, attributions: [2, 3, 2] },
+      { scenarioId: 4, attributions: [3, 2, 3] },
+      { scenarioId: 5, attributions: [2, 2, 2] },
+      { scenarioId: 6, attributions: [3, 3, 2] },
     ]))
     sessionStorage.setItem('layer2Answers', JSON.stringify([
       // SE(8): 高め
