@@ -192,6 +192,16 @@ export default function DiagnosisPage() {
     if (phase === 'layer2') {
       if (layer2Page > 0) {
         transition(() => setLayer2Page((p) => p - 1))
+      } else {
+        // layer2 最初のページ → layer1 最後のシナリオに戻る
+        const prevAnswers = scenarioAnswers.slice(0, -1)
+        const prevAnswer = scenarioAnswers[scenarioAnswers.length - 1]
+        transition(() => {
+          setCurrentAnswer(prevAnswer)
+          setScenarioAnswers(prevAnswers)
+          setScenarioIndex(scenarios.length - 1)
+          setPhase('layer1')
+        })
       }
     } else if (scenarioIndex > 0) {
       const prevAnswer = scenarioAnswers[scenarioIndex - 1]
@@ -336,18 +346,13 @@ export default function DiagnosisPage() {
             <span>{Math.round((currentProgress / TOTAL_STEPS) * 100)}%</span>
           </div>
           <ProgressBar current={currentProgress} total={TOTAL_STEPS} />
-          {isDev && (
-            <button
-              onClick={handleBack}
-              disabled={
-                (phase === 'layer1' && scenarioIndex === 0) ||
-                (phase === 'layer2' && layer2Page === 0)
-              }
-              className="mt-2 text-xs text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              ← 前のページに戻る
-            </button>
-          )}
+          <button
+            onClick={handleBack}
+            disabled={phase === 'layer1' && scenarioIndex === 0}
+            className="mt-2 text-xs text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            ← 前の質問に戻る
+          </button>
         </div>
       </div>
 

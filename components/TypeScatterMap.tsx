@@ -9,30 +9,31 @@ function axisCodeFromKey(key: string): string {
 }
 
 // Positions: key → { left%, top% }
-// ES axis = key[3]: ES-H → right half, ES-L → left half
-// PE axis = key[1]: PE-H → top half, PE-L → bottom half
-// Within quadrant: SE(key[0]) H/L = near/far from center, OS(key[2]) H/L = shape
+// Key format: SE(0)-PE(1)-OS(2)-ES(3), each H=1 / L=0
+// X (right=H): left = es*50 + se*25 + 12.5
+// Y (top=H):   top  = (1-pe)*50 + (1-os)*25 + 12.5
+// → HHHH lands at (87.5, 12.5) = most top-right; LLLL at (12.5, 87.5) = most bottom-left
 const TYPE_POSITIONS: Record<string, { left: number; top: number }> = {
   // Top-right (PE-H, ES-H) - blue / executor
-  HHHH: { left: 80, top: 16 },  // SE-H / OS-H
-  HHLH: { left: 80, top: 32 },  // SE-H / OS-L
-  LHHH: { left: 63, top: 16 },  // SE-L / OS-H
-  LHLH: { left: 63, top: 32 },  // SE-L / OS-L
+  HHHH: { left: 87.5, top: 12.5 },  // SE-H / OS-H
+  HHLH: { left: 87.5, top: 37.5 },  // SE-H / OS-L
+  LHHH: { left: 62.5, top: 12.5 },  // SE-L / OS-H
+  LHLH: { left: 62.5, top: 37.5 },  // SE-L / OS-L
   // Top-left (PE-H, ES-L) - amber / challenger
-  HHHL: { left: 37, top: 16 },  // SE-H / OS-H
-  HHLL: { left: 37, top: 32 },  // SE-H / OS-L
-  LHHL: { left: 20, top: 16 },  // SE-L / OS-H
-  LHLL: { left: 20, top: 32 },  // SE-L / OS-L
+  HHHL: { left: 37.5, top: 12.5 },  // SE-H / OS-H
+  HHLL: { left: 37.5, top: 37.5 },  // SE-H / OS-L
+  LHHL: { left: 12.5, top: 12.5 },  // SE-L / OS-H
+  LHLL: { left: 12.5, top: 37.5 },  // SE-L / OS-L
   // Bottom-right (PE-L, ES-H) - emerald / stable
-  HLHH: { left: 80, top: 63 },  // SE-H / OS-H
-  HLLH: { left: 80, top: 80 },  // SE-H / OS-L
-  LLHH: { left: 63, top: 63 },  // SE-L / OS-H
-  LLLH: { left: 63, top: 80 },  // SE-L / OS-L
+  HLHH: { left: 87.5, top: 62.5 },  // SE-H / OS-H
+  HLLH: { left: 87.5, top: 87.5 },  // SE-H / OS-L
+  LLHH: { left: 62.5, top: 62.5 },  // SE-L / OS-H
+  LLLH: { left: 62.5, top: 87.5 },  // SE-L / OS-L
   // Bottom-left (PE-L, ES-L) - rose / explorer
-  HLHL: { left: 37, top: 63 },  // SE-H / OS-H
-  HLLL: { left: 37, top: 80 },  // SE-H / OS-L
-  LLHL: { left: 20, top: 63 },  // SE-L / OS-H
-  LLLL: { left: 20, top: 80 },  // SE-L / OS-L
+  HLHL: { left: 37.5, top: 62.5 },  // SE-H / OS-H
+  HLLL: { left: 37.5, top: 87.5 },  // SE-H / OS-L
+  LLHL: { left: 12.5, top: 62.5 },  // SE-L / OS-H
+  LLLL: { left: 12.5, top: 87.5 },  // SE-L / OS-L
 }
 
 // SE(key[0]): H → large (72px), L → small (48px)
