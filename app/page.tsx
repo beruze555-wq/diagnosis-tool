@@ -219,11 +219,11 @@ export default function StartPage() {
         </div>
       </section>
 
-      {/* 参考文献マーキー */}
-      <ReferencesMarquee />
-
       {/* セクション4: フッター */}
       <p className="text-center text-xs text-gray-600 mt-2 mb-3">結果はあなた自身のために使われます。</p>
+
+      {/* 参考文献マーキー */}
+      <ReferencesMarquee />
       <div className="text-center mb-8">
         <a href="/about" className="text-xs text-gray-500 hover:text-gray-400 transition-colors">
           この診断の学術的背景について →
