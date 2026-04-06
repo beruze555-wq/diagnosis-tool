@@ -184,7 +184,7 @@ export default function AboutPage() {
           <div className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
           <div className="p-6 space-y-5">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">採用担当者・経営者の方へ</p>
-            <h2 className="text-base font-bold text-white">この診断結果の読み方</h2>
+            <h2 className="text-2xl font-bold text-white tracking-tight">診断結果の読み方</h2>
             <p className="text-sm text-gray-300 leading-relaxed">
               MIRORの4軸は「逆境下での持続力」を構成する要素です。採用やチーム編成において、以下の視点で活用できます。
             </p>
