@@ -508,6 +508,17 @@ export default function ResultPage() {
           scores={{ SE: scores.SE, PE: scores.PE, OS: scores.OS, ES: scores.ES }}
         />
 
+        {/* セクション見出し: 詳細分析 */}
+        <div className="text-center pt-6 pb-2 space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent" />
+            <span className="text-xs text-gray-500 tracking-widest uppercase">Detailed Analysis</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent" />
+          </div>
+          <h2 className="text-lg font-bold text-white">科学的根拠に基づいた詳しい分析</h2>
+          <p className="text-xs text-gray-500">あなたの回答データから導き出された、各指標の詳細レポート</p>
+        </div>
+
         {/* 第2層: スコア分析 */}
         <ChainFlow os={scores.OS} es={scores.ES} se={scores.SE} pe={scores.PE} />
 
