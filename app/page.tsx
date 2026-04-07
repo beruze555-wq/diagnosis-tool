@@ -72,26 +72,6 @@ export default function StartPage() {
     router.push(isDev ? '/diagnosis?dev=true' : '/diagnosis')
   }
 
-  const handleKoizumiRestart = () => {
-    // 小泉さん: layer2がバグでスキップされた → layer1データを復元してlayer2から再開
-    sessionStorage.removeItem('devMode')
-    sessionStorage.removeItem('devScores')
-    sessionStorage.removeItem('layer2Skipped')
-    sessionStorage.removeItem('layer2Answers')
-    sessionStorage.removeItem('resultSaved')
-    sessionStorage.setItem('userInfo', JSON.stringify({ age: 0, affiliation: 'recovery' }))
-    sessionStorage.setItem('diagnosisPhase', 'layer2')
-    sessionStorage.setItem('scenarioAnswers', JSON.stringify([
-      { scenarioId: 1, attributions: [4, 1, 7] },
-      { scenarioId: 2, attributions: [7, 7, 7] },
-      { scenarioId: 3, attributions: [7, 7, 7] },
-      { scenarioId: 4, attributions: [1, 1, 7] },
-      { scenarioId: 5, attributions: [6, 7, 7] },
-      { scenarioId: 6, attributions: [7, 7, 7] },
-    ]))
-    router.push('/diagnosis')
-  }
-
   const handleMoritaData = () => {
     sessionStorage.removeItem('devMode')
     sessionStorage.removeItem('devScores')
@@ -250,17 +230,6 @@ export default function StartPage() {
         <a href="/about" className="text-xs text-gray-500 hover:text-gray-400 transition-colors">
           この診断の学術的背景について →
         </a>
-      </div>
-
-      {/* 小泉さん救済ボタン: layer2スキップバグの復旧用 */}
-      <div className="max-w-lg mx-auto px-4 pb-4">
-        <button
-          onClick={handleKoizumiRestart}
-          className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-600/50 text-purple-400 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
-        >
-          小泉さん専用：パート2からやり直す
-        </button>
-        <p className="text-xs text-gray-600 mt-1 text-center">パート1の回答はそのまま引き継がれます</p>
       </div>
 
       {/* セクション5: 開発モード（URLクエリ ?dev=true が必要） */}
