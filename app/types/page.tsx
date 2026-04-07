@@ -23,7 +23,8 @@ const QUADRANTS = [
     dotColor: 'bg-blue-500',
     cardBorder: 'border-blue-700/40',
     chipBg: 'bg-blue-900/50 text-blue-300',
-    keys: ['HHHH', 'HHLH', 'LHHH', 'LHLH'],
+    // 2×2 grid: [TL, TR, BL, BR] — SE→右, OS→上
+    keys: ['LHHH', 'HHHH', 'LHLH', 'HHLH'],
   },
   {
     id: 'challenger',
@@ -35,7 +36,7 @@ const QUADRANTS = [
     dotColor: 'bg-amber-500',
     cardBorder: 'border-amber-700/40',
     chipBg: 'bg-amber-900/50 text-amber-300',
-    keys: ['HHHL', 'HHLL', 'LHHL', 'LHLL'],
+    keys: ['LHHL', 'HHHL', 'LHLL', 'HHLL'],
   },
   {
     id: 'stable',
@@ -47,7 +48,7 @@ const QUADRANTS = [
     dotColor: 'bg-emerald-500',
     cardBorder: 'border-emerald-700/40',
     chipBg: 'bg-emerald-900/50 text-emerald-300',
-    keys: ['HLHH', 'HLLH', 'LLHH', 'LLLH'],
+    keys: ['LLHH', 'HLHH', 'LLLH', 'HLLH'],
   },
   {
     id: 'explorer',
@@ -59,7 +60,7 @@ const QUADRANTS = [
     dotColor: 'bg-rose-500',
     cardBorder: 'border-rose-700/40',
     chipBg: 'bg-rose-900/50 text-rose-300',
-    keys: ['HLHL', 'HLLL', 'LLHL', 'LLLL'],
+    keys: ['LLHL', 'HLHL', 'LLLL', 'HLLL'],
   },
 ]
 
