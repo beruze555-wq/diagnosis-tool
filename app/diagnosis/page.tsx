@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { scenarios } from '@/lib/scenarios'
 import { layer2Questions } from '@/lib/layer2Questions'
-import { calculateOS } from '@/lib/scoring'
+
 import { ScenarioAnswer } from '@/types'
 
 const QUESTIONS_PER_PAGE = 6
@@ -227,20 +227,13 @@ export default function DiagnosisPage() {
         setCurrentAnswer({ scenarioId: scenarioIndex + 2, attributions: [0, 0, 0] })
       })
     } else {
-      const OS = calculateOS(newAnswers)
       sessionStorage.setItem('scenarioAnswers', JSON.stringify(newAnswers))
-      if (OS < 35) {
-        sessionStorage.setItem('layer2Skipped', 'true')
-        sessionStorage.removeItem('diagnosisPhase')
-        router.push('/result')
-      } else {
-        sessionStorage.removeItem('layer2Skipped')
-        sessionStorage.setItem('diagnosisPhase', 'layer2')
-        transition(() => {
-          setScenarioAnswers(newAnswers)
-          setPhase('layer2')
-        })
-      }
+      sessionStorage.removeItem('layer2Skipped')
+      sessionStorage.setItem('diagnosisPhase', 'layer2')
+      transition(() => {
+        setScenarioAnswers(newAnswers)
+        setPhase('layer2')
+      })
     }
   }
 
@@ -292,20 +285,13 @@ export default function DiagnosisPage() {
         setCurrentAnswer({ scenarioId: scenarioIndex + 2, attributions: [0, 0, 0] })
       })
     } else {
-      const OS = calculateOS(newAnswers)
       sessionStorage.setItem('scenarioAnswers', JSON.stringify(newAnswers))
-      if (OS < 35) {
-        sessionStorage.setItem('layer2Skipped', 'true')
-        sessionStorage.removeItem('diagnosisPhase')
-        router.push('/result')
-      } else {
-        sessionStorage.removeItem('layer2Skipped')
-        sessionStorage.setItem('diagnosisPhase', 'layer2')
-        transition(() => {
-          setScenarioAnswers(newAnswers)
-          setPhase('layer2')
-        })
-      }
+      sessionStorage.removeItem('layer2Skipped')
+      sessionStorage.setItem('diagnosisPhase', 'layer2')
+      transition(() => {
+        setScenarioAnswers(newAnswers)
+        setPhase('layer2')
+      })
     }
   }
 
