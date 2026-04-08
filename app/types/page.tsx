@@ -153,37 +153,59 @@ export default function TypesPage() {
 
         {/* Mobile: 4-quadrant card list */}
         <div className="md:hidden">
-          <div className="flex justify-between text-xs text-gray-500 mb-1 px-1">
-            <span>← ES LOW（感情の波）</span>
-            <span>ES HIGH（情緒安定）→</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {MAP_GRID.map((q) => (
-              <div key={q.id} className={`rounded-xl p-3 border ${q.bgClass}`}>
-                <p className={`text-xs font-bold leading-tight mb-2 ${q.headerColor}`}>{q.label}</p>
-                <div className="grid grid-cols-2 gap-1">
-                  {q.keys.map((key) => {
-                    const type = PERSONALITY_TYPES[key]
-                    if (!type) return null
-                    const isUser = key === userTypeKey
-                    return (
-                      <a
-                        key={key}
-                        href="#personality-types"
-                        onClick={() => setExpandedKey(key)}
-                        className={`flex items-center gap-1 px-1.5 py-1 rounded-lg text-[10px] leading-tight ${q.chipBg} ${isUser ? 'ring-1 ring-white' : ''}`}
-                      >
-                        <span className="font-medium truncate">{type.name}</span>
-                      </a>
-                    )
-                  })}
+          <div className="relative">
+            {/* Top axis label */}
+            <div className="text-center text-xs text-gray-400 mb-1">持続的努力 ↑</div>
+
+            <div className="flex items-center gap-1">
+              {/* Left axis label */}
+              <div className="text-[10px] text-gray-400 whitespace-nowrap shrink-0 -rotate-90 origin-center w-4">
+                ← 感情の波
+              </div>
+
+              {/* Grid with cross lines */}
+              <div className="relative flex-1">
+                {/* Cross lines */}
+                <div className="absolute inset-0 pointer-events-none z-10">
+                  <div className="absolute top-1/2 left-0 right-0 border-t border-dashed border-gray-400 opacity-30" />
+                  <div className="absolute left-1/2 top-0 bottom-0 border-l border-dashed border-gray-400 opacity-30" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5">
+                  {MAP_GRID.map((q) => (
+                    <div key={q.id} className={`rounded-xl p-3 border ${q.bgClass}`}>
+                      <p className={`text-xs font-bold leading-tight mb-2 ${q.headerColor}`}>{q.label}</p>
+                      <div className="grid grid-cols-2 gap-1">
+                        {q.keys.map((key) => {
+                          const type = PERSONALITY_TYPES[key]
+                          if (!type) return null
+                          const isUser = key === userTypeKey
+                          return (
+                            <a
+                              key={key}
+                              href="#personality-types"
+                              onClick={() => setExpandedKey(key)}
+                              className={`flex items-center gap-1 px-1.5 py-1 rounded-lg text-[10px] leading-tight ${q.chipBg} ${isUser ? 'ring-1 ring-white' : ''}`}
+                            >
+                              <span className="font-medium truncate">{type.name}</span>
+                            </a>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+
+              {/* Right axis label */}
+              <div className="text-[10px] text-gray-400 whitespace-nowrap shrink-0 rotate-90 origin-center w-4">
+                情緒安定 →
+              </div>
+            </div>
+
+            {/* Bottom axis label */}
+            <div className="text-center text-xs text-gray-400 mt-1">↓ 低持久</div>
           </div>
-          <p className="text-[10px] text-gray-600 mt-1 px-1">
-            ↑ 上段：PE HIGH（持続的努力高）　下段：PE LOW（低持久）↓
-          </p>
         </div>
 
         {/* マップの読み方 */}
