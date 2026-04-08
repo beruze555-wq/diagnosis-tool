@@ -155,56 +155,53 @@ export default function TypesPage() {
         <div className="md:hidden">
           <div className="relative">
             {/* Top axis label */}
-            <div className="text-center text-xs text-gray-400 mb-1">持続的努力 ↑</div>
+            <div className="text-center text-[10px] text-gray-400 mb-1">持続的努力 ↑</div>
 
-            <div className="flex items-center gap-1">
+            {/* Grid with cross lines + side labels */}
+            <div className="relative">
+              {/* Cross lines */}
+              <div className="absolute inset-0 pointer-events-none z-10">
+                <div className="absolute top-1/2 left-0 right-0 border-t border-dashed border-gray-400 opacity-30" />
+                <div className="absolute left-1/2 top-0 bottom-0 border-l border-dashed border-gray-400 opacity-30" />
+              </div>
+
               {/* Left axis label */}
-              <div className="text-[10px] text-gray-400 whitespace-nowrap shrink-0 -rotate-90 origin-center w-4">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 text-[10px] text-gray-400 whitespace-nowrap pl-1">
                 ← 感情の波
               </div>
-
-              {/* Grid with cross lines */}
-              <div className="relative flex-1">
-                {/* Cross lines */}
-                <div className="absolute inset-0 pointer-events-none z-10">
-                  <div className="absolute top-1/2 left-0 right-0 border-t border-dashed border-gray-400 opacity-30" />
-                  <div className="absolute left-1/2 top-0 bottom-0 border-l border-dashed border-gray-400 opacity-30" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-1.5">
-                  {MAP_GRID.map((q) => (
-                    <div key={q.id} className={`rounded-xl p-3 border ${q.bgClass}`}>
-                      <p className={`text-xs font-bold leading-tight mb-2 ${q.headerColor}`}>{q.label}</p>
-                      <div className="grid grid-cols-2 gap-1">
-                        {q.keys.map((key) => {
-                          const type = PERSONALITY_TYPES[key]
-                          if (!type) return null
-                          const isUser = key === userTypeKey
-                          return (
-                            <a
-                              key={key}
-                              href="#personality-types"
-                              onClick={() => setExpandedKey(key)}
-                              className={`flex items-center gap-1 px-1.5 py-1 rounded-lg text-[10px] leading-tight ${q.chipBg} ${isUser ? 'ring-1 ring-white' : ''}`}
-                            >
-                              <span className="font-medium truncate">{type.name}</span>
-                            </a>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {/* Right axis label */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 z-20 text-[10px] text-gray-400 whitespace-nowrap pr-1">
+                情緒安定 →
               </div>
 
-              {/* Right axis label */}
-              <div className="text-[10px] text-gray-400 whitespace-nowrap shrink-0 rotate-90 origin-center w-4">
-                情緒安定 →
+              <div className="grid grid-cols-2 gap-1.5">
+                {MAP_GRID.map((q) => (
+                  <div key={q.id} className={`rounded-xl p-3 border ${q.bgClass}`}>
+                    <p className={`text-xs font-bold leading-tight mb-2 ${q.headerColor}`}>{q.label}</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {q.keys.map((key) => {
+                        const type = PERSONALITY_TYPES[key]
+                        if (!type) return null
+                        const isUser = key === userTypeKey
+                        return (
+                          <a
+                            key={key}
+                            href="#personality-types"
+                            onClick={() => setExpandedKey(key)}
+                            className={`flex items-center gap-1 px-1.5 py-1 rounded-lg text-[10px] leading-tight ${q.chipBg} ${isUser ? 'ring-1 ring-white' : ''}`}
+                          >
+                            <span className="font-medium truncate">{type.name}</span>
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Bottom axis label */}
-            <div className="text-center text-xs text-gray-400 mt-1">↓ 低持久</div>
+            <div className="text-center text-[10px] text-gray-400 mt-1">↓ 低持久</div>
           </div>
         </div>
 
