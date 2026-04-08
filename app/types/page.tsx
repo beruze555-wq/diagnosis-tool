@@ -10,55 +10,62 @@ function axisCodeFromKey(key: string): string {
   return `SE:${key[0]} / PE:${key[1]} / OS:${key[2]} / ES:${key[3]}`
 }
 
-// Quadrant is determined by PE (key[1]) and ES (key[3])
-// Display order: ビジネス適性順 (Barrick & Mount 1991)
+// Quadrant style derived from PE (key[1]) and ES (key[3])
+const QUADRANT_STYLES: Record<string, { label: string; headerColor: string; dotColor: string; cardBorder: string; chipBg: string; bgClass: string }> = {
+  'HH': { label: '実行者ゾーン', headerColor: 'text-blue-400', dotColor: 'bg-blue-500', cardBorder: 'border-blue-700/40', chipBg: 'bg-blue-900/50 text-blue-300', bgClass: 'bg-blue-950/40 border-blue-700/50' },
+  'HL': { label: '挑戦者ゾーン', headerColor: 'text-amber-400', dotColor: 'bg-amber-500', cardBorder: 'border-amber-700/40', chipBg: 'bg-amber-900/50 text-amber-300', bgClass: 'bg-amber-950/40 border-amber-700/50' },
+  'LH': { label: '安定者ゾーン', headerColor: 'text-emerald-400', dotColor: 'bg-emerald-500', cardBorder: 'border-emerald-700/40', chipBg: 'bg-emerald-900/50 text-emerald-300', bgClass: 'bg-emerald-950/40 border-emerald-700/50' },
+  'LL': { label: '模索者ゾーン', headerColor: 'text-rose-400', dotColor: 'bg-rose-500', cardBorder: 'border-rose-700/40', chipBg: 'bg-rose-900/50 text-rose-300', bgClass: 'bg-rose-950/40 border-rose-700/50' },
+}
+
+function getQuadrantStyle(key: string) {
+  return QUADRANT_STYLES[`${key[1]}${key[3]}`]!
+}
+
+// Vertical order: Y axis (PE main + OS sub) top→bottom, then X axis (ES main + SE sub) right→left
+// 将軍(HHHH) at top, 種火(LLLL) at bottom
+const SORTED_KEYS = [
+  'HHHH', 'LHHH', 'HHHL', 'LHHL',  // PE-H / OS-H
+  'HHLH', 'LHLH', 'HHLL', 'LHLL',  // PE-H / OS-L
+  'HLHH', 'LLHH', 'HLHL', 'LLHL',  // PE-L / OS-H
+  'HLLH', 'LLLH', 'HLLL', 'LLLL',  // PE-L / OS-L
+]
+
+// Quadrants for mobile map grid
 const QUADRANTS = [
   {
     id: 'executor',
     label: '実行者ゾーン',
-    subLabel: '持続 × 安定 — 多くの環境で力を発揮',
     position: 'PE-H / ES-H',
     bgClass: 'bg-blue-950/40 border-blue-700/50',
     headerColor: 'text-blue-400',
-    dotColor: 'bg-blue-500',
-    cardBorder: 'border-blue-700/40',
     chipBg: 'bg-blue-900/50 text-blue-300',
-    // 2×2 grid: [TL, TR, BL, BR] — SE→右, OS→上
     keys: ['LHHH', 'HHHH', 'LHLH', 'HHLH'],
   },
   {
     id: 'challenger',
     label: '挑戦者ゾーン',
-    subLabel: '感情の波を力に変え、困難に立ち向かう',
     position: 'PE-H / ES-L',
     bgClass: 'bg-amber-950/40 border-amber-700/50',
     headerColor: 'text-amber-400',
-    dotColor: 'bg-amber-500',
-    cardBorder: 'border-amber-700/40',
     chipBg: 'bg-amber-900/50 text-amber-300',
     keys: ['LHHL', 'HHHL', 'LHLL', 'HHLL'],
   },
   {
     id: 'stable',
     label: '安定者ゾーン',
-    subLabel: '心の安定を活かし、自分に合う場所で輝く',
     position: 'PE-L / ES-H',
     bgClass: 'bg-emerald-950/40 border-emerald-700/50',
     headerColor: 'text-emerald-400',
-    dotColor: 'bg-emerald-500',
-    cardBorder: 'border-emerald-700/40',
     chipBg: 'bg-emerald-900/50 text-emerald-300',
     keys: ['LLHH', 'HLHH', 'LLLH', 'HLLH'],
   },
   {
     id: 'explorer',
     label: '模索者ゾーン',
-    subLabel: '試行錯誤の中で、自分だけの道を見つける',
     position: 'PE-L / ES-L',
     bgClass: 'bg-rose-950/40 border-rose-700/50',
     headerColor: 'text-rose-400',
-    dotColor: 'bg-rose-500',
-    cardBorder: 'border-rose-700/40',
     chipBg: 'bg-rose-900/50 text-rose-300',
     keys: ['LLHL', 'HLHL', 'LLLL', 'HLLL'],
   },
@@ -66,10 +73,10 @@ const QUADRANTS = [
 
 // Map grid order: [top-left, top-right, bottom-left, bottom-right]
 const MAP_GRID = [
-  QUADRANTS.find(q => q.id === 'challenger')!,  // top-left  (PE-H/ES-L)
-  QUADRANTS.find(q => q.id === 'executor')!,    // top-right (PE-H/ES-H)
-  QUADRANTS.find(q => q.id === 'explorer')!,    // bottom-left (PE-L/ES-L)
-  QUADRANTS.find(q => q.id === 'stable')!,      // bottom-right (PE-L/ES-H)
+  QUADRANTS.find(q => q.id === 'challenger')!,
+  QUADRANTS.find(q => q.id === 'executor')!,
+  QUADRANTS.find(q => q.id === 'explorer')!,
+  QUADRANTS.find(q => q.id === 'stable')!,
 ]
 
 export default function TypesPage() {
@@ -205,126 +212,118 @@ export default function TypesPage() {
           </p>
         </div>
 
-        {/* 16 type cards grouped by quadrant */}
-        <div className="space-y-8" id="personality-types">
+        {/* 16 type cards — vertical list sorted by axis position (top→bottom) */}
+        <div className="space-y-3" id="personality-types">
           <h2 className="text-base font-bold text-white">16タイプ 詳細</h2>
 
-          {QUADRANTS.map((q) => (
-            <div key={q.id} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${q.dotColor}`} />
-                <h3 className={`text-sm font-bold ${q.headerColor}`}>{q.label}</h3>
-                <span className="text-xs text-gray-600">{q.position}</span>
-              </div>
+          {SORTED_KEYS.map((key) => {
+            const type = PERSONALITY_TYPES[key]
+            const fit = getEnvironmentFit(key)
+            const q = getQuadrantStyle(key)
+            if (!type) return null
+            const isExpanded = expandedKey === key
+            const isUser = key === userTypeKey
+            return (
+              <div
+                key={key}
+                className={`bg-gray-800/50 rounded-xl border ${q.cardBorder} overflow-hidden ${isUser ? 'ring-1 ring-white' : ''}`}
+              >
+                <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500" />
+                <div
+                  className="p-4 cursor-pointer"
+                  onClick={() => setExpandedKey(isExpanded ? null : key)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${q.dotColor}`} />
+                        <p className="text-sm font-bold text-white">{type.name}</p>
+                        {isUser && <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded-full">あなた</span>}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{type.subtitle}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{axisCodeFromKey(key)}</p>
+                    </div>
+                    <span className="text-gray-600 text-xs mt-1 shrink-0">{isExpanded ? '▲' : '▼'}</span>
+                  </div>
 
-              {q.keys.map((key) => {
-                const type = PERSONALITY_TYPES[key]
-                const fit = getEnvironmentFit(key)
-                if (!type) return null
-                const isExpanded = expandedKey === key
-                const isUser = key === userTypeKey
-                return (
-                  <div
-                    key={key}
-                    className={`bg-gray-800/50 rounded-xl border ${q.cardBorder} overflow-hidden ${isUser ? 'ring-1 ring-white' : ''}`}
-                  >
-                    <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500" />
-                    <div
-                      className="p-4 cursor-pointer"
-                      onClick={() => setExpandedKey(isExpanded ? null : key)}
-                    >
-                      <div className="flex items-start justify-between gap-2">
+                  {isExpanded && (
+                    <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-3">
+                      <p className="text-xs text-gray-300 leading-relaxed">{type.description}</p>
+
+                      <div className="space-y-2">
                         <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-bold text-white">{type.name}</p>
-                            {isUser && <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded-full">あなた</span>}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-0.5">{type.subtitle}</p>
-                          <p className="text-xs text-gray-600 mt-0.5">{axisCodeFromKey(key)}</p>
+                          <p className="text-xs font-semibold text-emerald-400 mb-1">✦ 強み</p>
+                          <ul className="space-y-0.5">
+                            {type.strengths.map((s, si) => (
+                              <li key={si} className="text-xs text-gray-300 flex gap-1.5">
+                                <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
+                                <span>{s}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                        <span className="text-gray-600 text-xs mt-1 shrink-0">{isExpanded ? '▲' : '▼'}</span>
+                        <div>
+                          <p className="text-xs font-semibold text-orange-400 mb-1">⚠ 盲点</p>
+                          <ul className="space-y-0.5">
+                            {type.blindSpots.map((b, bi) => (
+                              <li key={bi} className="text-xs text-gray-300 flex gap-1.5">
+                                <span className="text-orange-500 shrink-0 mt-0.5">•</span>
+                                <span>{b}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-red-400 mb-1">逆境時の行動パターン</p>
+                          <p className="text-xs text-gray-300 leading-relaxed">{type.underPressure}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-blue-400 mb-1">成長のヒント</p>
+                          <p className="text-xs text-gray-300 leading-relaxed">{type.growthTip}</p>
+                        </div>
                       </div>
 
-                      {isExpanded && (
-                        <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-3">
-                          <p className="text-xs text-gray-300 leading-relaxed">{type.description}</p>
-
-                          <div className="space-y-2">
-                            <div>
-                              <p className="text-xs font-semibold text-emerald-400 mb-1">✦ 強み</p>
-                              <ul className="space-y-0.5">
-                                {type.strengths.map((s, si) => (
-                                  <li key={si} className="text-xs text-gray-300 flex gap-1.5">
-                                    <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
-                                    <span>{s}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-orange-400 mb-1">⚠ 盲点</p>
-                              <ul className="space-y-0.5">
-                                {type.blindSpots.map((b, bi) => (
-                                  <li key={bi} className="text-xs text-gray-300 flex gap-1.5">
-                                    <span className="text-orange-500 shrink-0 mt-0.5">•</span>
-                                    <span>{b}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-red-400 mb-1">逆境時の行動パターン</p>
-                              <p className="text-xs text-gray-300 leading-relaxed">{type.underPressure}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-blue-400 mb-1">成長のヒント</p>
-                              <p className="text-xs text-gray-300 leading-relaxed">{type.growthTip}</p>
-                            </div>
-                          </div>
-
-                          <div className="border-t border-gray-700/30 pt-3 space-y-2.5">
-                            <div>
-                              <p className="text-xs font-semibold text-emerald-400 mb-1">✨ 力を発揮できる環境</p>
-                              <ul className="space-y-0.5">
-                                {fit.idealEnvironment.map((item, i) => (
-                                  <li key={i} className="text-xs text-gray-400 flex gap-1.5">
-                                    <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
-                                    <span>{item}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-orange-400 mb-1">⚡ 消耗しやすい環境</p>
-                              <ul className="space-y-0.5">
-                                {fit.stressors.map((item, i) => (
-                                  <li key={i} className="text-xs text-gray-400 flex gap-1.5">
-                                    <span className="text-orange-500 shrink-0 mt-0.5">•</span>
-                                    <span>{item}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-blue-400 mb-1">🌱 成長アクション</p>
-                              <ul className="space-y-0.5">
-                                {fit.copingStrategies.map((item, i) => (
-                                  <li key={i} className="text-xs text-gray-400 flex gap-1.5">
-                                    <span className="text-blue-500 shrink-0 mt-0.5">•</span>
-                                    <span>{item}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
+                      <div className="border-t border-gray-700/30 pt-3 space-y-2.5">
+                        <div>
+                          <p className="text-xs font-semibold text-emerald-400 mb-1">✨ 力を発揮できる環境</p>
+                          <ul className="space-y-0.5">
+                            {fit.idealEnvironment.map((item, i) => (
+                              <li key={i} className="text-xs text-gray-400 flex gap-1.5">
+                                <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                      )}
+                        <div>
+                          <p className="text-xs font-semibold text-orange-400 mb-1">⚡ 消耗しやすい環境</p>
+                          <ul className="space-y-0.5">
+                            {fit.stressors.map((item, i) => (
+                              <li key={i} className="text-xs text-gray-400 flex gap-1.5">
+                                <span className="text-orange-500 shrink-0 mt-0.5">•</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-blue-400 mb-1">🌱 成長アクション</p>
+                          <ul className="space-y-0.5">
+                            {fit.copingStrategies.map((item, i) => (
+                              <li key={i} className="text-xs text-gray-400 flex gap-1.5">
+                                <span className="text-blue-500 shrink-0 mt-0.5">•</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          ))}
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
 
         {/* CTA */}
