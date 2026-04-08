@@ -10,31 +10,31 @@ function axisCodeFromKey(key: string): string {
 
 // Positions: key → { left%, top% }
 // Key format: SE(0)-PE(1)-OS(2)-ES(3), each H=1 / L=0
-// Main axes: ES → X (right=H), PE → Y (top=H)
-// Sub-axes: SE, OS — mirrored per quadrant so more-H pushes toward outer corner
-//   X: ES-H side → SE-H=right(outer), ES-L side → SE-H=left(outer)
-//   Y: PE-H side → OS-H=top(outer),   PE-L side → OS-H=bottom(outer)
+// X axis: ES (main) + SE (sub) — H = right, L = left (consistent direction)
+// Y axis: PE (main) + OS (sub) — H = top,   L = bottom (consistent direction)
+//   X: ES-L/SE-L=12.5, ES-L/SE-H=37.5, ES-H/SE-L=62.5, ES-H/SE-H=87.5
+//   Y: PE-H/OS-H=12.5, PE-H/OS-L=37.5, PE-L/OS-H=62.5, PE-L/OS-L=87.5
 const TYPE_POSITIONS: Record<string, { left: number; top: number }> = {
   // Top-right (PE-H, ES-H) - blue / executor
-  HHHH: { left: 87.5, top: 12.5 },  // SE-H / OS-H → outer corner
+  HHHH: { left: 87.5, top: 12.5 },  // SE-H / OS-H
   HHLH: { left: 87.5, top: 37.5 },  // SE-H / OS-L
   LHHH: { left: 62.5, top: 12.5 },  // SE-L / OS-H
-  LHLH: { left: 62.5, top: 37.5 },  // SE-L / OS-L → inner corner
-  // Top-left (PE-H, ES-L) - amber / challenger  [SE mirrored]
-  HHHL: { left: 12.5, top: 12.5 },  // SE-H / OS-H → outer corner
-  HHLL: { left: 12.5, top: 37.5 },  // SE-H / OS-L
-  LHHL: { left: 37.5, top: 12.5 },  // SE-L / OS-H
-  LHLL: { left: 37.5, top: 37.5 },  // SE-L / OS-L → inner corner
-  // Bottom-right (PE-L, ES-H) - emerald / stable  [OS mirrored]
-  HLHH: { left: 87.5, top: 87.5 },  // SE-H / OS-H → outer corner
-  HLLH: { left: 87.5, top: 62.5 },  // SE-H / OS-L
-  LLHH: { left: 62.5, top: 87.5 },  // SE-L / OS-H
-  LLLH: { left: 62.5, top: 62.5 },  // SE-L / OS-L → inner corner
-  // Bottom-left (PE-L, ES-L) - rose / explorer  [SE+OS mirrored]
-  HLHL: { left: 12.5, top: 87.5 },  // SE-H / OS-H → outer corner
-  HLLL: { left: 12.5, top: 62.5 },  // SE-H / OS-L
-  LLHL: { left: 37.5, top: 87.5 },  // SE-L / OS-H
-  LLLL: { left: 37.5, top: 62.5 },  // SE-L / OS-L → inner corner
+  LHLH: { left: 62.5, top: 37.5 },  // SE-L / OS-L
+  // Top-left (PE-H, ES-L) - amber / challenger
+  HHHL: { left: 37.5, top: 12.5 },  // SE-H / OS-H
+  HHLL: { left: 37.5, top: 37.5 },  // SE-H / OS-L
+  LHHL: { left: 12.5, top: 12.5 },  // SE-L / OS-H
+  LHLL: { left: 12.5, top: 37.5 },  // SE-L / OS-L
+  // Bottom-right (PE-L, ES-H) - emerald / stable
+  HLHH: { left: 87.5, top: 62.5 },  // SE-H / OS-H
+  HLLH: { left: 87.5, top: 87.5 },  // SE-H / OS-L
+  LLHH: { left: 62.5, top: 62.5 },  // SE-L / OS-H
+  LLLH: { left: 62.5, top: 87.5 },  // SE-L / OS-L
+  // Bottom-left (PE-L, ES-L) - rose / explorer
+  HLHL: { left: 37.5, top: 62.5 },  // SE-H / OS-H
+  HLLL: { left: 37.5, top: 87.5 },  // SE-H / OS-L
+  LLHL: { left: 12.5, top: 62.5 },  // SE-L / OS-H
+  LLLL: { left: 12.5, top: 87.5 },  // SE-L / OS-L
 }
 
 // SE(key[0]): H → large (72px), L → small (48px)
